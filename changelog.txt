@@ -1,0 +1,3 @@
+2022-11-30
+Added react as the main interface for the server side
+before this, electron, express, sqlite, had been used to build the basis of the project.
