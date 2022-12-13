@@ -7,8 +7,7 @@ import { startEndDates } from "../interfaces/startEndDateInterface";
  * @param {number} year the current year
  * @returns  {Date} the date of the first day of the week
  */
-export 
-    function getFirstDayOfWeek (weekNum: number, year:number):Date {
+export function getFirstDayOfWeek (weekNum: number, year:number):Date {
     let firstDay = new Date(year, 0, (1 + (weekNum - 1) * 7));
     while (firstDay.getDay() !== 0) {
         firstDay.setDate(firstDay.getDate() - 1);
@@ -46,7 +45,7 @@ export function formatDateTime (date:string):string {
  * @param date 
  * @returns {string}
  */
-export function getToday  (type:'timestamp'|'timestamp_string'|'month'|'' = '', date:string|Date = null):string {
+export function getToday  (type:'timestamp'|'timestamp_string'|'month'|'' = '', date:string|Date|null = null):string {
     let today = new Date();
     if (date != null) {
         today = new Date(date);
@@ -203,7 +202,7 @@ export function getDatesBetween (startDate:string|Date, stopDate:string|Date):st
  * @returns {Month[]}
  */
 export function getMonthsObjects():Month[] {
-    let months = []
+    let months: Month[] = []
     months.push({ id: "01", name: 'January' });
     months.push({ id: "02", name: 'February' });
     months.push({ id: "03", name: 'March' });
@@ -229,7 +228,7 @@ export function getMonthsObjects():Month[] {
  * @returns {Month[]}
  */
 export function getMonthsNoPad():Month[] {
-    let months = []
+    let months: Month[] = []
     months.push({ id: "1", name: 'January' });
     months.push({ id: "2", name: 'February' });
     months.push({ id: "3", name: 'March' });

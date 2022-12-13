@@ -1,6 +1,6 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import { constants } from '../constants'
+import { constants } from './constants'
 import { Store } from './Store';
 import fork from 'child_process';
 import ip from 'ip';

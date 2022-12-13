@@ -38,3 +38,27 @@
 {"level":"info","message":"process.send defined","service":"user-service"}
 {"level":"info","message":"server started successfully on 5100","service":"user-service"}
 {"level":"info","message":"process.send defined","service":"user-service"}
+{"level":"info","message":"server started successfully on 5100","service":"user-service"}
+{"level":"info","message":"process.send defined","service":"user-service"}
+{"level":"info","message":"app terminated","service":"user-service"}
+{"level":"info","message":"app terminated","service":"user-service"}
+{"code":"ENOTFOUND","hostname":"_mongodb._tcp.cluster0.ai5biiv\n            .mongodb.net","level":"error","service":"user-service","syscall":"querySrv"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"mongo db ocnnected","service":"user-service"}
+{"level":"info","message":"server started successfully on 5100","service":"user-service"}
+{"level":"info","message":"process.send defined","service":"user-service"}

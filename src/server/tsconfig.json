@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
-        "jsx": "react",
-        "outDir": "./dist",
+        "outDir": "../../dist/server",
         "allowJs": true,
         "target": "es6",
         "noImplicitReturns": true,
@@ -10,21 +9,17 @@
         "noImplicitAny": true,
         "module": "commonjs",
         "esModuleInterop": true,
-        "sourceMap": false,
+        "sourceMap": true,
         "baseUrl": "./",
         "paths": {
             "*": [
                 "node_modules/*"
-            ],
-            "@/*":[
-                "src/*"
             ]
         },
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
     },
     "include": [
-        "./src/**/*",
-        "./spec/**/*"
+        "./**/*"
     ],
 }

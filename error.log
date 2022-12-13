@@ -2,3 +2,4 @@
 {"level":"error","message":"process.send not defined.","service":"user-service"}
 {"level":"error","message":"process.send not defined.","service":"user-service"}
 {"level":"error","message":"process.send not defined.","service":"user-service"}
+{"code":"ENOTFOUND","hostname":"_mongodb._tcp.cluster0.ai5biiv\n            .mongodb.net","level":"error","service":"user-service","syscall":"querySrv"}
