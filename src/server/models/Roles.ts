@@ -1,11 +1,12 @@
 import { Table, Model, Column, DataType, ModelClassGetter,
    CreatedAt, PrimaryKey, HasMany, BelongsToMany } from "sequelize-typescript";
-import { Permissions } from "./permissions";
+import { Permissions } from "./Permissions";
 import { RolePermissions } from "./RolePermissions";
 
 @Table({
    tableName: 'roles',
-   modelName: 'Roles'
+  modelName: 'Roles',
+  paranoid: true,
 })
 // @BelongsToMany(Permissions, RolePermissions)
 
@@ -20,6 +21,11 @@ export class Roles extends Model{
   role_name: string;
   @Column
   description: string
+
+  @CreatedAt
+  created_on: string
+
+  updatedAt: false
 
   // @HasMany(() => Permissions)
   // permissions: Permissions

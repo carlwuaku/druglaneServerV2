@@ -3,7 +3,8 @@ import { Users } from "./Users";
 
 @Table({
    tableName: 'incoming_payments',
-   modelName: 'IncomingPayments'
+  modelName: 'IncomingPayments',
+  paranoid: true,
 })
 
 export class IncomingPayments extends Model{

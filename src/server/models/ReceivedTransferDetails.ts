@@ -1,13 +1,14 @@
 
 import { Table, Model, Column, DataType, ForeignKey, CreatedAt, Index, BelongsTo } from "sequelize-typescript";
-import { Products } from "./products";
+import { Products } from "./Products";
 import { ReceivedTransfers } from "./ReceivedTransfers";
 import { Users } from "./Users";
 
 
 @Table({
   tableName: 'received_transfer_details',
-  modelName: 'ReceivedTransferDetails'
+  modelName: 'ReceivedTransferDetails',
+  paranoid: true,
 })
 
 export class ReceivedTransferDetails extends Model{

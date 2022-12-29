@@ -2,7 +2,8 @@ import { Table, Model, Column,   CreatedAt } from "sequelize-typescript";
 
 @Table({
    tableName: 'db_sync',
-   modelName: 'DbSync'
+  modelName: 'DbSync',
+  paranoid: true,
 })
 
 export class DbSync extends Model{

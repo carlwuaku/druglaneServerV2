@@ -2,7 +2,8 @@ import { Table, Model, Column, Index } from "sequelize-typescript";
 
 @Table({
   tableName: "settings",
-  modelName: 'Settings'
+  modelName: 'Settings',
+  paranoid: true,
 })
 export class Settings extends Model{
   @Index

@@ -1,10 +1,16 @@
-import { Table, Model, Column } from "sequelize-typescript";
+import { Table, Model, Column, CreatedAt } from "sequelize-typescript";
 
 @Table({
    tableName: 'insurance_providers',
-   modelName: 'InsuranceProviders'
+  modelName: 'InsuranceProviders',
+  paranoid: true,
 })
 export class InsuranceProviders extends Model{
   @Column
-  name:string;
+  name: string;
+  
+  @CreatedAt
+  created_on: string
+
+  updatedAt: false
 }

@@ -7,16 +7,77 @@ import ip from 'ip';
 import { ResponseData } from './models/responseData';
 import { logger } from './config/logger';
 import { runMigrations } from './config/migrations/migrations';
+import { Settings } from './models/Settings';
 
 dotenv.config();
 // console.log('erver')
 export const app: Express = express();
+
+/**
+ * checks the database if the company details have been set
+ * @returns {boolean}
+ */
+export async function isCompanySet(): Promise<boolean>{
+    //get a connection to the database
+    const setting = await Settings.findOne({
+        where: {
+            'name': 'company_id'
+        }
+    });
+    if (setting == null) {
+        return false;
+    }
+    //check if the actual value exists and is a valid number
+    return isValidInt(setting.value) ;
+}
+
+
+/**
+ * check the database if the admin password is set
+ * @returns {boolean}
+ */
+export async function isAdminPasswordSet(): Promise<boolean>{
+    const setting = await Settings.findOne({
+        where: {
+            'name': 'admin_password'
+        }
+    });
+    if (setting == null) {
+        return false;
+    }
+    //check if the actual value exists and is a valid string
+    return setting.value.trim().length > 0;
+}
+
+export function isValidInt(value: any): boolean {
+    return value != null && Number.isInteger(value);
+
+}
+
+import adminController from './controllers/admin.controller';
+import customerController from './controllers/customer.controller';
+import productController from './controllers/product.controller';
+import purchaseController from './controllers/purchase.controller';
+import saleController from './controllers/sale.controller';
+import transfersController from './controllers/transfers.controller';
+import usersController from './controllers/users.controller';
+import vendorController from './controllers/vendor.controller';
+
+app.use('/api_admin', adminController);
+app.use('/api_staff', usersController);
+app.use('/api_customer', customerController);
+app.use('/api_product', productController);
+app.use('/api_vendor', vendorController);
+app.use('/api_purchase', purchaseController);
+app.use('/api_sale', saleController);
+app.use('/api_transfer', transfersController);
+
 const startServer = async () => {
     //make sure the app has been activated
     try {
         app.listen(constants.port, () => {
             logger.info("server started successfully on "+constants.port)
-            // runMigrations()
+            runMigrations()
             try {
                 /**
                  * If Node.js was not spawned with an IPC channel, process.send will beundefined

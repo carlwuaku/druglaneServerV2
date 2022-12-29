@@ -4,7 +4,8 @@ import { Users } from "./Users";
 
 @Table({
   tableName: 'outgoing_payments',
-  modelName: 'OutgoingPayments'
+  modelName: 'OutgoingPayments',
+  paranoid: true,
 })
 
 export class OutgoingPayments extends Model{

@@ -53362,10 +53362,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const react_1 = __importStar(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
 const react_bootstrap_1 = __webpack_require__(/*! react-bootstrap */ "./node_modules/react-bootstrap/esm/index.js");
 const Container_1 = __importDefault(__webpack_require__(/*! react-bootstrap/Container */ "./node_modules/react-bootstrap/esm/Container.js"));
-const AddLogItem_1 = __importDefault(__webpack_require__(/*! ./components/AddLogItem */ "./src/app/components/AddLogItem.tsx"));
-const LogItem_1 = __importDefault(__webpack_require__(/*! ./components/LogItem */ "./src/app/components/LogItem.tsx"));
-const Alert_1 = __importDefault(__webpack_require__(/*! react-bootstrap/Alert */ "./node_modules/react-bootstrap/esm/Alert.js"));
-// import { ipcRenderer } from 'electron/renderer';
+const electron_1 = __webpack_require__(/*! electron */ "electron");
 const App = () => {
     const [logs, setLogs] = (0, react_1.useState)([]);
     const [alert, setAlert] = (0, react_1.useState)({
@@ -53374,19 +53371,19 @@ const App = () => {
         variant: 'success'
     });
     (0, react_1.useEffect)(() => {
-        // window.electron.ipcRenderer.send("logs:load");
-        // window.electron.ipcRenderer.on("logs:get", (event:any, logs:any) => {
-        //   setLogs(JSON.parse(logs))
-        // })
-    });
+        electron_1.ipcRenderer.on("license_called", (event, data) => {
+            console.log("license called");
+        });
+    }, []);
     function addItem(item) {
         // setLogs()
         if (!item.text || !item.priority || !item.user) {
             showAlert("enter all fields", 'danger');
             return;
         }
-        item._id = Math.floor(Math.random() * 90000) + 10000;
+        // item._id = Math.floor(Math.random() * 90000) + 10000;
         item.created = new Date().toString();
+        electron_1.ipcRenderer.send("logs:add", item);
         setLogs([...logs, item]);
         showAlert('Log added', 'success');
         // alert(item)
@@ -53406,148 +53403,18 @@ const App = () => {
             });
         }, seconds);
     }
+    function validate() {
+        electron_1.ipcRenderer.send("call_validation");
+    }
     function deleteItem(_id) {
-        setLogs(logs.filter((item) => item._id != _id));
+        electron_1.ipcRenderer.send("logs:delete", _id);
+        // setLogs(logs.filter((item) => item._id != _id));
         showAlert("item deleted", "success");
     }
     return (react_1.default.createElement(Container_1.default, null,
-        react_1.default.createElement(AddLogItem_1.default, { addItem: addItem }),
-        alert.show && react_1.default.createElement(Alert_1.default, { variant: alert.variant }, alert.message),
-        logs.length,
-        " items left",
-        react_1.default.createElement(react_bootstrap_1.Table, null,
-            react_1.default.createElement("thead", null,
-                react_1.default.createElement("tr", null,
-                    react_1.default.createElement("th", null, "Priority"),
-                    react_1.default.createElement("th", null, "Log Text"),
-                    react_1.default.createElement("th", null, "User"),
-                    react_1.default.createElement("th", null, "Created"),
-                    react_1.default.createElement("th", null))),
-            react_1.default.createElement("tbody", null, logs.map(log => react_1.default.createElement(LogItem_1.default, { deleteItem: deleteItem, key: log._id, log: log }))))));
+        react_1.default.createElement(react_bootstrap_1.Button, { onClick: () => { validate(); } }, "call")));
 };
 exports["default"] = App;
-
-
-/***/ }),
-
-/***/ "./src/app/components/AddLogItem.tsx":
-/*!*******************************************!*\
-  !*** ./src/app/components/AddLogItem.tsx ***!
-  \*******************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const react_1 = __importStar(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
-const col_1 = __importDefault(__webpack_require__(/*! react-bootstrap/col */ "./node_modules/react-bootstrap/esm/Col.js"));
-const card_1 = __importDefault(__webpack_require__(/*! react-bootstrap/card */ "./node_modules/react-bootstrap/esm/Card.js"));
-const form_1 = __importDefault(__webpack_require__(/*! react-bootstrap/form */ "./node_modules/react-bootstrap/esm/Form.js"));
-const row_1 = __importDefault(__webpack_require__(/*! react-bootstrap/row */ "./node_modules/react-bootstrap/esm/Row.js"));
-const Button_1 = __importDefault(__webpack_require__(/*! react-bootstrap/Button */ "./node_modules/react-bootstrap/esm/Button.js"));
-const AddLogItem = ({ addItem }) => {
-    const [text, setText] = (0, react_1.useState)('');
-    const [user, setUser] = (0, react_1.useState)('');
-    const [priority, setPriority] = (0, react_1.useState)('');
-    const onSubmit = (e) => {
-        e.preventDefault();
-        //empty the fields
-        addItem({ text, user, priority });
-        setText("");
-        setUser("");
-        setPriority("");
-    };
-    //ON SUBMIT 
-    return (react_1.default.createElement(card_1.default, { className: 'mt-5 mb-3' },
-        react_1.default.createElement(card_1.default.Body, null,
-            react_1.default.createElement(form_1.default, { onSubmit: onSubmit },
-                react_1.default.createElement(row_1.default, { className: 'my-3' },
-                    react_1.default.createElement(col_1.default, null,
-                        react_1.default.createElement(form_1.default.Control, { placeholder: 'Log', value: text, onChange: (e) => setText(e.target.value) }))),
-                react_1.default.createElement(row_1.default, null,
-                    react_1.default.createElement(col_1.default, null,
-                        react_1.default.createElement(form_1.default.Control, { placeholder: 'User', value: user, onChange: (e) => setUser(e.target.value) })),
-                    react_1.default.createElement(col_1.default, null,
-                        react_1.default.createElement(form_1.default.Control, { as: 'select', value: priority, onChange: (e) => setPriority(e.target.value) },
-                            react_1.default.createElement("option", { value: "" }, "Select One"),
-                            react_1.default.createElement("option", { value: "low" }, "Low"),
-                            react_1.default.createElement("option", { value: "moderate" }, "Moderate"),
-                            react_1.default.createElement("option", { value: "high" }, "High")))),
-                react_1.default.createElement(row_1.default, { className: 'my-3' },
-                    react_1.default.createElement(col_1.default, null,
-                        react_1.default.createElement(Button_1.default, { type: 'submit', variant: 'secondary' }, "Add Log")))))));
-};
-exports["default"] = AddLogItem;
-
-
-/***/ }),
-
-/***/ "./src/app/components/LogItem.tsx":
-/*!****************************************!*\
-  !*** ./src/app/components/LogItem.tsx ***!
-  \****************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const react_1 = __importDefault(__webpack_require__(/*! react */ "./node_modules/react/index.js"));
-const Button_1 = __importDefault(__webpack_require__(/*! react-bootstrap/Button */ "./node_modules/react-bootstrap/esm/Button.js"));
-const Badge_1 = __importDefault(__webpack_require__(/*! react-bootstrap/Badge */ "./node_modules/react-bootstrap/esm/Badge.js"));
-// import { formatDate } from '@/server/helpers/dateHelper';
-const LogItem = ({ log, deleteItem }) => {
-    const getBg = (priority) => {
-        if (priority == "high") {
-            return "danger";
-        }
-        else if (priority == "moderate")
-            return "warning";
-        else
-            return "success";
-    };
-    function _deleteItem(_id) {
-        deleteItem(_id);
-    }
-    return (react_1.default.createElement("tr", null,
-        react_1.default.createElement("td", null,
-            react_1.default.createElement(Badge_1.default, { bg: getBg(log.priority) }, log.priority.charAt(0).toUpperCase() +
-                log.priority.slice(1))),
-        react_1.default.createElement("td", null, log.text),
-        react_1.default.createElement("td", null, log.user),
-        react_1.default.createElement("td", null,
-            react_1.default.createElement(Button_1.default, { onClick: () => _deleteItem(log._id), variant: 'danger', size: 'sm' }, "X"),
-            " ")));
-};
-exports["default"] = LogItem;
 
 
 /***/ }),
@@ -54181,6 +54048,17 @@ module.exports = "data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%
 
 "use strict";
 module.exports = "data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 8%27%3e%3cpath fill=%27%23198754%27 d=%27M2.3 6.73.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z%27/%3e%3c/svg%3e";
+
+/***/ }),
+
+/***/ "electron":
+/*!***************************!*\
+  !*** external "electron" ***!
+  \***************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("electron");
 
 /***/ }),
 

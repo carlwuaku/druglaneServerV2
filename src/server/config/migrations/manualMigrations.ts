@@ -974,10 +974,7 @@ CREATE UNIQUE INDEX  IF NOT EXISTS stock_index_1 ON stock_adjustment_sessions(co
     version: 74
   },
   {
-    query: `
-    PRAGMA foreign_keys=off;
-
-    CREATE TABLE IF NOT EXISTS dbbackups (
+    query: `CREATE TABLE IF NOT EXISTS dbbackups (
       id integer primary key autoincrement,
             file_name text NOT NULL,
             created_on text  DEFAULT CURRENT_TIMESTAMP,
@@ -985,11 +982,7 @@ CREATE UNIQUE INDEX  IF NOT EXISTS stock_index_1 ON stock_adjustment_sessions(co
             description text DEFUALT NULL,
             uploaded text default null,
             db_version text default null
-          );
-
-    
-          PRAGMA foreign_keys=on;
-          `,
+          );`,
     version: 75
   },
   {
@@ -1058,13 +1051,7 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
     version: 78
   },
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists refills (
+    query: `CREATE TABLE if not exists refills (
       id integer primary key autoincrement,
       product text NOT NULL,
       product_id integer default NULL,
@@ -1076,16 +1063,7 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
       
       foreign key (product_id) references products (id) ON DELETE SET NULL ON UPDATE CASCADE
 
-          );
-
-      
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
+          );`,
     version: 79
   },
   {
@@ -1235,13 +1213,7 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
     version: 84
   },
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists stock_values (
+    query: `CREATE TABLE if not exists stock_values (
       id integer primary key autoincrement,
       date text unique NOT NULL,
       last_modified text default current_timestamp,
@@ -1252,25 +1224,11 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
       
 
           );
-
-      
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
           `,
     version: 85
   },
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists outgoing_payments (
+    query: `CREATE TABLE if not exists outgoing_payments (
       id integer primary key autoincrement,
       date text  NOT NULL,
       amount text not null,
@@ -1285,51 +1243,23 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
       created_on date default current_timestamp
       
 
-          );
-
-      
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
+          );`,
     version: 86
   },
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists online_backups (
+    query: `CREATE TABLE if not exists online_backups (
       id integer primary key autoincrement,
       date text unique NOT NULL,
       url text not null,
       
       created_on date default current_timestamp
       
-          );
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
+          );`,
     version: 87
   },
 
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists active_ingredients (
+    query: `CREATE TABLE if not exists active_ingredients (
       id integer primary key autoincrement,
       name text  NOT NULL,
       indication text default null,
@@ -1339,24 +1269,11 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
       
       created_on date default current_timestamp
       
-          );
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
+          );`,
     version: 88
   },
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists item_active_ingredients (
+    query: `CREATE TABLE if not exists item_active_ingredients (
       id integer primary key autoincrement,
       product integer not null,
       ingredient integer not null,
@@ -1364,14 +1281,7 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
       FOREIGN KEY (ingredient) REFERENCES active_ingredients (id) ON DELETE RESTRICT ON UPDATE CASCADE
 
       
-          );
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
+          );`,
     version: 89
   },
   {
@@ -1470,13 +1380,7 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
     version: 98
   },
   {
-    query: ` 
-
-    PRAGMA foreign_keys=off;
-
-    
-
-    CREATE TABLE if not exists incoming_payments (
+    query: `CREATE TABLE if not exists incoming_payments (
       id integer primary key autoincrement,
       date text  NOT NULL,
       amount text not null,
@@ -1491,16 +1395,7 @@ CREATE  INDEX IF NOT EXISTS  dbbackups_name
       created_on date default current_timestamp
       
 
-          );
-
-      
-          
-          
-    
-          PRAGMA foreign_keys=on;
-          
-    
-          `,
+          );`,
     version: 99
   },
   {

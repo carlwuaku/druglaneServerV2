@@ -3,7 +3,8 @@ import { Users } from "./Users";
 
 @Table({
   tableName: 'user_sessions',
-  modelName: 'UserSessions'
+  modelName: 'UserSessions',
+  paranoid: true,
 })
 
 export class UserSessions extends Model{

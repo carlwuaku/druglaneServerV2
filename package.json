@@ -1,10 +1,14 @@
 {
   "name": "druglaneserver",
-  "version": "1.6.5",
+  "version": "2.0.0",
   "description": "Druglane Pharmacy Management Software Version 1",
   "main": "dist/main.js",
   "scripts": {
-    "test": "jest",
+    "pack": "electron-builder --dir",
+    "dist": "webpack && electron-builder",
+    "test": "cross-env NODE_ENV=test jest --testTimeout=10000",
+    "db:create:test": "cross-env NODE_ENV=test npx sequelize-cli db:create",
+    "db:reset": "node npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
     "build": "npm run clean && tsc && npm run copy-files",
     "clean": "rimraf dist/",
     "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css dist/",
@@ -64,6 +68,7 @@
     "xlsx": "^0.16.5"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.13",
     "@types/express-session": "^1.17.4",
     "@types/ip": "^1.1.0",
@@ -77,8 +82,10 @@
     "@typescript-eslint/parser": "^4.33.0",
     "concurrently": "^7.2.1",
     "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.7.2",
     "electron": "^21.0.1",
+    "electron-builder": "^23.6.0",
     "electron-is-dev": "^2.0.0",
     "eslint": "^7.32.0",
     "html-webpack-plugin": "^5.5.0",
@@ -87,8 +94,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "^3.0.2",
+    "sequelize-cli": "^6.5.2",
     "style-loader": "^3.3.1",
-    "supertest": "^6.3.1",
+    "supertest": "^6.3.3",
     "ts-jest": "^29.0.3",
     "ts-loader": "^9.4.1",
     "ts-node": "^10.9.1",
@@ -97,5 +105,31 @@
     "webpack-cli": "^5.0.0",
     "webpack-dev-server": "^4.11.1",
     "webpack-node-externals": "^3.0.0"
-  }
+  },
+  "build": {
+    "appId": "CalronSoftwares.DruglanePMS",
+    "mac": {
+      "category": "your.app.category.type"
+    },
+    "productName": "Druglane Pharmacy Management System 1.6",
+    "copyright": "Copyright © 2021 ${author}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "carlwuaku",
+        "repo": "druglaneposserver",
+        "releaseType": "release"
+      }
+    ],
+    "directories": {
+      "output": "releases"
+    },
+    "asar": true,
+    "files": [
+      "./dist/**/*"
+    ]
+  },
+  "bundledDependencies": [
+    "express"
+  ]
 }

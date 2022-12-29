@@ -1,0 +1,14 @@
+{
+    "development": {
+        "dialect": "sqlite",
+        "storage": "C:/Users/Carl/AppData/Roaming/DruglaneServer/druglane.db"
+    },
+    "test": {
+        "dialect": "sqlite",
+        "storage": "test_db.db"
+    },
+    "production": {
+        "dialect": "sqlite",
+        "storage": "C:/Users/Carl/AppData/Roaming/DruglaneServer/druglane.db"
+    }
+}

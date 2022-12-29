@@ -1,9 +1,10 @@
 import { Table, Model, Column, DataType,  CreatedAt, ForeignKey, Index, BelongsTo } from "sequelize-typescript";
-import { Roles } from "./roles";
+import { Roles } from "./Roles";
 
 @Table({
    tableName: 'users',
-   modelName: 'Users'
+  modelName: 'Users',
+  paranoid: true,
 })
 
 

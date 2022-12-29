@@ -2,7 +2,8 @@ import { Table, Model, Column, DataType, ForeignKey, CreatedAt } from "sequelize
 
 @Table({
    tableName: 'online_backups',
-   modelName: 'OnlineBackups'
+  modelName: 'OnlineBackups',
+  paranoid: true,
 })
 export class OnlineBackups extends Model{
   @Column({

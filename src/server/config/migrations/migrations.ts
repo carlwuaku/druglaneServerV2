@@ -6,10 +6,11 @@ require('ts-node/register')
 import { Store } from '../../Store';
 import { Umzug, SequelizeStorage } from 'umzug';
 import { manualMigrations } from './manualMigrations';
-import { constants } from '../../../constants';
+import { constants } from '../../constants';
 import { migrationsList } from './migrationsList';
 const store = new Store()
-import { sequelize } from '../../models/sequelize-config'
+import { sequelize } from '../sequelize-config'
+import { logger } from '../logger';
 // const sequelize = require('../models/sequelize-config')
 
 // const sequelize = new Sequelize({ dialect: 'sqlite', storage: './db.sqlite' });
@@ -35,7 +36,9 @@ export const runMigrations =
         const mig = manualMigrations[i];
         if (mig.query.trim().length > 1) {
           const result = await sequelize.transaction(async (t) => {
-            await sequelize.query(mig.query);
+            await sequelize.query(mig.query, {
+              transaction: t
+            });
           })
           
         } 
@@ -47,11 +50,13 @@ export const runMigrations =
     
       await umzug.up();
     } catch (error) {
-      if (error instanceof Error) {
-        console.log('manual migration error', error.message )
-        throw new Error("Migration error:"+error.message);
-      }
-      
+      logger.error(error)
+      // if (error instanceof Error) {
+        
+      //   console.log('manual migration error', error.message )
+        
+      // }
+      throw new Error("Migration error:" + error);
       
     }
    

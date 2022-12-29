@@ -1,3 +1,13 @@
+2022-12-21
+added deletedAt to all tables and set all tables to paranoid. this ensures that only softdeletes are ever
+used
+
+2022-12-20
+added updatedAt and created_on to all tables
+
+2022-12-13
+Successfully modified webpack config to allow spawning of server in a child process
+
 2022-11-30
 Added react as the main interface for the server side
 before this, electron, express, sqlite, had been used to build the basis of the project.

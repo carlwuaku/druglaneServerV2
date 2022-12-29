@@ -3,7 +3,8 @@ import { Users } from "./Users";
 
 @Table({
    tableName: 'activities',
-   modelName: 'Activities'
+    modelName: 'Activities',
+    paranoid: true,
 })
 
 export class Activities extends Model{
@@ -45,6 +46,13 @@ export class Activities extends Model{
         allowNull: true,
         defaultValue: 0
     })
-    deleted:string;
+    deleted: string;
+    
+    @Column({
+        type: DataType.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+    })
+    object_id: string;
     
 }

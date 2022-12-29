@@ -4,7 +4,8 @@ import { Users } from "./Users";
 
 @Table({
   tableName: "stock_adjustment_sessions",
-  modelName: 'StockAdjustmentSessions'
+  modelName: 'StockAdjustmentSessions',
+  paranoid: true,
 })
 
 export class StockAdjustmentSessions extends Model{

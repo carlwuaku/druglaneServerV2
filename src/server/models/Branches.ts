@@ -2,7 +2,8 @@ import { Table, Model, Column, DataType, PrimaryKey, CreatedAt, Index } from "se
 
 @Table({
    tableName: 'branches',
-   modelName: 'Branches'
+  modelName: 'Branches',
+  paranoid: true,
 })
 
 export class Branches extends Model{

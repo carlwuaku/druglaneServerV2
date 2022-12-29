@@ -4,7 +4,8 @@ import { Users } from "./Users";
 
 @Table({
    tableName: 'dbbackups',
-   modelName: 'DbBackups'
+  modelName: 'DbBackups',
+  paranoid: true,
 })
 
 export class DbBackups extends Model{

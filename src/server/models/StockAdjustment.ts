@@ -1,10 +1,11 @@
 import { Column, CreatedAt, DataType, ForeignKey, Index, Model, Table } from "sequelize-typescript";
-import { Products } from "./products";
+import { Products } from "./Products";
 import { Users } from "./Users";
 
 @Table({
   tableName: "stock_adjustment",
-  modelName: 'StockAdjustment'
+  modelName: 'StockAdjustment',
+  paranoid: true,
 })
 
 export class StockAdjustment extends Model{

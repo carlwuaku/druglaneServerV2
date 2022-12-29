@@ -3,7 +3,8 @@ import { CustomerDiagnostics } from "./CustomerDiagnostics";
 
 @Table({
    tableName: 'customers',
-   modelName: 'Customers'
+  modelName: 'Customers',
+  paranoid: true,
 
 })
 

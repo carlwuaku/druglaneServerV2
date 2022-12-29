@@ -1,24 +1,30 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
 import { ChildProcess, fork } from 'child_process'
-import { isAppActivated } from "./appValidation";
-import { logger } from "./server/config/logger";
-import isDev from 'electron-is-dev';
+import { isAppActivated, verifyLicenseKey } from "./appValidation";
+import { logger } from "./app/config/logger";
+// import isDev from 'electron-is-dev';
 import { connectDB } from '@/app/config/mongoose';
 import Log from '@/app/models/Log';
+import { Log as Loginterface } from "./app/interfaces/Log.interface";
 // import { startServer } from "./server/server";
 let mainWindow: BrowserWindow;
 let serverProcess: ChildProcess = null;
 let startupState: "Application Activated" |
     "Application Not Activated" | "Server Started" | "Checking Activation" = "Checking Activation";
+const isDev = process.env.NODE_ENV == "development"
 
 //connect to mongo db
 connectDB();
 
-//IOPC CONNECTION
+//IPC CONNECTION
 ipcMain.on("logs:load", sendLogs)
-
-
+ipcMain.on("logs:add", (event, item) => addLog(item))
+ipcMain.on("logs:delete", (event, item) => deleteLog(item))
+ipcMain.on("call_validation", (event, item) => {
+    verifyLicenseKey("A78D5-B93FB-CD281-3500A");
+mainWindow.webContents.send("license_called","true")}
+)
 
 //get the logs from mongo, and push to front end
 async function sendLogs() {
@@ -27,7 +33,26 @@ async function sendLogs() {
         mainWindow.webContents.send('logs:get', JSON.stringify(logs))
         console.log(logs)
     } catch (error) {
-        logger.error(error)
+        logger.error({message:error})
+    }
+}
+
+async function addLog(item: Loginterface) {
+    try {
+        await Log.create(item);
+        sendLogs();
+    } catch (error) {
+        logger.error({ message: error })
+    }
+    
+}
+
+async function deleteLog(_id: number) {
+    try {
+        await Log.findByIdAndDelete({ _id: _id });
+        sendLogs();
+    } catch (error) {
+        console.log(error)
     }
 }
 
@@ -38,13 +63,13 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
          webPreferences: {
              nodeIntegration: true,
              contextIsolation: false,
-             preload: "@/app/index.preload.js",
+            //  preload: path.join(__dirname, "preload.js"),
         },
         width: 800,
     });
 
     // and load the index.html of the app.
-    mainWindow.loadFile(path.join(__dirname, htmlLocation));
+    // mainWindow.loadFile(path.join(__dirname, htmlLocation));
     mainWindow.loadURL(isDev ? 'http://localhost:9000' : `file://${app.getAppPath()}/index.html`)
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
@@ -60,6 +85,7 @@ app.whenReady().then(() => {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         if (BrowserWindow.getAllWindows().length === 0) createWindow("/app/index.html", "@/app/index.preload.js");
+
         spawnServer();
     });
 
@@ -76,11 +102,11 @@ app.on("window-all-closed", () => {
             try {
                 serverProcess.kill();
             } catch (error) {
-                logger.error(error);
+                logger.error({ message: error });
             }
             
         }
-        logger.info("app terminated");
+        logger.info({ message: "app terminated" });
         app.quit();
     }
 });
@@ -134,6 +160,7 @@ export function loadActivationPage(): void {
     createWindow("/app/activate.html","/app/activate.js")
     
 }
+
 
 
 

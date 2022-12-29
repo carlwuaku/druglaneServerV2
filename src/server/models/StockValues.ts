@@ -2,7 +2,8 @@ import { Column, CreatedAt, DataType, Index, Model, Table } from "sequelize-type
 
 @Table({
   tableName: "stock_values",
-  modelName: 'StockValues'
+  modelName: 'StockValues',
+  paranoid: true,
 })
 
 export class StockValues extends Model{

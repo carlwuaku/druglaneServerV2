@@ -4,7 +4,8 @@ import { Users } from "./Users";
 
 @Table({
   tableName: "sales",
-  modelName: 'Sales'
+  modelName: 'Sales',
+  paranoid: true,
 })
 
 export class Sales extends Model{

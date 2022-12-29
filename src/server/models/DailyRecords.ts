@@ -3,8 +3,9 @@ import { Table, Model, Column, DataType,  CreatedAt, HasMany, Index, ForeignKey 
 import { Users } from "./Users";
 
 @Table({
-   tableName: 'daily_records',
-   modelName: 'DailyRecords'
+   tableName: 'dailyRecords',
+  modelName: 'DailyRecords',
+  paranoid: true,
 })
 
 export class DailyRecords extends Model{

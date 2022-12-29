@@ -1,6 +1,9 @@
 import { InputMigrations } from "umzug";
-import { STRING, INTEGER, DATE, DOUBLE, NOW, Op, QueryInterface, QueryOptions } from 'sequelize';
-
+import { STRING, INTEGER, DATE, DOUBLE, NOW, Op, QueryInterface, QueryOptions, Transaction } from 'sequelize';
+import { Products } from "../../models/Products";
+import models from '../../models/index'
+import { query } from "express";
+import { sequelize } from "../sequelize-config";
 
 export const migrationsList: InputMigrations<QueryInterface> = [
     {
@@ -1046,6 +1049,153 @@ export const migrationsList: InputMigrations<QueryInterface> = [
         },
         async down({ context: queryInterface }) {
             await queryInterface.dropTable('reminders')
+        }
+    },
+    {
+        name: "20221220113200-addCreatedOnToVariousTables",
+        async up({ context: queryInterface }) {
+            const tables = ["insurance_providers","drug_info",
+                "reminders", "role_permissions", "roles"];
+            const transaction = await sequelize.transaction();
+            try {
+                for (let index = 0; index < tables.length; index++) {
+                    const table = tables[index];
+                    //check if the column exists first
+                    const tableDescription = await queryInterface.describeTable(table);
+                    if (!tableDescription.created_on) {
+                        await queryInterface.addColumn(table, 'created_on',
+                            {
+                                defaultValue: NOW,
+                                allowNull: true,
+                                type: DATE,
+                            }, {
+                            transaction
+                        });
+                    }
+                }
+               
+                transaction.commit();
+            } catch (error) {
+                transaction.rollback();
+                throw new Error(error);
+
+            }
+            
+            
+            
+        },
+        async down({ context: queryInterface }) {
+            const tables = ["insurance_providers", "drug_info",
+                "reminders", "role_permissions", "roles"];
+            tables.forEach(async (table) => {
+                await queryInterface.removeColumn(table, 'created_on')
+            });
+
+        }
+    },
+    {
+        name: "20221220114600-addUpdatedAtToVariousTables",
+        async up({ context: queryInterface }) {
+
+            const transaction = await sequelize.transaction();
+            try {
+                for (let index = 0; index < models.length; index++) {
+                    const model = models[index];
+                    //check if the column exists first
+                    let tableDescription = await queryInterface.describeTable(model.tableName);
+
+                    if (!tableDescription.updatedAt) {
+                        await queryInterface.addColumn(model.tableName, 'updatedAt',
+                            {
+                                defaultValue: NOW,
+                                allowNull: true,
+                                type: DATE,
+                            }, {
+                            transaction
+                        });
+                    }
+                }
+                
+                transaction.commit();
+            } catch (error) {
+                transaction.rollback();
+                throw new Error(error);
+                
+            }
+
+
+            
+            
+            
+
+        },
+        async down({ context: queryInterface }) {
+            
+            models.forEach(async (model) => {
+                await queryInterface.removeColumn(model.tableName, 'updatedAt')
+            });
+
+        }
+    },
+    {
+        name: "20221220151900-addObjectIdToActivities",
+        async up({ context: queryInterface }) {
+            const tableDescription = await queryInterface.describeTable("activities");
+            if (!tableDescription.object_id) {
+                await queryInterface.addColumn("activities", 'object_id',
+                    {
+
+                        type: STRING,
+                    });
+            }
+            
+
+        },
+        async down({ context: queryInterface }) {
+
+            await queryInterface.removeColumn("activities", 'object_id')
+
+        }
+    },
+    {
+        name: "20221221082200-addDeletedAtToAllTables",
+        async up({ context: queryInterface }) {
+
+            const transaction = await sequelize.transaction();
+            try {
+                for (let index = 0; index < models.length; index++) {
+                    const model = models[index];
+                    //check if the column does not exist first
+                    let tableDescription = await queryInterface.describeTable(model.tableName);
+                    if (!tableDescription.deletedAt) {
+                        await queryInterface.addColumn(model.tableName, 'deletedAt',
+                            {
+                                allowNull: true,
+                                type: DATE,
+                            }, {
+                            transaction
+                        });
+                    }
+                }
+                
+                transaction.commit();
+            } catch (error) {
+                transaction.rollback();
+                throw new Error(error);
+
+            }
+
+           
+           
+            
+
+        },
+        async down({ context: queryInterface }) {
+
+            models.forEach(async (model) => {
+                await queryInterface.removeColumn(model.tableName, 'deletedAt')
+            });
+
         }
     }
 

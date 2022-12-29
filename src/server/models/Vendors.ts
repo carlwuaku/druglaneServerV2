@@ -2,7 +2,9 @@ import { Table, Model, Column, CreatedAt, Index } from "sequelize-typescript";
 
 @Table({
    tableName: 'vendors',
-   modelName: 'Vendors'
+  modelName: 'Vendors',
+  paranoid: true,
+  
 })
 
 export class Vendors extends Model{

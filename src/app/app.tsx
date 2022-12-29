@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'react-bootstrap';
+import { Button, Table } from 'react-bootstrap';
 import  Container  from 'react-bootstrap/Container';
 import AddLogItem from './components/AddLogItem';
 import LogItem from './components/LogItem';
 import { Log } from './interfaces/Log.interface';
 import Alert from 'react-bootstrap/Alert';
-// import { ipcRenderer } from 'electron/renderer';
+import { ipcRenderer } from 'electron';
 const App = () => {
   const [logs, setLogs] = useState([]);
 
@@ -16,11 +16,13 @@ const App = () => {
   });
 
   useEffect(() => {
-    // window.electron.ipcRenderer.send("logs:load");
-    // window.electron.ipcRenderer.on("logs:get", (event:any, logs:any) => {
-    //   setLogs(JSON.parse(logs))
-    // })
-  })
+  
+    ipcRenderer.on("license_called", (event: any, data: any) => {
+      console.log("license called")
+    })
+  }, [])
+
+
 
   function addItem(item:Log) {
     // setLogs()
@@ -28,8 +30,9 @@ const App = () => {
       showAlert("enter all fields", 'danger');
       return;
     }
-    item._id = Math.floor(Math.random() * 90000) + 10000;
+    // item._id = Math.floor(Math.random() * 90000) + 10000;
     item.created = new Date().toString()
+    ipcRenderer.send("logs:add", item);
     setLogs([...logs, item])
     showAlert('Log added','success')
     // alert(item)
@@ -52,33 +55,19 @@ const App = () => {
   }, seconds);
   }
 
+  function validate() {
+    ipcRenderer.send("call_validation");
+  }
+
   function deleteItem(_id: number) {
-    setLogs(logs.filter((item) => item._id != _id));
+    ipcRenderer.send("logs:delete", _id)
+    // setLogs(logs.filter((item) => item._id != _id));
     showAlert("item deleted","success")
   }
 
   return (
     <Container>
-      <AddLogItem addItem={addItem}></AddLogItem>
-      {alert.show && <Alert variant={alert.variant}>{ alert.message}</Alert>}
-      {logs.length} items left
-      <Table>
-        <thead>
-          <tr>
-            <th>Priority</th>
-            <th>Log Text</th>
-            <th>User</th>
-            <th>Created</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          { logs.map( log => 
-            <LogItem deleteItem={deleteItem} key={log._id} log ={log} />
-          )
-          }
-        </tbody>
-      </Table>
+      <Button onClick={()=>{validate()}}>call</Button>
     </Container>
   );
 }

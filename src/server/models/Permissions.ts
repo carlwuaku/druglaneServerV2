@@ -1,11 +1,12 @@
 import { Table, Model, Column, DataType,  CreatedAt, PrimaryKey, ForeignKey,
    Index, HasMany, BelongsToMany } from "sequelize-typescript";
 import { RolePermissions } from "./RolePermissions";
-import { Roles } from "./roles";
+import { Roles } from "./Roles";
 
 @Table({
    tableName: 'permissions',
-   modelName: 'Permissions'
+  modelName: 'Permissions',
+  paranoid: true,
 })
 
 

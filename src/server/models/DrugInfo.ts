@@ -2,7 +2,8 @@ import { Table, Model, Column,   CreatedAt } from "sequelize-typescript";
 
 @Table({
    tableName: 'drug_info',
-   modelName: 'DrugInfo'
+  modelName: 'DrugInfo',
+  paranoid: true,
 })
 
 export class DrugInfo extends Model{
@@ -40,6 +41,8 @@ export class DrugInfo extends Model{
     @Column
     overdosage: string;
 
-    @CreatedAt
-    created_on: string
+  @CreatedAt
+  created_on: string
+
+  updatedAt: false
 }

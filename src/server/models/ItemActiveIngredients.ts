@@ -1,9 +1,11 @@
 import { Table, Model, Column, DataType, ForeignKey } from "sequelize-typescript";
-import { Products } from "./products";
+import { Products } from "./Products";
 
 @Table({
    tableName: 'item_active_ingredients',
-   modelName: 'ItemActiveIngredients'
+  modelName: 'ItemActiveIngredients',
+  paranoid: true,
+   
 })
 export class ItemActiveIngredients extends Model{
   @ForeignKey(() => Products)
