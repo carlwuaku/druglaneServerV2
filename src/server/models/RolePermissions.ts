@@ -6,6 +6,7 @@ import { Roles } from "./Roles";
    tableName: 'role_permissions',
   modelName: 'RolePermissions',
   paranoid: true,
+  
 })
 export class RolePermissions extends Model{
   @ForeignKey(() => Roles)

@@ -1,4 +1,4 @@
-import { Column, CreatedAt, DataType, Index, Model, Table } from "sequelize-typescript";
+import { Column, CreatedAt, DataType, Index, Model, PrimaryKey, Table } from "sequelize-typescript";
 
 @Table({
   tableName: "stock_values",
@@ -7,9 +7,20 @@ import { Column, CreatedAt, DataType, Index, Model, Table } from "sequelize-type
 })
 
 export class StockValues extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATE,
+    unique: true,
+    validate: {
+      isDate: true
+    }
   })
   date: string;
 

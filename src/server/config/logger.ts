@@ -1,4 +1,4 @@
-import { constants } from '../constants';
+import { constants } from '../../utils/constants';
 import * as winston from 'winston';
 import path from 'path';
 import { getToday } from '../helpers/dateHelper';

@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt } from "sequelize-typescript";
+import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, PrimaryKey } from "sequelize-typescript";
 
 @Table({
    tableName: 'products',
@@ -7,6 +7,13 @@ import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt } from "se
 })
 
 export class Products extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column({
     allowNull: false,
@@ -18,7 +25,10 @@ export class Products extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   price: number;
 
@@ -43,7 +53,10 @@ export class Products extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   max_stock: number;
 
@@ -51,14 +64,20 @@ export class Products extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   min_stock: number;
 
   @Index
   @Column({
     type: DataType.DATE,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      isDate: true
+    }
   })
   expiry: string;
 
@@ -69,7 +88,10 @@ export class Products extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   current_stock: number;
 
@@ -83,7 +105,10 @@ export class Products extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   cost_price: number;
 
@@ -93,8 +118,9 @@ export class Products extends Model{
   @Index
   @Column
   description: string;
+
   @Column({
-    type: DataType.DOUBLE,
+    type: DataType.INTEGER,
     allowNull: false,
     defaultValue: 1
   })
@@ -104,7 +130,7 @@ export class Products extends Model{
   shelf: string
 
   @Column({
-    type: DataType.INTEGER
+    type: DataType.STRING
   })
   preferred_vendor:number;
 
@@ -132,7 +158,11 @@ export class Products extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 1.33
+    defaultValue: 1.33,
+    validate: {
+      isNumeric: true,
+      isFloat: true
+    }
   })
   markup:number;
 
@@ -140,6 +170,15 @@ export class Products extends Model{
   active_ingredients:string;
 
   @Column
-  drug_info:string;
+  drug_info: string;
+  
+
+  stock_value?: number
+  selling_value?: number;
+  cost_value?: number
+  
+
 }
+
+
 

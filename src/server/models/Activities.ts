@@ -18,6 +18,7 @@ export class Activities extends Model{
     @PrimaryKey
     @Column({
         type: DataType.BIGINT,
+        autoIncrement:true
     })
     activity_id:string;
 

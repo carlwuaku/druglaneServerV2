@@ -1,4 +1,4 @@
-import { Column, CreatedAt, DataType, ForeignKey, Index, Model, Table } from "sequelize-typescript";
+import { Column, CreatedAt, DataType, ForeignKey, Index, Model, PrimaryKey, Table } from "sequelize-typescript";
 import { Users } from "./Users";
 
 
@@ -9,15 +9,27 @@ import { Users } from "./Users";
 })
 
 export class StockAdjustmentSessions extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column({
     type: DataType.DATE,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      isDate: true
+    }
   })
   date:string;
 
   @Index
-  @Column
+  @Column({
+    unique: true
+  })
   code:string;
 
   @CreatedAt

@@ -1,4 +1,4 @@
-import { Table, Model, Column, CreatedAt, Index } from "sequelize-typescript";
+import { Table, Model, Column, CreatedAt, Index, DataType, PrimaryKey } from "sequelize-typescript";
 
 @Table({
    tableName: 'vendors',
@@ -8,6 +8,13 @@ import { Table, Model, Column, CreatedAt, Index } from "sequelize-typescript";
 })
 
 export class Vendors extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column
   name: string;

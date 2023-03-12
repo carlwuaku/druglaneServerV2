@@ -1,7 +1,7 @@
 {
   "name": "druglaneserver",
   "version": "2.0.0",
-  "description": "Druglane Pharmacy Management Software Version 1",
+  "description": "Druglane Pharmacy Management Software Version 2",
   "main": "dist/main.js",
   "scripts": {
     "pack": "electron-builder --dir",
@@ -33,6 +33,10 @@
   },
   "homepage": "https://github.com/carlwuaku/druglaneposserver#readme",
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/material": "^5.11.6",
     "@types/bootstrap": "^5.2.6",
     "@types/jquery": "^3.5.14",
     "@types/react-bootstrap": "^0.32.32",
@@ -50,11 +54,14 @@
     "image-to-base64": "^2.2.0",
     "ip": "^1.1.5",
     "jquery": "^3.6.1",
+    "mariadb": "^3.1.0",
     "md5": "^2.2.1",
     "mongoose": "^6.8.0",
     "node-fetch": "^2.6.1",
     "node-os-utils": "^1.2.2",
     "node-schedule": "^1.3.2",
+    "primeicons": "^6.0.1",
+    "primereact": "^9.0.0-beta.1",
     "react-bootstrap": "^2.6.0",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
@@ -94,6 +101,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "^3.0.2",
+    "sass": "^1.57.1",
+    "sass-loader": "^13.2.0",
     "sequelize-cli": "^6.5.2",
     "style-loader": "^3.3.1",
     "supertest": "^6.3.3",
@@ -111,7 +120,7 @@
     "mac": {
       "category": "your.app.category.type"
     },
-    "productName": "Druglane Pharmacy Management System 1.6",
+    "productName": "Druglane Pharmacy Management System 2",
     "copyright": "Copyright © 2021 ${author}",
     "publish": [
       {

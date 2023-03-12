@@ -19,10 +19,19 @@ module.exports = {
             exclude: [
                 path.resolve(__dirname, "src/server/"),
                 path.resolve(__dirname, "src/preload/"),
-                path.resolve(__dirname, "src/build/")
+                path.resolve(__dirname, "src/build/"),
+                path.resolve(__dirname, "src/style.css")
             ],
             use: [{ loader: 'ts-loader' }],
-        }]
+        },
+            {
+                test: /\.s[ac]ss$/i,
+                use: [
+                    'style-loader',
+                    'css-loader',
+                    'sass-loader',
+                ],
+            },]
     },
     output: {
         path: __dirname + '/dist',

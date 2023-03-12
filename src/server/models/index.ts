@@ -6,10 +6,8 @@ import { DailyRecords } from '../models/DailyRecords';
 import { DbBackups } from '../models/DbBackups';
 import { DbSync } from '../models/DbSync';
 import { DiagnosticTests } from '../models/DiagnosticTests';
-import { DrugInfo } from '../models/DrugInfo';
 import { IncomingPayments } from '../models/IncomingPayments';
 import { InsuranceProviders } from '../models/InsuranceProviders';
-import { ItemActiveIngredients } from '../models/ItemActiveIngredients';
 import { OnlineBackups } from '../models/OnlineBackups';
 import { OutgoingPayments } from '../models/OutgoingPayments';
 import { Permissions } from '../models/Permissions';
@@ -35,7 +33,7 @@ import { Users } from '../models/Users';
 import { UserSessions } from '../models/UserSessions';
 import { Vendors } from '../models/Vendors';
 export default [Activities, Branches, CustomerDiagnostics, Customers, DailyRecords, DbBackups, DbSync,
-    DiagnosticTests, DrugInfo, IncomingPayments, InsuranceProviders, ItemActiveIngredients, OnlineBackups, OutgoingPayments,
+    DiagnosticTests,  IncomingPayments, InsuranceProviders,  OnlineBackups, OutgoingPayments,
     Permissions, ProductBatches, Products, PurchaseDetails, Purchases, ReceivedTransferDetails, ReceivedTransfers, Refills,
     RolePermissions, Roles, Sales, SalesDetails, Settings, StockAdjustment, StockAdjustmentPending, StockAdjustmentSessions,
     StockValues, TransferDetails, Transfers, Users, UserSessions, Vendors]

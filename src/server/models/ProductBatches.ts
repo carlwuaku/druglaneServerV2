@@ -1,14 +1,21 @@
-import { Table, Model, Column, DataType, ForeignKey, CreatedAt, Index } from "sequelize-typescript";
+import { Table, Model, Column, DataType, ForeignKey, CreatedAt, Index, PrimaryKey } from "sequelize-typescript";
 import { Products } from "./Products";
 import { Users } from "./Users";
 
 
 @Table({
-  tableName: 'outgoing_payments',
+  tableName: 'ProductBatches',
   modelName: 'ProductBatches',
   paranoid: true,
 })
 export class ProductBatches extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Column
   batch_number: string;
 

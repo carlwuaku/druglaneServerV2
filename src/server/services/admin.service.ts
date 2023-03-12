@@ -2,7 +2,7 @@
  * This contains the logic for all the functionalities in the staffcontroller. also used in the 
  * firebase functions. all functions must be async, and throw errors if necessary
  */
-import { constants } from '../constants'
+import { constants } from '../../utils/constants'
 import path from 'path';
 import { Users } from '../models/Users';
 import { Roles } from '../models/Roles';
@@ -12,8 +12,11 @@ import { Branches } from '../models/Branches';
 import { UserSessions } from '../models/UserSessions';
 import { logger } from '../config/logger'
 import { InsuranceProviders } from '../models/InsuranceProviders';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import bcrypt from 'bcryptjs'
+import { Permissions } from '../models/Permissions';
+import { RolePermissions } from '../models/RolePermissions';
+import {errorMessages, infoMessages, moduleNames} from '../helpers/stringHelpers'
 // const path = require('path')
 
 // const ActivitiesHelper = require('../helpers/activitiesHelper');
@@ -44,13 +47,13 @@ export async function login_function(data: { username: any; password: any; }): P
             include: [Roles]
         });
         let password_valid: boolean = false;
-        if (user != null) {
+        if (user) {
             //username was found. compare the password
             password_valid = bcrypt.compareSync(password, user.password_hash);
         }
 
-        if (user == null || !password_valid) {
-            throw new Error("User not found")
+        if (!user || !password_valid) {
+            throw new Error(errorMessages.USER_NOT_FOUND)
 
         }
         //user is valid
@@ -68,8 +71,8 @@ export async function login_function(data: { username: any; password: any; }): P
 
 
         user.type = "staff";
-        await Activities.create({
-            activity: 'logged in',
+         Activities.create({
+            activity: ` ${user.display_name} ${infoMessages.LOGGED_IN}`,
             user_id: user.id,
             module: 'System'
         })
@@ -78,7 +81,7 @@ export async function login_function(data: { username: any; password: any; }): P
     } catch (error) {
         //if the error is "user not found", rethrow it. else if it's some other error, log it
         if (error instanceof Error) {
-            logger.error(error)
+            logger.error({message:error})
             throw new Error(error.message)
         }
         else {
@@ -101,8 +104,8 @@ export async function get_branches_function(): Promise<Branches[]> {
         return query;
 
     } catch (error) {
-        logger.error(error)
-        throw new Error("Error getting branches")
+        logger.error({message:error})
+        throw new Error(errorMessages.ERROR_GETTING_BRANCHES)
     }
 }
 
@@ -132,9 +135,24 @@ export async function get_logo_function(): Promise<string> {
         return image
 
     } catch (error) {
-        logger.error(error)
-        throw new Error("Error getting logo")
+        logger.error({message:error})
+        throw new Error(errorMessages.ERROR_GETTING_LOGO)
     }
+}
+
+export async function getSettings(_data?: { settings: string[] }): Promise<Settings[]> {
+    try {
+        let data = await Settings.findAll(
+            {
+                where: _data && _data.settings ? { name: { [Op.in]: _data.settings } } : {} 
+            }
+        );
+        return data;
+    } catch (error) {
+        logger.error({ message: error})
+        throw new Error(errorMessages.ERROR_GETTING_SETTINGS)
+    }
+   
 }
 
 
@@ -143,17 +161,22 @@ export async function get_logo_function(): Promise<string> {
  * @param {Object} _data object containing data
  * @returns {Object}
  */
-export async function save_branch_function(_data: { name: any; phone: any; }): Promise<Branches> {
+export async function save_branch_function(_data: { [key: string]: any}): Promise<Branches> {
     try {
         let data = {
             name: `'${_data.name}'`,
             phone: `'${_data.phone}'`
         }
         let branch = await Branches.create(data)
+         Activities.create({
+            activity: infoMessages.CREATED_NEW_BRANCH,
+            user_id: _data.user_id,
+            module: moduleNames.SYSTEM
+        })
         return branch;
     } catch (error) {
-        logger.error(error)
-        throw new Error("Error creating branch")
+        logger.error({message:error})
+        throw new Error(errorMessages.ERROR_CREATING_BRANCH)
     }
 }
 
@@ -166,8 +189,8 @@ export async function get_insurers_function(): Promise<InsuranceProviders[]> {
         let insurers = await InsuranceProviders.findAll();
         return insurers
     } catch (error) {
-        logger.error(error)
-        throw new Error("Error getting insurers")
+        logger.error({message:error})
+        throw new Error(errorMessages.ERROR_GETTING_INSURERS)
 
     }
 }
@@ -178,13 +201,18 @@ export async function get_insurers_function(): Promise<InsuranceProviders[]> {
  * add a new insurance provider
  * @param _data an object containing the name of the insurance provider
  */
-export async function add_insurer_function(_data: { name: any; }): Promise<InsuranceProviders> {
+export async function add_insurer_function(_data: { [key: string]: any}): Promise<InsuranceProviders> {
     try {
         let data = { name: `'${_data.name}'` }
         let insuranceProvider = await InsuranceProviders.create(data);
+         Activities.create({
+            activity: 'created a new branch',
+            user_id: _data.user_id,
+            module: 'System'
+        })
         return insuranceProvider
     } catch (error) {
-        logger.error(error)
+        logger.error({message:error})
         throw new Error("Error creating insurer")
     }
 };
@@ -194,7 +222,7 @@ export async function add_insurer_function(_data: { name: any; }): Promise<Insur
  * @param _data {id:string}
  * @returns {Promise<ReturnData>} 
  */
-export async function delete_insurer_function(_data: { id: string; }): Promise<boolean> {
+export async function delete_insurer_function(_data: { [key: string]: any}): Promise<boolean> {
     //split the id or name into an array
     const ids = _data.id.split(",");
     try {
@@ -213,7 +241,7 @@ export async function delete_insurer_function(_data: { id: string; }): Promise<b
         })
         return true
     } catch (error) {
-        logger.error(error)
+        logger.error({message:error})
         throw new Error("Error deleting insurer")
     }
 };
@@ -267,7 +295,7 @@ export async function get_all_activities_function(_data: {
         //console.log(objects)
         return objects
     } catch (error) {
-        logger.error(error)
+        logger.error({message:error})
         throw new Error("Error getting activities")
     }
 
@@ -279,10 +307,10 @@ export async function get_all_activities_function(_data: {
  * @param _data 
  * @returns a list of activities
  */
-export async function get_activities_function(_data: { r: any; offset: any; limit: any; }): Promise<Activities[]> {
+export async function get_activities_function(_data: { [key: string]: any}): Promise<Activities[]> {
     let reg = _data.r;//this would be the id or unique identifier of an object
-    let offset = _data.offset == undefined ? 0 : _data.offset;
-    let limit = _data.limit == undefined ? null : _data.limit;
+    let offset = _data.offset == undefined ? 0 : parseInt(_data.offset);
+    let limit = _data.limit == undefined ? null : parseInt(_data.limit);
     try {
         let objects = await Activities.findAll({
             where: {
@@ -299,7 +327,7 @@ export async function get_activities_function(_data: { r: any; offset: any; limi
 
         return objects
     } catch (error) {
-        logger.error(error)
+        logger.error({message:error})
         throw new Error("Error getting Activities")
     }
 
@@ -310,10 +338,9 @@ export async function get_activities_function(_data: { r: any; offset: any; limi
  * @param _data 
  * @returns {Promise<Activities[]>} a list of activities
  */
-export async function get_user_activities_function(_data:
-    { id: any; offset: number; limit: number; start_date?: string; end_date?: string; }): Promise<Activities[]> {
-    let offset = _data.offset == undefined ? 0 : _data.offset;
-    let limit = _data.limit == undefined ? 100 : _data.limit;
+export async function get_user_activities_function(_data: { [key: string]: any}): Promise<Activities[]> {
+    let offset = _data.offset == undefined ? 0 :parseInt(_data.offset);
+    let limit = _data.limit == undefined ? 100 : parseInt(_data.limit);
 
     let start = _data.start_date == undefined ? null : _data.start_date;
     let end = _data.end_date == undefined ? null : _data.end_date;
@@ -324,10 +351,7 @@ export async function get_user_activities_function(_data:
         };
         if (start != null) {
             where["created_on"] = {
-                [Op.and]: {
-                    [Op.gte]: `${start} 00:00:00`,
-                    [Op.lte]: `${end} 23:59:59`
-                }
+                [Op.and]: [`${start} 00:00:00`, `${end} 23:59:59`]
             };
         }
         // let where = start == null ? `user_id = ${reg}` : ` user_id = ${reg} and created_on >= '${start} 00:00:00' and created_on <= '${end} 23:59:59'`;
@@ -349,7 +373,7 @@ export async function get_user_activities_function(_data:
 
         return objects
     } catch (error) {
-        logger.error(error)
+        logger.error({ message: error })
         throw new Error("Error getting Activities")
     }
 
@@ -360,13 +384,14 @@ export async function get_user_activities_function(_data:
  * @param _data 
  * @returns {Promise<Users>} a list of users
  */
-export async function get_users_function(_data: { limit: number, offset: number }): Promise<Users[]> {
+export async function get_users_function(_data: { [key: string]: any}): Promise<Users[]> {
     try {
 
-
+        let offset = _data.offset == undefined ? 0 : parseInt(_data.offset);
+        let limit = _data.limit == undefined ? 100 : parseInt(_data.limit);
         let objects = await Users.findAll({
-            limit: _data.limit,
-            offset: _data.offset,
+            limit: limit,
+            offset: offset,
             include: {
                 model: Roles
             }
@@ -374,9 +399,9 @@ export async function get_users_function(_data: { limit: number, offset: number 
 
         return objects
     } catch (error) {
-        console.log(error)
+        // console.log(error)
 
-        logger.error(error)
+        logger.error({ message: error })
         throw new Error("Error getting users")
     }
 };
@@ -407,13 +432,17 @@ export async function save_user_function(_data: { [key: string]: any }): Promise
             delete user.password_hash;
         }
         await user.save();
-
+        Activities.create({
+            activity: `modified a new user: ${user.display_name}`,
+            user_id: _data.user_id,
+            module: 'System'
+        })
 
 
 
         return user
     } catch (error) {
-        logger.error(error)
+        logger.error({ message: error })
         throw new Error("Error adding a user")
     }
 
@@ -429,7 +458,7 @@ export async function save_user_function(_data: { [key: string]: any }): Promise
  * @param _data 
  * @returns {boolean} true if the user was actually deleted
  */
-export async function delete_user_function(_data: { id: any; userid: any; }): Promise<boolean> {
+export async function delete_user_function(_data: { [key: string]: any}): Promise<boolean> {
 
     let id = _data.id;
 
@@ -441,16 +470,16 @@ export async function delete_user_function(_data: { id: any; userid: any; }): Pr
             }
         })
         await user.destroy();
-        await Activities.create({
-            activity: `deleted user ${user.toJSON()}`,
-            user_id: `${_data.userid}`,
+        Activities.create({
+            activity: `deleted user ${JSON.stringify(user)}`,
+            user_id: `${_data.user_id}`,
             object_id: user.id,
             module: 'users'
         })
         return true
     } catch (error) {
-        logger.error(error)
-        throw new Error("Error creating user")
+        logger.error({ message: error })
+        throw new Error(error)
     }
 
 };
@@ -460,7 +489,7 @@ export async function delete_user_function(_data: { id: any; userid: any; }): Pr
  * @param _data 
  * @returns {Promise<Users>} a user object 
  */
-export async function get_user_function(_data: { id: any; }): Promise<Users> {
+export async function get_user_function(_data: { [key: string]: any}): Promise<Users> {
     try {
         let user = await Users.findOne({
             where: {
@@ -472,12 +501,589 @@ export async function get_user_function(_data: { id: any; }): Promise<Users> {
 
         return user
     } catch (error) {
-        console.log(error)
-        logger.error(error)
-        throw new Error("Error getting user")
+        logger.error({ message: error })
+        throw new Error(error)
     }
 
 };
+
+
+export async function activate_user_function(_data: { [key: string]: any}): Promise<boolean> {
+
+
+    //console.log(id)
+    try {
+        await Users.update({
+            active: _data.active
+        }, {
+            where: {
+                id: _data.id
+            }
+        })
+
+        Activities.create({
+            activity: `activated a user: ${_data.display_name}`,
+            user_id: _data.user_id,
+            module: 'System'
+        })
+
+
+
+        return true
+    } catch (error) {
+        logger.error({ message: error })
+        throw new Error(`Error activating user: error: ${error}`)
+    }
+
+};
+
+
+export async function update_user_function(_data: {[key:string]:any}): Promise<boolean> {
+
+
+    //console.log(id)
+    try {
+        let user = await Users.findByPk(_data.id);
+        user.set(_data)
+        await user.save();
+
+        Activities.create({
+            activity: `updated a user: ${user.display_name}: ${JSON.stringify(_data)} `,
+            user_id: _data.user_id,
+            module: 'System'
+        })
+
+
+
+        return true
+    } catch (error) {
+        logger.error({ message: error })
+        throw new Error(`Error updating user: error: ${error}`)
+    }
+
+};
+
+
+
+export async function add_role_function (_data: { [key: string]: any }):Promise<Roles> {
+    
+    
+    try {
+        let role = await Roles.create(_data);
+        
+        Activities.create({
+            activity: `created a new role ${_data.role_name}`,
+            user_id: _data.user_id,
+            module: 'System'
+        })
+        return role;
+    } catch (error) {
+        logger.error({ message: error })
+        throw new Error(`Error getting user: ${error}`)
+
+    }
+
+
+
+
+};
+
+/**
+ * get all roles from the database
+ * @param _data the limit and offset
+ * @returns a list of roles 
+ */
+export async function get_roles_function(_data: { [key: string]: any}):Promise<Roles[]>  {
+    try {
+        let offset = _data.offset == undefined ? 0 : parseInt(_data.offset);
+        let limit = _data.limit == undefined ? 100 : parseInt(_data.limit);
+        let data = await Roles.findAll({
+            limit: limit,
+            offset: offset
+        })
+        
+        return data;
+    } catch (error) {
+        logger.error({ message: error })
+        throw new Error(`Error getting roles: ${error}`)
+    }
+
+};
+
+
+
+/**
+ * get list of permissions assigned to a role
+ * @param _data {id: the id of the role}
+ * @returns the list of permissions
+ */
+export async function get_role_permissions_function(_data: { [key: string]: any}): Promise<Permissions[]> {
+    try {
+        let data = await Permissions.findAll({
+            where: {
+                permission_id: {
+                    [Op.in]: Sequelize.literal(`(select permission_id from ${RolePermissions.tableName} 
+                    where role_id = ${_data.id})`)
+                }
+            }
+        })
+       
+
+        return data
+    } catch (error) {
+        logger.error({ message: error });
+        throw new Error(`Error getting role permissions for role_id: ${_data.id}: ${error}`)
+    }
+
+};
+//tested
+
+/**
+ * get permissions not available to a role
+ * @param _data 
+ * @returns a list of permissions
+ */
+export async function get_role_excluded_permissions_function(_data: { [key: string]: any}): Promise<Permissions[]>  {
+    try {
+        let data = await Permissions.findAll({
+            where: {
+                permission_id: {
+                    [Op.notIn]: Sequelize.literal(`(select permission_id from ${RolePermissions.tableName} 
+                    where role_id = ${_data.id})`)
+                }
+            },
+            logging: console.log
+        })
+       
+        return data
+    } catch (error) {
+        logger.error({ message: error })
+        throw new Error(`Unable to get excluded permissions for role id: ${_data.id}: ${error}`)
+    }
+
+};
+//tested
+/**
+ * add a new permission to the role
+ * @param _data 
+ * @returns the role_permission object
+ */
+export async function add_role_permission_function (_data: {[key:string]:any}): Promise<RolePermissions>  {
+    
+    try {
+        let role_permission = await RolePermissions.create(_data);
+        Activities.create({
+            activity: `added a permission ${_data.permission_name} to role: ${_data.role_name}`,
+            user_id: _data.user_id,
+            module: 'System'
+        })
+        return role_permission
+    } catch (error) {
+        logger.error({message:error})
+        throw new Error(`Unable to add a permission ${_data.permission_name} 
+        to role: ${_data.role_name}: : ${error}`)
+    }
+
+};
+
+/**
+ * delete a permission from a role
+ * @param _data 
+ * @returns true if successful
+ */
+export async function delete_role_permission_function(_data: { [key: string]: any}):Promise<boolean>  {
+    
+    try {
+        
+        await RolePermissions.destroy({
+            where: {
+                role_id: _data.role_id,
+                permission_id: _data.permission_id
+            }
+        })
+        Activities.create({
+            activity: `removed a permission ${_data.permission_name} from role ${_data.role_name}`,
+            user_id: `${_data.user_id}`,
+            module: 'users'
+        })
+        
+        return true
+    } catch (error) {
+        logger.error({message: error})
+        throw new Error(`Error removing permission from role: error: ${error}`)
+    }
+
+};
+
+
+
+
+export async function delete_role_function(_data: { [key: string]: any}): Promise<boolean>  {
+   
+    try {
+        
+        await Roles.destroy({
+            where: { role_id: _data.id }
+        });
+        Activities.create({
+            activity: `deleted a role ${_data.role_name} `,
+            user_id: `${_data.user_id}`,
+            module: 'users'
+        })
+
+        return true
+
+    } catch (error) {
+       logger.error({message:error})
+        throw new Error("Error deleting a role. Error: "+error)
+
+    }
+};//tested
+
+export async function get_role_function(_data: { [key: string]: any}): Promise<Roles>  {
+   
+    try {
+        let object = await Roles.findByPk(_data.id, {
+            include: [RolePermissions]
+        })
+        return object
+    } catch (error) {
+        logger.error({message: error})
+        throw new Error("Error getting a role. Error: " + error)
+    }
+
+};
+
+
+export async function change_staff_password_function(_data: { [key: string]: any}) {
+    
+    
+    let old_password = _data.old_password
+    try {
+
+        let user = await Users.findOne({
+            where: {
+                username: _data.username,
+            }
+        });
+        let password_valid: boolean = false;
+        if (user != null) {
+            //username was found. compare the password
+            password_valid = bcrypt.compareSync(_data.old_password, user.password_hash);
+        }
+
+        if (user == null || !password_valid) {
+            throw new Error(errorMessages.WRONG_COMBINATION)
+
+        }
+        //user is valid. update the password
+        let hash = bcrypt.hashSync(_data.password, 10);
+        // console.log(hash)
+        user.password_hash = `${hash}`;
+        await user.save();
+
+        
+        Activities.create({
+            activity: ` ${user.display_name} changed their password`,
+            user_id: user.id,
+            module: 'System'
+        })
+
+        return user;
+
+        
+
+    } catch (error) {
+        logger.error({message: error})
+
+        throw new Error(error)
+    }
+
+
+
+};
+
+
+
+// ////////////////INCOMING PAYMENTS//////////////////////
+// exports.save_incoming_payment_function = async (_data) => {
+//     try {
+//         let helperClass = require('../helpers/incomingPaymentHelper')
+//         let h = new helperClass();
+
+//         let data = h.prep_data(_data);
+//         data.created_by = _data.user_id;
+
+//         try {
+//             let customer_phone = _data.customer_phone;
+//             //get the customer who matches the name
+//             let cust_details = await customerHelper.getItem(` phone = "${customer_phone}" `, customerHelper.table_name);
+//             if (cust_details == null) {
+//                 //save the person
+//                 data.payer =
+//                     await customerHelper.insert({
+//                         name: `"${_data.customer_name}"`,
+//                         phone: `"${_data.customer_phone}"`
+//                     }, customerHelper.table_name)
+//             }
+//             // sales_data.customer = `"${_data.customer_name} - ${_data.customer_phone}"`;
+
+//         } catch (error) {
+//             log.error(error)
+//         }
+
+
+//         // //console.log(data)
+//         await h.insert(data, h.table_name);
+
+//         return { status: '1', data: null }
+//     } catch (error) {
+//         await helper.closeConnection();
+//         if (process.env.NODE_ENV != "production") console.log(error)
+
+//         log.error(error)
+//         throw new Error(error)
+//     }
+
+
+
+
+
+// };
+
+// exports.find_incoming_payments_between_dates_function = async (_data) => {
+//     try {
+//         let helperClass = require('../helpers/incomingPaymentHelper')
+//         let h = new helperClass();
+
+//         let start = _data.start_date == undefined ? h.getToday() : _data.start_date;
+//         let end = _data.end_date == undefined ? h.getToday() : _data.end_date;
+//         let code = _data.code;
+//         let type = _data.type
+
+//         let objects = null;
+//         if (code != undefined) {
+//             objects = await h.search(code)
+//         }
+//         else if (type != undefined) {
+//             objects = await h.getMany(` date >= '${start}' and date <= '${end}' and type ='${type}'`, h.table_name);
+//         }
+//         else {
+//             objects = await h.getMany(` date >= '${start}' and date <= '${end}' `, h.table_name);
+
+//         }
+
+//         for (var i = 0; i < objects.length; i++) {
+//             try {
+//                 let customer = await customerHelper.getItem(`id = '${objects[i].payer}'`, customerHelper.table_name);
+//                 objects[i].customer_name = customer.name;
+//                 objects[i].phone = customer.phone;
+//             } catch (error) {
+//                 log.error(error)
+//                 objects[i].customer_name = "N/A";
+//                 objects[i].phone = "N/A";
+//             }
+
+//         }
+
+
+
+
+//         return {
+//             status: '1',
+//             data: objects
+//         }
+//     } catch (error) {
+//         await helper.closeConnection();
+//         // if(process.env.NODE_ENV != "production") console.log(error)
+
+//         log.error(error)
+//         throw new Error(error)
+//     }
+
+// };
+
+// exports.delete_incoming_payment_function = async (_data) => {
+//     let helperClass = require('../helpers/incomingPaymentHelper')
+//     let h = new helperClass();
+//     try {
+//         let codes = _data.id.split(",");//comma-separated
+//         let code_quotes = []
+//         for (var i = 0; i < codes.length; i++) {
+//             code_quotes.push(`${codes[i]}`)
+//         }
+
+
+//         await h.delete(` id in (${code_quotes.join(",")}) `, h.table_name);
+//         await activitiesHelper.log(_data.user_id, `"deleted credit payment receipt: ${code_quotes.join(",")}  "`, `'Accounts'`)
+
+
+
+//         return {
+//             status: '1'
+//         }
+//     } catch (error) {
+//         await helper.closeConnection();
+//         log.error(error)
+//         throw new Error(error)
+//     }
+
+// };
+
+
+// exports.get_customer_payments_function = async (_data) => {
+
+//     let helperClass = require('../helpers/incomingPaymentHelper')
+//     let h = new helperClass();
+//     try {
+//         let id = _data.customer;
+//         let objects = await h.getMany(` payer = ${id}  `, h.table_name);
+
+
+//         // objects.map(obj => {
+//         //     obj.stock = obj.current_stock
+//         // })
+//         return { status: '1', data: objects }
+//     } catch (error) {
+//         await helper.closeConnection();
+//         log.error(error)
+//         throw new Error(error)
+//     }
+
+// };
+// ///////////////////END INCOMING PAYMENTS///////////////
+
+
+// exports.reset_user_password = async (_data) => {
+//     let Helper = require('../helpers/token');
+//     let h = new Helper();
+//     try {
+
+
+//         //if retry, do not regenerate the token.
+//         if (_data.retry == "1") {
+//             message = _data.message;
+
+//             let data = { error: true, retry: true, message: message }
+//             //render the page
+//             res.render("resetPassword", data)
+//             return false;
+//         }
+//         //check the username  or email
+//         let user = _data.user;
+//         let AdminHelper = require("../helpers/adminHelper")
+//         let adminHelper = new AdminHelper();
+//         let user_details = await adminHelper.getItem(`lower(email) = lower('${user}') or lower(username) = lower('${user}')`, adminHelper.table_name);
+//         //if found, generate the token and send the mail
+//         if (user_details != null) {
+
+
+//             //create a token and send it to the url
+//             const crypto = require("crypto");
+
+//             const token = crypto.randomBytes(5).toString("hex");
+//             //insert it into the token table
+//             //clear others
+//             await h.delete(`name = 'reset_user_password_${user_details.email}'`, h.table_name)
+//             await h.insert({ name: `'reset_user_password_${user_details.email}'`, token: `'${token}'` }, h.table_name)
+
+//             const axios = require('axios');
+
+
+//             let email = user_details.email;
+
+//             message = `You have requested to reset your Druglane password. Please use this code as token in the reset page: ${token}.`;
+//             // console.log(message)
+//             const FormData = require('form-data');
+
+//             const form = new FormData();
+//             form.append('mails', email);
+//             form.append('message', message);
+//             form.append('subject', "Reset Druglane Password");
+
+//             axios.post(constants.server_url + `/api_admin/sendBulkMail`, form, { headers: form.getHeaders() })
+
+
+//                 .then(function (response) {
+//                     // console.log(response.data);
+//                     let data = {
+//                         error: false, retry: false, message: `Email sent to your email. Please 
+//             check your inbox to retrieve the token`}
+//                     //render the page
+//                     return data;
+//                 })
+//                 .catch(function (error) {
+//                     let data = {
+//                         error: true, retry: false, message: `Unable to communicate with cloud server. Please 
+//             check your internet connection and try again`}
+//                     return data;
+//                 });
+//         }
+//         else {
+//             let data = {
+//                 error: true, retry: false, message: `No username or email found. Please check and try 
+//                 again.`}
+//             return data;
+//         }
+
+//     } catch (error) {
+//         // console.log(error);
+//         let data = {
+//             error: true, retry: false, message: `Server error. Please try again`
+//         }
+//         return data;
+//     }
+
+// };
+
+
+// exports.do_reset_user_password = async (_data) => {
+//     try {
+//         let Helper = require('../helpers/token');
+//         let h = new Helper();
+//         const activityHelper = require('../helpers/activitiesHelper')
+//         const ah = new activityHelper();
+
+//         let token = _data.token;
+//         let password = _data.password;
+//         let email = _data.username;
+
+//         var bcrypt = require('bcryptjs');
+
+//         let AdminHelper = require("../helpers/adminHelper")
+//         let adminHelper = new AdminHelper();
+//         let user_details = await adminHelper.getItem(`lower(email) = lower('${email}') or lower(username) = lower('${email}')`, adminHelper.table_name);
+
+//         if (user_details == null) {
+//             return { status: "-1", message: "Username or email not found" }
+//         }
+//         //get the setting admin_password
+//         var old_token = await h.getField("token", h.table_name, `name = 'reset_user_password_${user_details.email}'`);
+//         // console.log(old_token.token, token)
+//         if (token == old_token.token) {
+//             var hash = bcrypt.hashSync(password, 10);
+
+//             //set the new password
+//             await adminHelper.updateField("password_hash", `'${hash}'`, `id = ${user_details.id}`, adminHelper.table_name)
+//             return { status: "1", message: "Password reset successfully" }
+
+//         } else {
+//             // Passwords don't match
+//             return { status: "-1", message: "Wrong token entered. Try again" }
+
+//         }
+
+//     } catch (error) {
+//         log.error(error)
+//         // console.log(error)
+//         throw new Error(error)
+
+//     }
+
+
+
+
+// };
 
 
 

@@ -1,5 +1,5 @@
 import { logger } from './logger';
-import { constants } from '../constants'
+import { constants } from '../../utils/constants'
 
 export const config: {[key:string]: any}= {
     "development": {

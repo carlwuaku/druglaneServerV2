@@ -1,4 +1,4 @@
-import { Column, CreatedAt, DataType, ForeignKey, Index, Model, Table } from "sequelize-typescript";
+import { Column, CreatedAt, DataType, ForeignKey, Index, Model, PrimaryKey, Table } from "sequelize-typescript";
 import { Products } from "./Products";
 import { Users } from "./Users";
 
@@ -8,10 +8,20 @@ import { Users } from "./Users";
   paranoid: true,
 })
 
-export class StockAdjustment extends Model{
+ export class StockAdjustment extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATE,
+    validate: {
+      isDate: true
+    }
   })
   date: string;
 
@@ -27,7 +37,11 @@ export class StockAdjustment extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   quantity_counted: number;
 
@@ -35,7 +49,10 @@ export class StockAdjustment extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   quantity_expected: number;
 
@@ -43,7 +60,11 @@ export class StockAdjustment extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   current_price: number;
 
@@ -68,7 +89,10 @@ export class StockAdjustment extends Model{
   size: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATE,
+    validate: {
+      isDate: true,
+    }
   })
   expiry: string;
 
@@ -79,7 +103,11 @@ export class StockAdjustment extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   quantity_expired: number;
 
@@ -87,7 +115,11 @@ export class StockAdjustment extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   quantity_damaged: number;
 
@@ -95,7 +127,11 @@ export class StockAdjustment extends Model{
   shelf: string;
 
   @Column
-  unit:string
+  unit: string
+  
+ 
 }
+
+
 
 

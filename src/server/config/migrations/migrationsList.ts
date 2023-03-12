@@ -1,15 +1,87 @@
 import { InputMigrations } from "umzug";
-import { STRING, INTEGER, DATE, DOUBLE, NOW, Op, QueryInterface, QueryOptions, Transaction } from 'sequelize';
+import {
+    STRING, INTEGER, DATE, DOUBLE, NOW, Op, QueryInterface, QueryOptions,
+    DataTypes, Sequelize
+} from 'sequelize';
 import { Products } from "../../models/Products";
 import models from '../../models/index'
 import { query } from "express";
 import { sequelize } from "../sequelize-config";
+import { Customers } from "../../models/Customers";
+import { Activities } from "../../models/Activities";
+import { Permissions } from "../../models/Permissions";
+import { allPermissions, defaultSalesPersonPermissions } from "../../config/permissions";
+import { Roles } from "../../models/Roles";
+import { RolePermissions } from "../../models/RolePermissions";
+import { Users } from "../../models/Users";
+import { UserSessions } from "../../models/UserSessions";
+import { Sales } from "../../models/Sales";
+import { InsuranceProviders } from "../../models/InsuranceProviders";
+import { SalesDetails } from "../../models/SalesDetails";
+import { Purchases } from "../../models/Purchases";
+import { PurchaseDetails } from "../../models/PurchaseDetails";
+import { Vendors } from "../../models/Vendors";
+import { ReceivedTransfers } from "../../models/ReceivedTransfers";
+import { ReceivedTransferDetails } from "../../models/ReceivedTransferDetails";
+import { Branches } from "../../models/Branches";
+import { Transfers } from "../../models/Transfers";
+import { TransferDetails } from "../../models/TransferDetails";
+import { Settings } from "../../models/Settings";
+import { StockAdjustment } from "../../models/StockAdjustment";
+import { StockAdjustmentSessions } from "../../models/StockAdjustmentSessions";
+import { CustomerDiagnostics } from "../../models/CustomerDiagnostics";
+import { DiagnosticTests } from "../../models/DiagnosticTests";
+import { StockAdjustmentPending } from "../../models/StockAdjustmentPending";
+import { DbBackups } from "../../models/DbBackups";
+import { Refills } from "../../models/Refills";
+import { StockValues } from "../../models/StockValues";
+import { OutgoingPayments } from "../../models/OutgoingPayments";
+import { OnlineBackups } from "../../models/OnlineBackups";
+import { DbSync } from "../../models/DbSync";
+import { IncomingPayments } from "../../models/IncomingPayments";
 
 export const migrationsList: InputMigrations<QueryInterface> = [
     {
-        name: "20210314155622-addCustomerDob",
+        name: "2019-001-initialMigrations-addActvities",
         async up({ context: queryInterface }) {
-            await queryInterface.createTable('customers', {
+            
+            await queryInterface.createTable(Activities.tableName, {
+                activity_id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                user_id: {
+                    type: STRING
+                },
+                activity: {
+                    type: STRING
+                },
+                module: {
+                    type: INTEGER
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+                },
+                deleted: {
+                    allowNull: true,
+                    type: INTEGER,
+                    defaultValue: 0
+
+                }
+            });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Activities.tableName);
+        }
+    },
+    {
+        name: "2019-002-initialMigrations-addCustomers",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Customers.tableName, {
                 id: {
                     allowNull: false,
                     autoIncrement: true,
@@ -17,25 +89,2098 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 name: {
-                    type: STRING
+                    type: STRING,
+                    allowNull: false
                 },
                 sex: {
-                    type: DATE
+                    type: STRING
+                },
+                email: {
+                    type: STRING
                 },
                 phone: {
                     type: STRING
                 },
-                email: {
+                location: {
+                    type: STRING
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+                }
+            });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Customers.tableName);
+        }
+    },
+    {
+        name: "2019-003-initialMigrations-createPermissions",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Permissions.tableName, {
+                permission_id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
                     type: INTEGER
                 },
+                name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                description: {
+                    type: STRING
+                }
+            });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Permissions.tableName);
+        }
+    }
+    ,
+    {
+        name: "2019-004-initialMigrations-insertPermissions",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.bulkInsert(Permissions.tableName,
+                [...allPermissions.values()],
+                {
+                });
+        },
+        async down({ context: queryInterface }) {
+            //no going back
+        }
+    },
+    {
+        name: "2019-005-initialMigrations-createRoles",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Roles.tableName, {
+                role_id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                role_name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                description: {
+                    type: STRING
+                }
             })
-            await queryInterface.addColumn('customers', 'date_of_birth',
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Permissions.tableName);
+        }
+    },
+    {
+        name: "2019-006-initialMigrations-createRolePermissions",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(RolePermissions.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                role_id: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                permission_id: {
+                    type: INTEGER,
+                    allowNull: false
+                }
+            });
+
+            await queryInterface.addConstraint(
+                RolePermissions.tableName,
+                {
+                    fields: ['role_id'],
+                    type: 'foreign key',
+                    name: 'role_permissions_role_id', // useful if using queryInterface.removeConstraint
+                    references: {
+                        table: Roles.tableName,
+                        field: 'role_id',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+            await queryInterface.addConstraint(RolePermissions.tableName,
+                {
+                    fields: ['permission_id'],
+                    type: 'foreign key',
+                    name: 'role_permissions_permission_id', // useful if using queryInterface.removeConstraint
+                    references: {
+                        table: Permissions.tableName,
+                        field: 'permission_id',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(RolePermissions.tableName);
+        }
+    },
+
+    {
+        name: "2019-007-initialMigrations-insertRoles",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.bulkInsert(Roles.tableName,
+                [
+                    {
+                        role_id: 1,
+                        role_name: 'Branch Manager',
+                        description: 'manages day-to-day activities. Receives purchases, manages stock. May also make sales'
+                    },
+                    {
+                        role_id: 2,
+                        role_name: 'Sales Person',
+                        description: 'serves customers and makes sales. Limited permissions by default'
+                    }
+                ],
+                {
+                });
+        },
+        async down({ context: queryInterface }) {
+            //no going back
+        }
+    },
+    {
+        name: "2019-008-initialMigrations-insertDefaultPermissions",
+        async up({ context: queryInterface }) {
+            let objects: object[] = [];
+            //do it for the manager. all permissions by default
+            allPermissions.forEach(permission => {
+                objects.push({ role_id: 1, permission_id: permission.permission_id });
+            })
+
+            defaultSalesPersonPermissions.forEach(id => {
+                objects.push({role_id: 2, permission_id: id})
+            })
+
+            await queryInterface.bulkInsert(RolePermissions.tableName,
+                objects,
+                {
+                });
+        },
+        async down({ context: queryInterface }) {
+            //no going back
+        }
+    },
+    //do users, user_sessions, products...
+    {
+        name: "2019-009-initialMigrations-createInsurers",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(InsuranceProviders.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                name: {
+                    type: STRING,
+                    allowNull: false
+                }
+
+
+            });
+
+            await queryInterface.addIndex(InsuranceProviders.tableName,
+                ['name']);
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(InsuranceProviders.tableName);
+        }
+    },
+
+    {
+        name: "2019-010-initialMigrations-createVendors",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Vendors.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                location: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                phone: {
+                    type: STRING,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                email: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                notes: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                legacy_id: {
+                    type: STRING,
+                    defaultValue: null
+                }
+
+
+            });
+
+            await queryInterface.addIndex(Vendors.tableName,
+                ['name'], {
+                unique: true
+            });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Vendors.tableName);
+        }
+    },
+    {
+        name: "2019-011-initialMigrations-createBranches",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Branches.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                location: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                phone: {
+                    type: STRING,
+                    allowNull: false
+                },
+                address: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                email: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(Branches.tableName,
+                ['name'], {
+                unique: true
+            });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Branches.tableName);
+        }
+    },
+    {
+        name: "2019-012-initialMigrations-createSettings",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Settings.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                module: {
+                    type: STRING,
+                    allowNull: false
+                },
+                value: {
+                    type: STRING,
+                    allowNull: false
+                }
+
+
+            });
+
+            await queryInterface.addIndex(Settings.tableName,
+                ['name'], {
+                unique: true
+            });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Settings.tableName);
+        }
+    },
+    {
+        name: "2019-013-initialMigrations-createUsers",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Users.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                role_id: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                email: {
+                    type: STRING,
+                    allowNull: false
+                },
+                username: {
+                    type: STRING,
+                    allowNull: false
+                },
+                password_hash: {
+                    type: STRING,
+                    allowNull: false
+                },
+                last_login: {
+                    type: STRING,
+                    allowNull: false,
+                    defaultValue: ''
+                },
+                last_ip: {
+                    type: STRING,
+                    allowNull: false,
+                    defaultValue: ''
+                },
+                created_on: {
+                    type: STRING,
+                    allowNull: false,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                display_name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                active: {
+                    type: INTEGER,
+                    allowNull: false,
+                    defaultValue: 0
+                },
+                last_seen: {
+                    type: STRING,
+                    allowNull: true
+                },
+                phone: {
+                    type: STRING,
+                    defaultValue: ''
+                }
+            });
+
+            await queryInterface.addIndex(Users.tableName,
+                ['username'], {
+                    unique: true
+                });
+            await queryInterface.addIndex(Users.tableName,
+                ['email'], {
+                unique: true
+            });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Users.tableName);
+        }
+    },
+    {
+        name: "2019-014-initialMigrations-createUserSessions",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(UserSessions.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                user_id: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                token: {
+                    type: STRING,
+                    allowNull: false
+                },
+                expires: {
+                    type: STRING,
+                    allowNull: false
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+            });
+
+            await queryInterface.addIndex(UserSessions.tableName,
+                ['user_id','token','expires'], {
+                unique: true
+            });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(UserSessions.tableName);
+        }
+    },
+    {
+        name: "2019-015-initialMigrations-createProducts",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Products.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                name: {
+                    type: STRING,
+                    allowNull: false
+                },
+                price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                category: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                notes: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                unit: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                picture: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                max_stock: {
+                    type: DOUBLE,
+                    defaultValue: null
+                },
+                min_stock: {
+                    type: DOUBLE,
+                    defaultValue: null
+                },
+                expiry: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                barcode: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                current_stock: {
+                    type: DOUBLE,
+                    defaultValue: null
+                },
+                last_modified: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                cost_price: {
+                    type: DOUBLE,
+                    defaultValue: null
+                },
+                status: {
+                    type: INTEGER,
+                    defaultValue: 1
+                },
+                size: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                description: {
+                    type: STRING,
+                    defaultValue: 1
+                },
+                shelf: {
+                    type: STRING,
+                    defaultValue: 1
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+            });
+
+            await queryInterface.addIndex(Products.tableName,
+                ['name'], {
+                unique: true
+            });
+
+            await queryInterface.addIndex(Products.tableName,
+                ['price', 'category', 'max_stock', 'min_stock', 'expiry',
+                    'current_stock', 'last_modified',
+                    'status']);
+            await queryInterface.addIndex(Products.tableName,
+                [ 'expiry']);
+            await queryInterface.addIndex(Products.tableName,
+                [
+                    'current_stock']);
+            await queryInterface.addIndex(Products.tableName,
+                ['description']);
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Products.tableName);
+        }
+    },
+    {
+        name: "2019-016-initialMigrations-createSales",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Sales.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                customer: {
+                    type: STRING,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false,
+                    unique: true
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                amount_paid: {
+                    type: DOUBLE,
+                    defaultValue: 0
+                },
+                payment_method: {
+                    type: STRING,
+                    defaultValue: 'Cash'
+                },
+                momo_reference: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                insurance_provider: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                insurance_member_name: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                insurance_member_id: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                creditor_name: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                credit_paid: {
+                    type: INTEGER,
+                    defaultValue: 0
+                },
+                discount: {
+                    type: DOUBLE,
+                    defaultValue: 0
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                shift: {
+                    type: STRING,
+                    defaultValue: null
+                }
+                
+                
+            });
+
+            await queryInterface.addIndex(Sales.tableName,
+                ['code'], {
+                unique: true
+            });
+
+            await queryInterface.addIndex(Sales.tableName,
+                ['payment_method',]);
+            await queryInterface.addIndex(Sales.tableName,
+                ['date',]);
+            await queryInterface.addIndex(Sales.tableName,
+                ['customer',]);
+            
+            await queryInterface.addConstraint(
+                Sales.tableName,
+                {
+                    fields: ['insurance_provider'],
+                    type: 'foreign key',
+                    references: {
+                        table: InsuranceProviders.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+            
+            
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Sales.tableName);
+        }
+    },
+    {
+        name: "2019-017-initialMigrations-createSalesDetails",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(SalesDetails.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                product: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                quantity: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                cost_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(SalesDetails.tableName,
+                ['code']);
+
+            await queryInterface.addIndex(SalesDetails.tableName,
+                ['date',]);
+
+            await queryInterface.addConstraint(
+                SalesDetails.tableName,
+                {
+                    fields: ['code'],
+                    type: 'foreign key',
+                    references: {
+                        table: Sales.tableName,
+                        field: 'code',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+
+            await queryInterface.addConstraint(
+                SalesDetails.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(SalesDetails.tableName);
+        }
+    },
+    {
+        name: "2019-018-initialMigrations-createPurchases",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Purchases.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                vendor: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false,
+                    unique: true
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                amount_paid: {
+                    type: DOUBLE,
+                    defaultValue: 0
+                },
+                payment_method: {
+                    type: STRING,
+                    defaultValue: 'Cash'
+                },
+                site: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                invoice: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                last_payment_date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                status: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(Purchases.tableName,
+                ['code'], {
+                unique: true
+            });
+
+            await queryInterface.addIndex(Purchases.tableName,
+                ['payment_method',]);
+            await queryInterface.addIndex(Purchases.tableName,
+                ['date',]);
+            await queryInterface.addIndex(Purchases.tableName,
+                ['vendor',]);
+
+            await queryInterface.addConstraint(
+                Purchases.tableName,
+                {
+                    fields: ['vendor'],
+                    type: 'foreign key',
+                    references: {
+                        table: Vendors.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Purchases.tableName);
+        }
+    },
+    {
+        name: "2019-019-initialMigrations-createPurchaseDetails",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(PurchaseDetails.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                product: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false
+                },
+
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                quantity: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                selling_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                unit: {
+                    type: STRING,
+                    allowNull: false
+                },
+                markup: {
+                    type: STRING,
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(PurchaseDetails.tableName,
+                ['code']);
+
+            await queryInterface.addIndex(PurchaseDetails.tableName,
+                ['date']);
+
+            await queryInterface.addConstraint(
+                PurchaseDetails.tableName,
+                {
+                    fields: ['code'],
+                    type: 'foreign key',
+                    references: {
+                        table: Purchases.tableName,
+                        field: 'code',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+
+            await queryInterface.addConstraint(
+                PurchaseDetails.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(PurchaseDetails.tableName);
+        }
+    },
+    {
+        name: "2019-020-initialMigrations-createReceivedTransfers",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(ReceivedTransfers.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                sender: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false,
+                    unique: true
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                invoice: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(ReceivedTransfers.tableName,
+                ['code'], {
+                unique: true
+            });
+
+            await queryInterface.addIndex(ReceivedTransfers.tableName,
+                ['invoice',]);
+            await queryInterface.addIndex(ReceivedTransfers.tableName,
+                ['date',]);
+            await queryInterface.addIndex(ReceivedTransfers.tableName,
+                ['sender',]);
+
+            await queryInterface.addConstraint(
+                ReceivedTransfers.tableName,
+                {
+                    fields: ['sender'],
+                    type: 'foreign key',
+                    references: {
+                        table: Branches.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(ReceivedTransfers.tableName);
+        }
+    },
+    {
+        name: "2019-021-initialMigrations-createReceivedTransferDetails",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(ReceivedTransferDetails.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                product: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false
+                },
+
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                expiry: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                quantity: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                cost_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(ReceivedTransferDetails.tableName,
+                ['code']);
+
+            await queryInterface.addIndex(ReceivedTransferDetails.tableName,
+                ['date']);
+
+            await queryInterface.addConstraint(
+                ReceivedTransferDetails.tableName,
+                {
+                    fields: ['code'],
+                    type: 'foreign key',
+                    references: {
+                        table: ReceivedTransfers.tableName,
+                        field: 'code',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+
+            await queryInterface.addConstraint(
+                ReceivedTransferDetails.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(PurchaseDetails.tableName);
+        }
+    },
+    {
+        name: "2019-022-initialMigrations-createTransfers",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Transfers.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                receiver: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false,
+                    unique: true
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                status: {
+                    type: STRING,
+                    defaultValue: 'Pending'
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(Transfers.tableName,
+                ['code'], {
+                unique: true
+            });
+
+            await queryInterface.addIndex(Transfers.tableName,
+                ['date',]);
+            await queryInterface.addIndex(Transfers.tableName,
+                ['receiver',]);
+
+            await queryInterface.addConstraint(
+                Transfers.tableName,
+                {
+                    fields: ['receiver'],
+                    type: 'foreign key',
+                    references: {
+                        table: Branches.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Transfers.tableName);
+        }
+    },
+    {
+        name: "2019-023-initialMigrations-createTransferDetails",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(TransferDetails.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                product: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                code: {
+                    type: STRING,
+                    allowNull: false
+                },
+
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                expiry: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                quantity: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                cost_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(TransferDetails.tableName,
+                ['code']);
+
+            await queryInterface.addIndex(TransferDetails.tableName,
+                ['date']);
+
+            await queryInterface.addConstraint(
+                TransferDetails.tableName,
+                {
+                    fields: ['code'],
+                    type: 'foreign key',
+                    references: {
+                        table: Transfers.tableName,
+                        field: 'code',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+
+            await queryInterface.addConstraint(
+                TransferDetails.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(TransferDetails.tableName);
+        }
+    },
+    
+    {
+        name: "2019-024-initialMigrations-createStockAdjustment",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(StockAdjustment.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                product: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                quantity_counted: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                quantity_expected: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                current_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                code: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                
+                cost_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                category: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                size: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                expiry: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                comments: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                quantity_expired: {
+                    type: DOUBLE,
+                    allowNull: false,
+                    defaultValue: 0
+                },
+                quantity_damaged: {
+                    type: DOUBLE,
+                    allowNull: false,
+                    defaultValue: 0
+                }
+
+
+            });
+
+            await queryInterface.addIndex(StockAdjustment.tableName,
+                ['code']);
+
+            await queryInterface.addIndex(StockAdjustment.tableName,
+                ['date',]);
+            await queryInterface.addIndex(StockAdjustment.tableName,
+                ['created_on',]);
+            await queryInterface.addIndex(StockAdjustment.tableName,
+                ['product',]);
+
+           
+            await queryInterface.addConstraint(
+                StockAdjustment.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(SalesDetails.tableName);
+        }
+    },
+    {
+        name: "2019-025-initialMigrations-createStockAdjustmentSessions",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(StockAdjustmentSessions.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    allowNull: false
+                },
+                
+                code: {
+                    type: STRING,
+                    allowNull: false
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                status: {
+                    type: STRING,
+                    defaultValue: 'in_progress'
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                }
+
+
+            });
+
+            await queryInterface.addIndex(StockAdjustmentSessions.tableName,
+                ['code'],
+                {
+                unique: true
+            });
+
+            await queryInterface.addIndex(StockAdjustmentSessions.tableName,
+                ['created_on']);
+
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(StockAdjustmentSessions.tableName);
+        }
+    },
+
+    {
+        name: "2019-026-initialMigrations-createCustomerDiagnostics",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(CustomerDiagnostics.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                customer: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+
+                test: {
+                    type: STRING,
+                    allowNull: false
+                },
+                data: {
+                    type: STRING,
+                    allowNull: false
+                },
+                comments: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(CustomerDiagnostics.tableName,
+                ['test'], {
+                    unique: true
+                });
+            await queryInterface.addConstraint(
+                CustomerDiagnostics.tableName,
+                {
+                    fields: ['customer'],
+                    type: 'foreign key',
+                    references: {
+                        table: Customers.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'cascade',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(CustomerDiagnostics.tableName);
+        }
+    },
+
+
+    {
+        name: "2019-027-initialMigrations-createDiagnosticTests",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(DiagnosticTests.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                test_name: {
+                    type: STRING,
+                    allowNull: false
+                },
+
+                parameters: {
+                    type: STRING,
+                    allowNull: false
+                },
+                comments: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(DiagnosticTests.tableName,
+                ['test_name'], {
+                    unique: true
+                });
+            await queryInterface.bulkInsert(DiagnosticTests.tableName,
+                [
+                    {
+                        test_name: 'Blood Glucose Test',
+                        parameters: 'value (mmol/L)',
+                        comments: `Normal ranges for non-diabetic: Before meals - 4.0 to 5.9 mmol/L; After meals - under 7.8 mmol/L; 
+      For diabetics: Before meals - 4 to 7 mmol / L; After meals - 5 to 9 mmol / L`,
+                    },
+                    {
+                        test_name: 'Blood Pressure',
+                        parameters: `systolic, diastolic`,
+                        comments: `90/60mmHg  to 120/80mmHg - ideal,
+      140/90mmHg or higher - high,
+      90/60mmHg or lower - low`,
+                    },
+                    {
+                        test_name: 'Total Blood Cholesterol',
+                        parameters: `value (mmol/L)`,
+                        comments: `Below 5.2 mmol/L - normal, 5.2 to 6.2 mmol/L - Borderline High, Above 6.2 mmol/L - High`,
+                    }
+                ])
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(DiagnosticTests.tableName);
+        }
+    },
+    {
+        name: "2019-028-initialMigrations-createStockAdjustmentPending",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(StockAdjustmentPending.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                product: {
+                    type: INTEGER,
+                    allowNull: false
+                },
+                quantity_counted: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                quantity_expected: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                current_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                code: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+
+                cost_price: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                category: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                size: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                expiry: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                comments: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                quantity_expired: {
+                    type: DOUBLE,
+                    allowNull: false,
+                    defaultValue: 0
+                },
+                quantity_damaged: {
+                    type: DOUBLE,
+                    allowNull: false,
+                    defaultValue: 0
+                },
+                shelf: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                unit: {
+                    type: STRING,
+                    defaultValue: null
+                }
+
+
+            });
+
+            await queryInterface.addIndex(StockAdjustmentPending.tableName,
+                ['code']);
+
+            await queryInterface.addIndex(StockAdjustmentPending.tableName,
+                ['date',]);
+            await queryInterface.addIndex(StockAdjustmentPending.tableName,
+                ['created_on',]);
+            await queryInterface.addIndex(StockAdjustmentPending.tableName,
+                ['product',]);
+
+
+            await queryInterface.addConstraint(
+                StockAdjustmentPending.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(StockAdjustmentPending.tableName);
+        }
+    },
+
+    {
+        name: "2019-029-initialMigrations-createdbBackups",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(DbBackups.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                file_name: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                description: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                uploaded: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                db_version: {
+                    type: STRING,
+                    defaultValue: null
+                }
+
+
+            });
+
+            await queryInterface.addIndex(DbBackups.tableName,
+                ['file_name', 'created_on', 'description', 'uploaded',
+                    'db_version']);
+
+
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(DbBackups.tableName);
+        }
+    },
+    {
+        name: "2019-030-initialMigrations-createRefills",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(Refills.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                product: {
+                    type: STRING,
+                    allowNull: false,
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                start_date: {
+                    type: STRING,
+                    allowNull: false,
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                product_id: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                quantity: {
+                    type: DOUBLE,
+                    allowNull: false,
+                },
+                end_date: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                status: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                customer_id: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                customer_name: {
+                    type: STRING,
+                    defaultValue: null
+                }
+
+
+            });
+
+            await queryInterface.addIndex(Refills.tableName,
+                ['end_date']);
+            await queryInterface.addIndex(Refills.tableName,
+                ['start_date']);
+            await queryInterface.addIndex(Refills.tableName,
+                ['status']);
+            
+            await queryInterface.addConstraint(
+                Refills.tableName,
+                {
+                    fields: ['product'],
+                    type: 'foreign key',
+                    references: {
+                        table: Products.tableName,
+                        field: 'id',
+                    },
+                    onDelete: 'restrict',
+                    onUpdate: 'cascade'
+                });
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(Refills.tableName);
+        }
+    },
+    {
+        name: "2019-031-initialMigrations-createStockValues",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(StockValues.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    allowNull: false
+                },
+                last_modified: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                },
+                selling_value: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                cost_value: {
+                    type: DOUBLE,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(StockValues.tableName);
+        }
+    },
+    {
+        name: "2019-032-initialMigrations-createOutgoingPaymets",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(OutgoingPayments.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    allowNull: false
+                },
+                amount: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                type: {
+                    type: STRING,
+                    allowNull: false
+                },
+                recipient: {
+                    type: STRING,
+                    allowNull: false
+                },
+                payment_method: {
+                    type: STRING,
+                    defaultValue: 'Cash'
+                },
+                transaction_id: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                item_code: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                notes: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(OutgoingPayments.tableName,
+                ['date']);
+            await queryInterface.addIndex(OutgoingPayments.tableName,
+                ['type']);
+            await queryInterface.addIndex(OutgoingPayments.tableName,
+                ['recipient']);
+            await queryInterface.addIndex(OutgoingPayments.tableName,
+                ['created_on']);
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(OutgoingPayments.tableName);
+        }
+    },
+    
+    {
+        name: "2019-034-initialMigrations-createOnlineBackups",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(OnlineBackups.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    allowNull: false
+                },
+                url: {
+                    type: STRING,
+                    allowNull: false
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(OnlineBackups.tableName,
+                ['date']);
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(OnlineBackups.tableName);
+        }
+    },
+    {
+        name: "2019-035-initialMigrations-createDBSync",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(DbSync.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                type: {
+                    type: STRING,
+                    allowNull: false
+                },
+                action: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                data: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(DbSync.tableName,
+                ['created_on']);
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(DbSync.tableName);
+        }
+    },
+    {
+        name: "2019-036-initialMigrations-createIncomingPaymets",
+        async up({ context: queryInterface }) {
+
+            await queryInterface.createTable(IncomingPayments.tableName, {
+                id: {
+                    allowNull: false,
+                    autoIncrement: true,
+                    primaryKey: true,
+                    type: INTEGER
+                },
+                date: {
+                    type: STRING,
+                    allowNull: false
+                },
+                amount: {
+                    type: DOUBLE,
+                    allowNull: false
+                },
+                type: {
+                    type: STRING,
+                    allowNull: false
+                },
+                payer: {
+                    type: STRING,
+                    allowNull: false
+                },
+                payment_method: {
+                    type: STRING,
+                    defaultValue: 'Cash'
+                },
+                transaction_id: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                item_code: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                notes: {
+                    type: STRING,
+                    defaultValue: null
+                },
+                created_by: {
+                    type: INTEGER,
+                    defaultValue: null
+                },
+                created_on: {
+                    type: STRING,
+                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                }
+
+
+            });
+
+            await queryInterface.addIndex(IncomingPayments.tableName,
+                ['date']);
+            await queryInterface.addIndex(IncomingPayments.tableName,
+                ['type']);
+            await queryInterface.addIndex(IncomingPayments.tableName,
+                ['payer']);
+            await queryInterface.addIndex(IncomingPayments.tableName,
+                ['created_on']);
+
+
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.dropTable(IncomingPayments.tableName);
+        }
+    },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    {
+        name: "20210314155622-addCustomerDob",
+        async up({ context: queryInterface }) {
+            
+            await queryInterface.addColumn(Customers.tableName, 'date_of_birth',
                 {
                     type: DATE
                 });
         },
         async down({ context: queryInterface }) {
-            await queryInterface.dropTable('customers');
+            await queryInterface.removeColumn(Customers.tableName, 'date_of_birth');
  
         }
     },
@@ -966,18 +3111,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
                 });
 
-            await queryInterface.addConstraint('sales_payment_methods',
-                {
-                    fields: ['code'],
-                    type: 'foreign key',
-                    name: 'sales_payment_methods_code_key', // useful if using queryInterface.removeConstraint
-                    references: {
-                        table: 'sales',
-                        field: 'code',
-                    },
-                    onDelete: 'cascade',
-                    onUpdate: 'cascade'
-                });
+            
         },
         async down({ context: queryInterface }) {
             await queryInterface.dropTable('sales_payment_methods')
@@ -1054,7 +3188,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     {
         name: "20221220113200-addCreatedOnToVariousTables",
         async up({ context: queryInterface }) {
-            const tables = ["insurance_providers","drug_info",
+            const tables = ["insurance_providers",
                 "reminders", "role_permissions", "roles"];
             const transaction = await sequelize.transaction();
             try {
@@ -1085,7 +3219,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
         },
         async down({ context: queryInterface }) {
-            const tables = ["insurance_providers", "drug_info",
+            const tables = ["insurance_providers", 
                 "reminders", "role_permissions", "roles"];
             tables.forEach(async (table) => {
                 await queryInterface.removeColumn(table, 'created_on')
@@ -1103,7 +3237,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     const model = models[index];
                     //check if the column exists first
                     let tableDescription = await queryInterface.describeTable(model.tableName);
-
+                    
                     if (!tableDescription.updatedAt) {
                         await queryInterface.addColumn(model.tableName, 'updatedAt',
                             {

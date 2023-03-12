@@ -1,4 +1,4 @@
-import { Table, Model, Column,   CreatedAt } from "sequelize-typescript";
+import { Table, Model, Column,   CreatedAt, DataType, PrimaryKey } from "sequelize-typescript";
 
 @Table({
    tableName: 'db_sync',
@@ -7,6 +7,13 @@ import { Table, Model, Column,   CreatedAt } from "sequelize-typescript";
 })
 
 export class DbSync extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Column
   type: string;
 

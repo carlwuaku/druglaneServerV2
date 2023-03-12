@@ -1,63 +1,80 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
-import { ChildProcess, fork } from 'child_process'
+import { ChildProcess, fork, SendHandle } from 'child_process'
 import { isAppActivated, verifyLicenseKey } from "./appValidation";
 import { logger } from "./app/config/logger";
 // import isDev from 'electron-is-dev';
-import { connectDB } from '@/app/config/mongoose';
-import Log from '@/app/models/Log';
-import { Log as Loginterface } from "./app/interfaces/Log.interface";
+
+import { constants } from "./electronConstants";
+import { ServerEvents } from "./utils/ServerEvents";
+import { GET_APP_DETAILS, GET_SERVER_STATE, GET_SERVER_URL, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED } from "./utils/stringKeys";
+import { runFolderCreation } from "./utils/directorySetup";
 // import { startServer } from "./server/server";
 let mainWindow: BrowserWindow;
 let serverProcess: ChildProcess = null;
-let startupState: "Application Activated" |
-    "Application Not Activated" | "Server Started" | "Checking Activation" = "Checking Activation";
+let serverState: "Application Activated" |
+    "Application Not Activated" | "Server Started" | "Checking Activation"
+    | "Server Starting" | "Server Stopping" = "Checking Activation";
 const isDev = process.env.NODE_ENV == "development"
 
-//connect to mongo db
-connectDB();
+const serverEventEmitter = new ServerEvents();
+let serverUrl = "";
 
-//IPC CONNECTION
-ipcMain.on("logs:load", sendLogs)
-ipcMain.on("logs:add", (event, item) => addLog(item))
-ipcMain.on("logs:delete", (event, item) => deleteLog(item))
+// global.shared = {ipcMain}
+//create backup folders
+runFolderCreation();
+
 ipcMain.on("call_validation", (event, item) => {
+    event.reply()
     verifyLicenseKey("A78D5-B93FB-CD281-3500A");
 mainWindow.webContents.send("license_called","true")}
 )
 
-//get the logs from mongo, and push to front end
-async function sendLogs() {
-    try {
-        const logs = await Log.find().sort({ created: 1 });
-        mainWindow.webContents.send('logs:get', JSON.stringify(logs))
-        console.log(logs)
-    } catch (error) {
-        logger.error({message:error})
-    }
+ipcMain.on(GET_APP_DETAILS, getAppDetails)
+ipcMain.on(GET_SERVER_STATE, () => {
+    sendServerState(serverState)
+})
+
+ipcMain.on(GET_SERVER_URL, sendServerUrl)
+
+
+function getAppDetails() {
+    const title = `${constants.appname} v${app.getVersion()}`
+    mainWindow.webContents.send("appDetailsSent", {title})
 }
 
-async function addLog(item: Loginterface) {
-    try {
-        await Log.create(item);
-        sendLogs();
-    } catch (error) {
-        logger.error({ message: error })
-    }
-    
+function sendServerState(state:string) {
+    mainWindow.webContents.send(SERVER_STATE_CHANGED, state)
+
 }
 
-async function deleteLog(_id: number) {
-    try {
-        await Log.findByIdAndDelete({ _id: _id });
-        sendLogs();
-    } catch (error) {
-        console.log(error)
-    }
+serverEventEmitter.on(SERVER_STATE_CHANGED, (data) => {
+    console.log("event emitter ", data);
+    serverState = data;
+    sendServerState(data);
+})
+
+serverEventEmitter.on(SERVER_MESSAGE_RECEIVED, (data) => {
+    console.log("event emitter message ", data);
+    mainWindow.webContents.send(SERVER_MESSAGE_RECEIVED, data)
+
+})
+serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
+    serverUrl = data;
+    console.log("event emitter server url updated ", data);
+    sendServerUrl();
+})
+
+function sendServerUrl() {
+    console.log("server url changed ", serverUrl);
+
+    mainWindow.webContents.send(SERVER_URL_RECEIVED, serverUrl)
 }
+
 
 function createWindow(htmlLocation: string, preloadLocation?: string) {
     // Create the browser window.
+    //TODO: Check if null.
      mainWindow = new BrowserWindow({
         height: 600,
          webPreferences: {
@@ -116,42 +133,52 @@ app.on("window-all-closed", () => {
 // startServer();
 export async function spawnServer() {
     try {
+        serverEventEmitter.emit(SERVER_STATE_CHANGED, "Checking Activation")
         //check if the app is activated. if it is, start the server. else go the activation page
         const appActivated = await isAppActivated();
         if (appActivated) {
-            console.log("app activated");
+            serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Starting")
+
             //spawn server->runmigrations
             const serverPath = path.join(__dirname, 'server/server')
              serverProcess = fork(serverPath)
 
             serverProcess.on('exit', (code: number, signal) => {
-                console.log('serverProcess process exited with ' +
+                logger.error('serverProcess process exited with ' +
                     `code ${code} and signal ${signal}`);
+                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server stopped")
             });
             serverProcess.on('error', (error) => {
+                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Error: "+error)
                 console.log('serverProcess process error ', error)
             });
 
             serverProcess.on('spawn', () => {
+                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Running")
                 console.log('serverProcess spawned')
-                //check if the company details has been set. then check if the admin password has been set
+                //TODO: check if the company details has been set. then check if the admin password has been set
             
             });
             serverProcess.on('disconnect', () => {
+                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Disconnected")
                 console.log('serverProcess disconnected')
             })
-            serverProcess.on('message', (message, handle) => {
-                console.log("serverProcess sent a message", message)
+            serverProcess.on('message', (message:any, handle: SendHandle) => {
+                
+                serverEventEmitter.emit(message.event, message.message)
+                // console.log("serverProcess sent a message", message)
             });
 
          }
         else {
+            serverEventEmitter.emit(SERVER_STATE_CHANGED, "App not activated")
             console.log("app not activated")
             loadActivationPage();
         }
     } catch (error) {
         //start the server the old fashioned way
-        
+        serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Error "+ error)
+
         console.log(error)
     }
 }

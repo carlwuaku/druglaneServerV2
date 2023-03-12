@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo } from "sequelize-typescript";
+import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo, PrimaryKey } from "sequelize-typescript";
 import { Products } from "./Products";
 import { Transfers } from "./Transfers";
 import { Users } from "./Users";
@@ -10,6 +10,13 @@ import { Users } from "./Users";
 })
 
 export class TransferDetails extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
