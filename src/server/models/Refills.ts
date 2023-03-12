@@ -1,16 +1,24 @@
 
-import { Table, Model, Column, DataType, ForeignKey, CreatedAt, Index } from "sequelize-typescript";
+import { Table, Model, Column, DataType, ForeignKey, CreatedAt, Index, PrimaryKey } from "sequelize-typescript";
 import { Customers } from "./Customers";
-import { Products } from "./products";
+import { Products } from "./Products";
 import { Users } from "./Users";
 
 
 @Table({
   tableName: 'refills',
-  modelName: 'Refills'
+  modelName: 'Refills',
+  paranoid: true,
 })
 
 export class Refills extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column
   product: string;

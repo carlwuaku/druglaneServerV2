@@ -1,13 +1,22 @@
 
-import { Table, Model, Column, DataType,  CreatedAt, HasMany, ForeignKey } from "sequelize-typescript";
+import { Table, Model, Column, DataType,  CreatedAt, HasMany, ForeignKey, PrimaryKey } from "sequelize-typescript";
 import { Users } from "./Users";
 
 @Table({
    tableName: 'dbbackups',
-   modelName: 'DbBackups'
+  modelName: 'DbBackups',
+  paranoid: true,
 })
 
 export class DbBackups extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id:number
+
+  
   @Column
   file_name: string;
 

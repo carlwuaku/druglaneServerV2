@@ -1,17 +1,26 @@
 {
   "name": "druglaneserver",
-  "version": "1.6.5",
-  "description": "Druglane Pharmacy Management Software Version 1",
+  "version": "2.0.0",
+  "description": "Druglane Pharmacy Management Software Version 2",
   "main": "dist/main.js",
   "scripts": {
-    "test": "jest",
+    "pack": "electron-builder --dir",
+    "dist": "webpack && electron-builder",
+    "test": "cross-env NODE_ENV=test jest --testTimeout=10000",
+    "db:create:test": "cross-env NODE_ENV=test npx sequelize-cli db:create",
+    "db:reset": "node npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
     "build": "npm run clean && tsc && npm run copy-files",
     "clean": "rimraf dist/",
     "copy-files": "copyfiles -u 1 src/**/*.html src/**/*.css dist/",
     "watch": "npm run clean && tsc --watch && npm run copy-files",
     "start": "npm run watch && electron ./dist/main.js",
     "dev": "concurrently \"npm run clean && npm run copy-files && tsc --watch \" \"nodemon --exec  electron dist/main  \" ",
-    "migration-skeleton": "npx sequelize-cli migration:generate --name migration-skeleton"
+    "migration-skeleton": "npx sequelize-cli migration:generate --name migration-skeleton",
+    "start-webpack": "npm run build-webpack && electron dist/main.js",
+    "build-webpack": "webpack",
+    "react:dev": "webpack serve --mode=development",
+    "electron:dev": "nodemon",
+    "webpack-dev": "concurrently --kill-others \"npm run react:dev\" \"npm run electron:dev\" "
   },
   "repository": {
     "type": "git",
@@ -24,9 +33,16 @@
   },
   "homepage": "https://github.com/carlwuaku/druglaneposserver#readme",
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/material": "^5.11.6",
+    "@types/bootstrap": "^5.2.6",
     "@types/jquery": "^3.5.14",
+    "@types/react-bootstrap": "^0.32.32",
     "bcryptjs": "^2.0.1",
     "body-parser": "^1.18.2",
+    "bootstrap": "^5.2.3",
     "decompress-zip": "^0.2.2",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.3",
@@ -38,10 +54,15 @@
     "image-to-base64": "^2.2.0",
     "ip": "^1.1.5",
     "jquery": "^3.6.1",
+    "mariadb": "^3.1.0",
     "md5": "^2.2.1",
+    "mongoose": "^6.8.0",
     "node-fetch": "^2.6.1",
     "node-os-utils": "^1.2.2",
     "node-schedule": "^1.3.2",
+    "primeicons": "^6.0.1",
+    "primereact": "^9.0.0-beta.1",
+    "react-bootstrap": "^2.6.0",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
     "sequelize": "^6.3.4",
@@ -54,24 +75,70 @@
     "xlsx": "^0.16.5"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.13",
     "@types/express-session": "^1.17.4",
     "@types/ip": "^1.1.0",
     "@types/jest": "^29.2.3",
+    "@types/mongoose": "^5.11.97",
     "@types/node": "^17.0.42",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.9",
     "@types/validator": "^13.7.3",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "concurrently": "^7.2.1",
     "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.7.2",
     "electron": "^21.0.1",
+    "electron-builder": "^23.6.0",
+    "electron-is-dev": "^2.0.0",
     "eslint": "^7.32.0",
+    "html-webpack-plugin": "^5.5.0",
     "jest": "^29.3.1",
     "nodemon": "^2.0.16",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "rimraf": "^3.0.2",
-    "supertest": "^6.3.1",
+    "sass": "^1.57.1",
+    "sass-loader": "^13.2.0",
+    "sequelize-cli": "^6.5.2",
+    "style-loader": "^3.3.1",
+    "supertest": "^6.3.3",
     "ts-jest": "^29.0.3",
+    "ts-loader": "^9.4.1",
     "ts-node": "^10.9.1",
-    "typescript": "^4.7.3"
-  }
+    "typescript": "^4.7.3",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.0",
+    "webpack-dev-server": "^4.11.1",
+    "webpack-node-externals": "^3.0.0"
+  },
+  "build": {
+    "appId": "CalronSoftwares.DruglanePMS",
+    "mac": {
+      "category": "your.app.category.type"
+    },
+    "productName": "Druglane Pharmacy Management System 2",
+    "copyright": "Copyright © 2021 ${author}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "carlwuaku",
+        "repo": "druglaneposserver",
+        "releaseType": "release"
+      }
+    ],
+    "directories": {
+      "output": "releases"
+    },
+    "asar": true,
+    "files": [
+      "./dist/**/*"
+    ]
+  },
+  "bundledDependencies": [
+    "express"
+  ]
 }

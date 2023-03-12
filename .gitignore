@@ -1,2 +1,12 @@
 node_modules
 dist
+combined.log
+error.log
+releases
+debug.log
+error.log
+test_db
+test_db.db
+ui_combined.log
+ui_debug.log
+ui_error.log

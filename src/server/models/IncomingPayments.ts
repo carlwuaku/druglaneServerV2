@@ -1,12 +1,20 @@
-import { Table, Model, Column, DataType,  CreatedAt, Index, ForeignKey } from "sequelize-typescript";
+import { Table, Model, Column, DataType,  CreatedAt, Index, ForeignKey, PrimaryKey } from "sequelize-typescript";
 import { Users } from "./Users";
 
 @Table({
    tableName: 'incoming_payments',
-   modelName: 'IncomingPayments'
+  modelName: 'IncomingPayments',
+  paranoid: true,
 })
 
 export class IncomingPayments extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @Index
   @Column({
     type: DataType.DATE

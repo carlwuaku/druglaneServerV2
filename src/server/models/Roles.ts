@@ -1,18 +1,21 @@
 import { Table, Model, Column, DataType, ModelClassGetter,
-   CreatedAt, PrimaryKey, HasMany, BelongsToMany } from "sequelize-typescript";
-import { Permissions } from "./permissions";
+   CreatedAt, PrimaryKey, HasMany, BelongsToMany, AutoIncrement } from "sequelize-typescript";
+import { Permissions } from "./Permissions";
 import { RolePermissions } from "./RolePermissions";
 
 @Table({
    tableName: 'roles',
-   modelName: 'Roles'
+  modelName: 'Roles',
+  paranoid: true,
+  
 })
 // @BelongsToMany(Permissions, RolePermissions)
 
 export class Roles extends Model{
   @PrimaryKey
   @Column({
-    type: DataType.INTEGER
+    type: DataType.INTEGER,
+    autoIncrement: true
   })
   role_id: number;
 
@@ -21,6 +24,10 @@ export class Roles extends Model{
   @Column
   description: string
 
-  // @HasMany(() => Permissions)
-  // permissions: Permissions
+  @CreatedAt
+  created_on: string
+
+  updatedAt: false
+
+ 
 }

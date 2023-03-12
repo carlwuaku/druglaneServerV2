@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { constants } from '../constants';
+import { constants } from '../utils/constants';
 // import log from 'electron-log'
 
 export  class Store{

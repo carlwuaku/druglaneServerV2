@@ -1,14 +1,23 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo } from "sequelize-typescript";
-import { Products } from "./products";
-import { Purchases } from "./purchases";
+import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo, PrimaryKey } from "sequelize-typescript";
+import { Products } from "./Products";
+import { Purchases } from "./Purchases";
 import { Users } from "./Users";
 
 @Table({
-   tableName: 'purchases',
-   modelName: 'PurchaseDetails'
+   tableName: 'purchase_details',
+  modelName: 'PurchaseDetails',
+  paranoid: true,
 })
 
 export class PurchaseDetails extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+
+  
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,

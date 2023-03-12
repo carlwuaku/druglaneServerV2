@@ -1,15 +1,27 @@
-import { Table, Model, Column, DataType,  CreatedAt, HasMany, Index } from "sequelize-typescript";
+import { Table, Model, Column, DataType,  CreatedAt, HasMany, Index, PrimaryKey } from "sequelize-typescript";
 import { CustomerDiagnostics } from "./CustomerDiagnostics";
 
 @Table({
    tableName: 'customers',
-   modelName: 'Customers'
+  modelName: 'Customers',
+  paranoid: true,
 
 })
 
 export class Customers extends Model{
+
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+
+  
   @Index
-  @Column
+  @Column({
+    allowNull: false
+  })
   name:string;
 
   
@@ -21,10 +33,18 @@ export class Customers extends Model{
   phone:string;
 
   @Index
-  @Column
+  @Column({
+    validate: {
+      isEmail: true
+    }
+  })
   email:string;
 
-  @Column
+  @Column({
+    validate: {
+      isDate: true
+    }
+  })
   date_of_birth:string;
 
   @CreatedAt

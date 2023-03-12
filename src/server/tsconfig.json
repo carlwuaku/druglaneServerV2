@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "outDir": "../../dist/server",
+        "allowJs": true,
+        "target": "es6",
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noEmitOnError": true,
+        "noImplicitAny": true,
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "sourceMap": true,
+        "baseUrl": "./",
+        "paths": {
+            "*": [
+                "node_modules/*"
+            ]
+        },
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "include": [
+        "./**/*"
+, "../utils/constants.ts"    ],
+}

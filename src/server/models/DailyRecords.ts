@@ -1,13 +1,22 @@
 
-import { Table, Model, Column, DataType,  CreatedAt, HasMany, Index, ForeignKey } from "sequelize-typescript";
+import { Table, Model, Column, DataType,  CreatedAt, HasMany, Index, ForeignKey, PrimaryKey } from "sequelize-typescript";
 import { Users } from "./Users";
 
 @Table({
-   tableName: 'daily_records',
-   modelName: 'DailyRecords'
+   tableName: 'dailyRecords',
+  modelName: 'DailyRecords',
+  paranoid: true,
 })
 
 export class DailyRecords extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+
+  
   @Index
 @Column({
   type: DataType.DATE

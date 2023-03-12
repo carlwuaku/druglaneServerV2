@@ -1,13 +1,21 @@
-import { Table, Model, Column, DataType,  CreatedAt, ForeignKey, Index, BelongsTo } from "sequelize-typescript";
-import { Roles } from "./roles";
+import { Table, Model, Column, DataType,  CreatedAt, ForeignKey, Index, BelongsTo, PrimaryKey } from "sequelize-typescript";
+import { Roles } from "./Roles";
 
 @Table({
    tableName: 'users',
-   modelName: 'Users'
+  modelName: 'Users',
+  paranoid: true,
 })
 
 
 export class Users extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+  
   @ForeignKey(() => Roles)
   @Column({
     type: DataType.INTEGER

@@ -2,10 +2,18 @@ import { Table, Model, Column, DataType, PrimaryKey, CreatedAt, Index } from "se
 
 @Table({
    tableName: 'branches',
-   modelName: 'Branches'
+  modelName: 'Branches',
+  paranoid: true,
 })
 
 export class Branches extends Model{
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id:number
+
   @Index
   @Column({
     type: DataType.STRING,

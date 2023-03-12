@@ -1,31 +1,162 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import { constants } from '../constants'
+import { constants } from '../utils/constants'
 import { Store } from './Store';
 import fork from 'child_process';
 import ip from 'ip';
 import { ResponseData } from './models/responseData';
 import { logger } from './config/logger';
 import { runMigrations } from './config/migrations/migrations';
+import { Settings } from './models/Settings';
+import { ServerEvents } from "../utils/ServerEvents";
+import { SERVER_STATE_CHANGED, SERVER_URL_UPDATED } from '../utils/stringKeys'
+const serverEventEmitter = new ServerEvents();
 
 dotenv.config();
 // console.log('erver')
 export const app: Express = express();
+
+/**
+ * checks the database if the company details have been set
+ * @returns {boolean}
+ */
+export async function isCompanySet(): Promise<boolean>{
+    //get a connection to the database
+    const setting = await Settings.findOne({
+        where: {
+            'name': 'company_id'
+        }
+    });
+    if (setting == null) {
+        return false;
+    }
+    //check if the actual value exists and is a valid number
+    return isValidInt(setting.value) ;
+}
+
+
+/**
+ * check the database if the admin password is set
+ * @returns {boolean}
+ */
+export async function isAdminPasswordSet(): Promise<boolean>{
+    const setting = await Settings.findOne({
+        where: {
+            'name': 'admin_password'
+        }
+    });
+    if (setting == null) {
+        return false;
+    }
+    //check if the actual value exists and is a valid string
+    return setting.value.trim().length > 0;
+}
+
+export function isValidInt(value: any): boolean {
+    return value != null && Number.isInteger(value);
+
+}
+
+import adminController from './controllers/admin.controller';
+import customerController from './controllers/customer.controller';
+import productController from './controllers/product.controller';
+import purchaseController from './controllers/purchase.controller';
+import saleController from './controllers/sale.controller';
+import transfersController from './controllers/transfers.controller';
+import usersController from './controllers/users.controller';
+import vendorController from './controllers/vendor.controller';
+
+app.use('/api_admin', adminController);
+app.use('/api_staff', usersController);
+app.use('/api_customer', customerController);
+app.use('/api_product', productController);
+app.use('/api_vendor', vendorController);
+app.use('/api_purchase', purchaseController);
+app.use('/api_sale', saleController);
+app.use('/api_transfer', transfersController);
+
+//CORS STUFF     
+app.use(async (req, res, next): Promise<void> => {
+    //allow all clients in development mode
+    res.header('Access-Control-Allow-Origin', '*');
+    if (process.env.NODE_ENV != "production") {
+        console.log("in dev")
+       
+    }
+
+
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Token, Usertype, Userid, Type');
+
+    if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET')
+        //return empty object.
+        res.status(200).json({})
+    }
+    else {
+        next();
+        // var token = req.headers.token;
+        // var type = req.headers.type;
+        // if (type == 'staff') {
+        //     //if user is staff and not admin, do the necessary checks
+
+        //     try {
+        //         //do checks here if user has logged in or not
+        //         let user = await userSession.getItem(` token = '${token}' `, userSession.sessions_table);
+
+        //         if (user != undefined) {
+        //             req.query.userid = user.user_id;
+        //             req.body.userid = user.user_id;
+        //             //if not options, call next to allow the request to get to the routes
+        //             next();
+        //         }
+        //         else {
+
+        //             res.status(200).json({ status: 0, message: 'not logged in' })
+
+        //         }
+
+        //     } catch (error) {
+        //         //not logged in.
+        //         res.status(200).json({ status: 0, message: 'not logged in' })
+        //     }
+
+        // }
+        // else {
+        //     next();
+        // }
+    }
+    //if type is set
+
+    // console.log(req.headers)
+
+
+
+
+
+});
+
+
 const startServer = async () => {
     //make sure the app has been activated
     try {
         app.listen(constants.port, () => {
-            logger.info("server started successfully on "+constants.port)
-            // runMigrations()
+            logger.info("server started successfully on " + constants.port);
+            const ipAddress = ip.address();
+            const serverUrl = `http://${ipAddress}:${constants.port}`;
+            process.send({ message: serverUrl, event: SERVER_URL_UPDATED });
+            runMigrations()
             try {
                 /**
-                 * If Node.js was not spawned with an IPC channel, process.send will beundefined
+                 * If Node.js was not spawned with an IPC channel, process.send will be undefined
                  */
-                process.send("server started successfully");
+                process.send({message:`Server running on http://${ipAddress}:${constants.port}`, event: SERVER_STATE_CHANGED});
+                
+
                 logger.info("process.send defined")
             } catch (error) {
-                console.log("process.send not defined")
-                logger.error("process.send not defined.")
+                // console.log("process.send not defined")
+                logger.error("process.send not defined.");
+                process.send(`Error: ${error}`)
             }
         })
     } catch (error) {
@@ -138,62 +269,6 @@ startServer();
 //     { route: "/api_product/saveBranchDetails", permission: "Manage Inventory" },
 
 // ]
-// //CORS STUFF     
-// app.use(async (req, res, next): Promise<void> => {
-//     //allow all clients in development mode
-//     if (process.env.NODE_ENV != "production") {
-//         res.header('Access-Control-Allow-Origin', '*');
-//     }
-
-
-//     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Token, Usertype, Userid, Type');
-
-//     if (req.method === 'OPTIONS') {
-//         res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET')
-//         //return empty object.
-//         res.status(200).json({})
-//     }
-//     else {
-//         var token = req.headers.token;
-//         var type = req.headers.type;
-//         if (type == 'staff') {
-//             //if user is staff and not admin, do the necessary checks
-
-//             try {
-//                 //do checks here if user has logged in or not
-//                 let user = await userSession.getItem(` token = '${token}' `, userSession.sessions_table);
-
-//                 if (user != undefined) {
-//                     req.query.userid = user.user_id;
-//                     req.body.userid = user.user_id;
-//                     //if not options, call next to allow the request to get to the routes
-//                     next();
-//                 }
-//                 else {
-
-//                     res.status(200).json({ status: 0, message: 'not logged in' })
-
-//                 }
-
-//             } catch (error) {
-//                 //not logged in.
-//                 res.status(200).json({ status: 0, message: 'not logged in' })
-//             }
-
-//         }
-//         else {
-//             next();
-//         }
-//     }
-//     //if type is set
-
-//     // console.log(req.headers)
-
-
-
-
-
-// });
 
 
 // function checkSignIn(req: Request, res: Response, next: NextFunction): void {

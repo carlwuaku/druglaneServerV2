@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "jsx": "react",
         "outDir": "./dist",
         "allowJs": true,
         "target": "es6",
@@ -10,10 +11,13 @@
         "module": "commonjs",
         "esModuleInterop": true,
         "sourceMap": false,
-        "baseUrl": ".",
+        "baseUrl": "./",
         "paths": {
             "*": [
                 "node_modules/*"
+            ],
+            "@/*":[
+                "src/*"
             ]
         },
         "experimentalDecorators": true,

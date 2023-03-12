@@ -1,21 +1,32 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo } from "sequelize-typescript";
-import { Products } from "./products";
-import { Purchases } from "./purchases";
+import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo, PrimaryKey } from "sequelize-typescript";
+import { Products } from "./Products";
+import { Purchases } from "./Purchases";
 import { Users } from "./Users";
 
 @Table({
   tableName: "stock_adjustment_pending",
-  modelName: 'StockAdjustmentPending'
+  modelName: 'StockAdjustmentPending',
+  paranoid: false,
 })
 
-export class StockAdjustmentPending extends Model{
+export class StockAdjustmentPending extends Model {
+  @PrimaryKey
+  @Column({
+    type: DataType.INTEGER,
+    autoIncrement: true
+  })
+  id: number
+
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATE,
+    validate: {
+      isDate: true
+    }
   })
   date: string;
 
-  
+
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
@@ -27,7 +38,11 @@ export class StockAdjustmentPending extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   quantity_counted: number;
 
@@ -35,19 +50,26 @@ export class StockAdjustmentPending extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true
+    }
   })
   quantity_expected: number;
 
-  
+
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   current_price: number;
 
-  @ForeignKey(()=> Users)
+  @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
@@ -68,7 +90,10 @@ export class StockAdjustmentPending extends Model{
   size: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATE,
+    validate: {
+      isDate: true
+    }
   })
   expiry: string;
 
@@ -79,7 +104,11 @@ export class StockAdjustmentPending extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   quantity_expired: number;
 
@@ -87,7 +116,11 @@ export class StockAdjustmentPending extends Model{
   @Column({
     type: DataType.DOUBLE,
     allowNull: false,
-    defaultValue: 0
+    defaultValue: 0,
+    validate: {
+      isNumeric: true,
+      notNull: true
+    }
   })
   quantity_damaged: number;
 
@@ -95,5 +128,5 @@ export class StockAdjustmentPending extends Model{
   shelf: string;
 
   @Column
-  unit:string
+  unit: string
 }
