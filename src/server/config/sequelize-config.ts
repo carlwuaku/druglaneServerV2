@@ -1,20 +1,10 @@
 import { Sequelize } from 'sequelize-typescript'
 import models from '../models/index'
 import { config } from './config';
-import { Activities } from '../models/Activities';
 import { Branches } from '../models/Branches';
 import { CustomerDiagnostics } from '../models/CustomerDiagnostics';
 import { Customers } from '../models/Customers';
-import { DailyRecords } from '../models/DailyRecords';
-import { DbBackups } from '../models/DbBackups';
-import { DbSync } from '../models/DbSync';
-import { DiagnosticTests } from '../models/DiagnosticTests';
-import { IncomingPayments } from '../models/IncomingPayments';
-import { InsuranceProviders } from '../models/InsuranceProviders';
-import { OnlineBackups } from '../models/OnlineBackups';
-import { OutgoingPayments } from '../models/OutgoingPayments';
 import { Permissions } from '../models/Permissions';
-import { ProductBatches } from '../models/ProductBatches';
 import { Products } from '../models/Products';
 import { PurchaseDetails } from '../models/PurchaseDetails';
 import { Purchases } from '../models/Purchases';
@@ -25,15 +15,11 @@ import { Roles } from '../models/Roles';
 import { RolePermissions } from '../models/RolePermissions';
 import { Sales } from '../models/Sales';
 import { SalesDetails } from '../models/SalesDetails';
-import { Settings } from '../models/Settings';
 import { StockAdjustment } from '../models/StockAdjustment';
 import { StockAdjustmentPending } from '../models/StockAdjustmentPending';
-import { StockAdjustmentSessions } from '../models/StockAdjustmentSessions';
-import { StockValues } from '../models/StockValues';
 import { TransferDetails } from '../models/TransferDetails';
 import { Transfers } from '../models/Transfers';
 import { Users } from '../models/Users';
-import { UserSessions } from '../models/UserSessions';
 import { Vendors } from '../models/Vendors';
 const connection = new Sequelize(config[process.env.NODE_ENV]);
 
@@ -47,54 +33,166 @@ Permissions.belongsToMany(Roles, {
 Roles.belongsToMany(Permissions, {
     through: RolePermissions,
     foreignKey: 'role_id'
+});
+
+Roles.hasMany(Users, {
+    foreignKey: 'role_id'
 })
 
 Customers.hasMany(CustomerDiagnostics, {
-    foreignKey:'customer'
+    foreignKey: 'customer', 
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 })
-CustomerDiagnostics.belongsTo(Customers)
-
-Customers.hasMany(SalesDetails, {
+CustomerDiagnostics.belongsTo(Customers, {
     foreignKey: 'customer'
 })
-SalesDetails.belongsTo(Customers);
+
+Customers.hasMany(SalesDetails, {
+    foreignKey: 'customer',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE'
+})
+SalesDetails.belongsTo(Customers, {
+    foreignKey: 'customer'
+});
 
 Products.hasMany(SalesDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+SalesDetails.belongsTo(Products, {
     foreignKey: 'product'
 })
-SalesDetails.belongsTo(Products)
-
-Products.hasMany(SalesDetails, {
-    foreignKey: 'product'
-})
-SalesDetails.belongsTo(Products)
 
 
 Products.hasMany(PurchaseDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+PurchaseDetails.belongsTo(Products, {
     foreignKey: 'product'
 })
-PurchaseDetails.belongsTo(Products)
 
 
 Products.hasMany(TransferDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+TransferDetails.belongsTo(Products, {
     foreignKey: 'product'
 })
-TransferDetails.belongsTo(Products)
 
 Products.hasMany(ReceivedTransferDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+ReceivedTransferDetails.belongsTo(Products, {
     foreignKey: 'product'
 })
-ReceivedTransferDetails.belongsTo(Products)
 
 Products.hasMany(StockAdjustment, {
-    foreignKey: 'product'
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
 })
-StockAdjustment.belongsTo(Products)
+StockAdjustment.belongsTo(Products, {
+    foreignKey: 'product'})
 
 Products.hasMany(StockAdjustmentPending, {
-    foreignKey: 'product'
+    foreignKey: 'product',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 })
-StockAdjustmentPending.belongsTo(Products)
+StockAdjustmentPending.belongsTo(Products, {
+    foreignKey: 'product'})
+
+Purchases.hasMany(PurchaseDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+PurchaseDetails.belongsTo(Purchases, {
+    foreignKey: 'code'
+});
+
+Vendors.hasMany(Purchases, {
+    foreignKey: 'vendor',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+Purchases.belongsTo(Vendors, {
+    foreignKey: 'vendor'});
+
+ReceivedTransfers.hasMany(ReceivedTransferDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+ReceivedTransferDetails.belongsTo(ReceivedTransfers, {
+    foreignKey: 'code'
+});
+
+Branches.hasMany(ReceivedTransfers, {
+    foreignKey: 'sender',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+ReceivedTransfers.belongsTo(Branches, {
+    foreignKey: 'sender'
+});
+
+Customers.hasMany(Refills, {
+    foreignKey: "customer_id",
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+Refills.belongsTo(Customers, {
+    foreignKey: "customer_id"
+});
+
+Sales.hasMany(SalesDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+SalesDetails.belongsTo(Sales, {
+    foreignKey: 'code'
+});
+
+Customers.hasMany(Sales, {
+    foreignKey: 'customer',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE'
+});
+Sales.belongsTo(Customers, {
+    foreignKey: 'customer'
+});
+
+
+Transfers.hasMany(TransferDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+TransferDetails.belongsTo(Transfers);
+
+Branches.hasMany(Transfers, {
+    foreignKey: 'recipient',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+Transfers.belongsTo(Branches, {
+    foreignKey: 'recipient'
+});
+
+
+
+
 
 //transferdetails->product
 //stockadjustment->product

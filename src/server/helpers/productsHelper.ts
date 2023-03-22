@@ -5,7 +5,7 @@ import { SalesDetails } from "../models/SalesDetails";
 import { PurchaseDetails } from "../models/PurchaseDetails";
 import { TransferDetails } from "../models/TransferDetails";
 import { ReceivedTransferDetails } from "../models/ReceivedTransferDetails";
-import { Op, Transaction, WhereOptions } from "sequelize/types";
+import { Op, Transaction, WhereOptions } from "sequelize";
 import { logger } from "../config/logger";
 import { getToday } from "./dateHelper";
 import { StockValues } from "../models/StockValues";
@@ -39,24 +39,18 @@ export async function getStockValues(): Promise<IStockValues>{
     return {cost_value: results.cost_value, selling_value: results.selling_value}
 }
 
-export async function refreshCurrentStock(product_id: number, new_value?:number):Promise<void> {
+export async function refreshCurrentStock(product_id: number):Promise<void> {
     try {
         let product = await Products.findByPk(product_id);
         let now = getToday("timestamp");
 
-        if (!new_value) {
+        
             let stock = await calculateCurrentStock(product_id);
             await product.update({
                 'current_stock': stock,
                 'last_stock_modification': `'${now}'`
             })
-        }
-        else {
-            await product.update({
-                'current_stock': `current_stock + ${new_value}`,
-                'last_stock_modification': `'${now}'`
-            });
-        }
+        
 
 
     } catch (error) {
@@ -76,7 +70,7 @@ export async function calculateCurrentStock(product_id: number): Promise<number>
     //get the last stock taking, get the total quantity sold, purchased, transfered in and out since
     //that last stock taking date
     let last_date:string = null;
-    let last_stock_count:number = 0;
+        let last_stock_count: number = 0;
     let last_stock_taking = await StockAdjustment.findOne({
         attributes: ["quantity_counted", "created_on"],
         where: {
@@ -111,6 +105,11 @@ export async function calculateCurrentStock(product_id: number): Promise<number>
     let received = await ReceivedTransferDetails.sum("quantity", {
         where
     });
+        // console.log("sale "+product_id, sold);
+        // console.log("purchased " + product_id, purchased);
+        // console.log("received " + product_id, received);
+        // console.log("transfered " + product_id, transfered);
+        // console.log("last_stock_count " + product_id, last_stock_count);
 
         return last_stock_count + purchased + received - sold - transfered;
     } catch (error) {

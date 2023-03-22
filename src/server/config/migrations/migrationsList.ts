@@ -3331,6 +3331,42 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             });
 
         }
+    },
+    {
+        name: "20230314000000-addLastProductStockModified",
+        async up({ context: queryInterface }) {
+            await queryInterface.addColumn(Products.tableName, 'last_stock_modification',
+                {
+                    type: STRING,
+                    defaultValue: null,
+                    allowNull: true
+                });
+        },
+        async down({ context: queryInterface }) {
+            await queryInterface.removeColumn(Products.tableName, 'last_stock_modification');
+        }
+    },
+    {
+        name: "20230321000000-addIndexToStockValues",
+        async up({ context: queryInterface }) {
+            await queryInterface.addIndex(StockValues.tableName,
+                ['date'], {
+                    unique: true
+                });
+        },
+        async down({ context: queryInterface }) {
+        }
+    },
+    {
+        name: "20230321000000-addIndexToStockAdjustment",
+        async up({ context: queryInterface }) {
+            await queryInterface.addIndex(StockAdjustment.tableName,
+                ['product']);
+            await queryInterface.addIndex(StockAdjustment.tableName,
+                ['code']);
+        },
+        async down({ context: queryInterface }) {
+        }
     }
 
 ]

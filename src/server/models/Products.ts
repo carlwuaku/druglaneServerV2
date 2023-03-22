@@ -171,6 +171,44 @@ export class Products extends Model{
 
   @Column
   drug_info: string;
+
+  @Column
+  last_stock_modification: string;
+
+  @Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return Date.parse(this.getDataValue('expiry')) < Date.now()
+    },
+  })
+  expired: boolean;
+
+  @Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('current_stock') < 1
+    },
+  })
+  out_of_stock: boolean;
+
+  @Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('current_stock') > 0 && 
+        this.getDataValue('current_stock') <= this.getDataValue('min_stock')
+    },
+  })
+  near_min: boolean;
+
+  @Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('current_stock') > 0 &&
+        this.getDataValue('current_stock') >= this.getDataValue('max_stock')
+    },
+  })
+  near_max: boolean;
+
   
 
   stock_value?: number

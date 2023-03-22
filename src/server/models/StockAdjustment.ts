@@ -75,7 +75,9 @@ import { Users } from "./Users";
   })
   created_by: number;
 
-  @Column
+  @Column({
+    allowNull: true
+  })
   code: string;
 
   @CreatedAt
@@ -102,11 +104,9 @@ import { Users } from "./Users";
   @Index
   @Column({
     type: DataType.DOUBLE,
-    allowNull: false,
     defaultValue: 0,
     validate: {
-      isNumeric: true,
-      notNull: true
+      isNumeric: true
     }
   })
   quantity_expired: number;
@@ -114,17 +114,13 @@ import { Users } from "./Users";
   @Index
   @Column({
     type: DataType.DOUBLE,
-    allowNull: false,
     defaultValue: 0,
     validate: {
-      isNumeric: true,
-      notNull: true
+      isNumeric: true
     }
   })
   quantity_damaged: number;
 
-  @Column
-  shelf: string;
 
   @Column
   unit: string

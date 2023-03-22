@@ -18,7 +18,6 @@ export class PurchaseDetails extends Model{
   id: number
 
   
-  @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
@@ -44,7 +43,6 @@ export class PurchaseDetails extends Model{
   @CreatedAt
   created_on: string;
 
-  @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
@@ -58,7 +56,6 @@ export class PurchaseDetails extends Model{
   markup: number;
 
   @Index
-  @ForeignKey(()=> Purchases)
   @Column
   code: string;
 

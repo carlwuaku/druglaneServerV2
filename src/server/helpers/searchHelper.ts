@@ -41,6 +41,12 @@ export function getOperatorParamArray(operator: string, param: string | Array<an
     //store the like operator queries
     let like_queries: any[] = []
     params.forEach(p => {
+        //if we're looking for dates between, each item has to be converted into a date object with new Date()
+        if (operator === 'dates_between' && Array.isArray(p)) {
+            p.map(obj => {
+                obj = new Date(obj)
+            });
+        }
         switch (operator) {
             case 'includes':
                 like_queries.push({ [Op.like]: `%${p}%` })
@@ -57,13 +63,21 @@ export function getOperatorParamArray(operator: string, param: string | Array<an
             case 'between':
                 like_queries.push({ [Op.between]: p })//an array is expected for the value
                 break;
+            case 'dates_between':
+                like_queries.push({ [Op.between]: p })//an array is expected for the value
+                break;
             case 'less_than':
                 like_queries.push({ [Op.lt]: p })//a number is expected for the value
                 break;
             case 'greater_than':
                 like_queries.push({ [Op.gt]: p })//a number is expected for the value
                 break;
-            
+            case 'greater_than_or_equal':
+                like_queries.push({ [Op.gte]: p })//a number is expected for the value
+                break;
+            case 'less_than_or_equal':
+                like_queries.push({ [Op.lte]: p })//a number is expected for the value
+                break;
 
             default:
                 like_queries.push({ [Op.like]: `${p}` })

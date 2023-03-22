@@ -1,7 +1,4 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, HasMany, PrimaryKey } from "sequelize-typescript";
-import { PurchaseDetails } from "./PurchaseDetails";
-import { Users } from "./Users";
-import { Vendors } from "./Vendors";
+import { Table, Model, Column, DataType, Index, CreatedAt, PrimaryKey } from "sequelize-typescript";
 
 @Table({
    tableName: 'purchases',
@@ -19,7 +16,6 @@ export class Purchases extends Model{
   id: number
 
   
-  @ForeignKey(() => Vendors)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
@@ -45,7 +41,6 @@ export class Purchases extends Model{
   @CreatedAt
   created_on: string;
 
-  @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
@@ -71,8 +66,7 @@ export class Purchases extends Model{
   })
   last_payment_date: string
 
-  @HasMany(()=> PurchaseDetails, 'code')
-  details: PurchaseDetails[]
+  
 }
 
 
