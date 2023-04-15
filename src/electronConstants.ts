@@ -10,12 +10,16 @@ const databaseName = "druglanev1.db";
 
 const appDirectory = "druglaneServerV1";
 const settings_location:string =  path.join(process.env.APPDATA, appDirectory);
-
+export const defaultOptions:{[key:string]:any} = {
+   "port": 5000,
+   "backup_time": 19
+}
 export const constants = {
   appLongName : appLongName,
      appname : appName,
-     server_url : process.env.NODE_ENV == "development" ? 
-        "http://localhost/druglanebackend" : "https://druglanepms.calgadsoftwares.com",
+   server_url: "https://druglanepms.calgadsoftwares.com",
+   // process.env.NODE_ENV == "development" ? 
+   //      "http://localhost/druglanebackend" : "https://druglanepms.calgadsoftwares.com",
      settings_location,
      customer_image_url : "assets/customer_images/",
      customer_image_thumbnail_url : "assets/customer_images/thumbnails/",
@@ -29,7 +33,6 @@ export const constants = {
      firebase_requests_collection : "requests",
      firebase_responses_collection : "responses",
      
-     settings_path :path.join( settings_location,'system-settings.json'),
      db_path : path.join( settings_location, databaseName),
      backup_folder : path.join(os.homedir(), `${appName}Backups`),
      settings_filename : 'system-settings.json',

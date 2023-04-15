@@ -57,6 +57,10 @@ export class Sales extends Model{
 
   @Index
   @Column
+  date: string;
+
+  @Index
+  @Column
   insurance_provider: string;
 
   @Index
@@ -80,9 +84,19 @@ export class Sales extends Model{
   @Column({
     type: DataType.DOUBLE
   })
-  discount:  number;
+  discount: number;
+  
+  @Column({
+    type: DataType.DOUBLE
+  })
+  tax: number;
 
   @Index
   @Column
   shift: string;
+
+  total?: number;
+  display_name?: string;
+  num_of_items?: number;
+  total_cost?: number;
 }

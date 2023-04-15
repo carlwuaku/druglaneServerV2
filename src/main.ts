@@ -1,14 +1,18 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, Menu } from "electron";
 import * as path from "path";
 import { ChildProcess, fork, SendHandle } from 'child_process'
 import { isAppActivated, verifyLicenseKey } from "./appValidation";
 import { logger } from "./app/config/logger";
 // import isDev from 'electron-is-dev';
 
-import { constants } from "./electronConstants";
+import { constants, defaultOptions } from "./electronConstants";
 import { ServerEvents } from "./utils/ServerEvents";
-import { GET_APP_DETAILS, GET_SERVER_STATE, GET_SERVER_URL, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED } from "./utils/stringKeys";
+import { ACTIVATION_RESULT, CALL_ACTIVATION, GET_APP_DETAILS, GET_PREFERENCE, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED } from "./utils/stringKeys";
 import { runFolderCreation } from "./utils/directorySetup";
+import Store from "electron-store";
+import { getData } from "./utils/network";
+import contextMenu from 'electron-context-menu'
+//A78D5-B93FB-CD281-3500A
 // import { startServer } from "./server/server";
 let mainWindow: BrowserWindow;
 let serverProcess: ChildProcess = null;
@@ -19,15 +23,27 @@ const isDev = process.env.NODE_ENV == "development"
 
 const serverEventEmitter = new ServerEvents();
 let serverUrl = "";
+const store = new Store();
+//save all 
+let logs: string[] = [];
 
+contextMenu({
+    showSaveImageAs: true
+});
 // global.shared = {ipcMain}
 //create backup folders
 runFolderCreation();
 
-ipcMain.on("call_validation", (event, item) => {
-    event.reply()
-    verifyLicenseKey("A78D5-B93FB-CD281-3500A");
-mainWindow.webContents.send("license_called","true")}
+ipcMain.on(CALL_ACTIVATION, async (event, key) => {
+    try {
+        let data = await verifyLicenseKey(key);
+        mainWindow.webContents.send(ACTIVATION_RESULT, {data: data.data, error: false,message: ""})
+    } catch (error) {
+        mainWindow.webContents.send(ACTIVATION_RESULT, { data: null, error: true, message:error })
+    }
+    
+    
+}
 )
 
 ipcMain.on(GET_APP_DETAILS, getAppDetails)
@@ -35,7 +51,17 @@ ipcMain.on(GET_SERVER_STATE, () => {
     sendServerState(serverState)
 })
 
+ipcMain.on(RESTART_SERVER, async (event, data) => {
+    await spawnServer()
+})
+
 ipcMain.on(GET_SERVER_URL, sendServerUrl)
+
+ipcMain.on(GET_PREFERENCE, (event, data:{key:string}) => {
+    let value = store.get(data.key, defaultOptions[data.key])
+    event.reply(PREFERENCE_RECEIVED, value)
+}
+)
 
 
 function getAppDetails() {
@@ -44,23 +70,26 @@ function getAppDetails() {
 }
 
 function sendServerState(state:string) {
-    mainWindow.webContents.send(SERVER_STATE_CHANGED, state)
+    mainWindow.webContents.send(SERVER_STATE_CHANGED, { data: state, time: new Date().toLocaleString() })
 
 }
 
 serverEventEmitter.on(SERVER_STATE_CHANGED, (data) => {
     console.log("event emitter ", data);
+    logs.unshift(data);
     serverState = data;
     sendServerState(data);
 })
 
 serverEventEmitter.on(SERVER_MESSAGE_RECEIVED, (data) => {
     console.log("event emitter message ", data);
-    mainWindow.webContents.send(SERVER_MESSAGE_RECEIVED, data)
+    logs.unshift(data);
+    mainWindow.webContents.send(SERVER_MESSAGE_RECEIVED, {data, time: new Date().toLocaleString()})
 
 })
 serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
     serverUrl = data;
+    logs.unshift(data);
     console.log("event emitter server url updated ", data);
     sendServerUrl();
 })
@@ -68,7 +97,7 @@ serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
 function sendServerUrl() {
     console.log("server url changed ", serverUrl);
 
-    mainWindow.webContents.send(SERVER_URL_RECEIVED, serverUrl)
+    mainWindow.webContents.send(SERVER_URL_RECEIVED, { data: serverUrl, time: new Date().toLocaleString() }, serverUrl)
 }
 
 
@@ -80,6 +109,7 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
          webPreferences: {
              nodeIntegration: true,
              contextIsolation: false,
+             spellcheck: true
             //  preload: path.join(__dirname, "preload.js"),
         },
         width: 800,
@@ -90,6 +120,7 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
     mainWindow.loadURL(isDev ? 'http://localhost:9000' : `file://${app.getAppPath()}/index.html`)
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
+    Menu.setApplicationMenu(null)
 }
 
 // This method will be called when Electron has finished
@@ -144,12 +175,12 @@ export async function spawnServer() {
              serverProcess = fork(serverPath)
 
             serverProcess.on('exit', (code: number, signal) => {
-                logger.error('serverProcess process exited with ' +
-                    `code ${code} and signal ${signal}`);
-                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server stopped")
+                logger.error({message: 'serverProcess process exited with ' +
+                    `code ${code} and signal ${signal}`});
+                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Stopped")
             });
             serverProcess.on('error', (error) => {
-                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Error: "+error)
+                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Error")
                 console.log('serverProcess process error ', error)
             });
 
@@ -162,11 +193,12 @@ export async function spawnServer() {
             serverProcess.on('disconnect', () => {
                 serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Disconnected")
                 console.log('serverProcess disconnected')
-            })
-            serverProcess.on('message', (message:any, handle: SendHandle) => {
+            });
+
+            serverProcess.on('message', (message: any, handle: SendHandle) => {
+                console.log("serverProcess sent a message", message)
                 
                 serverEventEmitter.emit(message.event, message.message)
-                // console.log("serverProcess sent a message", message)
             });
 
          }

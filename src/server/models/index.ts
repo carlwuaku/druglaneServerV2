@@ -32,7 +32,7 @@ import { Transfers } from '../models/Transfers';
 import { Users } from '../models/Users';
 import { UserSessions } from '../models/UserSessions';
 import { Vendors } from '../models/Vendors';
-export default [Activities, Branches, CustomerDiagnostics, Customers, DailyRecords, DbBackups, DbSync,
+export const models =  [Activities, Branches, CustomerDiagnostics, Customers, DailyRecords, DbBackups, DbSync,
     DiagnosticTests,  IncomingPayments, InsuranceProviders,  OnlineBackups, OutgoingPayments,
     Permissions, ProductBatches, Products, PurchaseDetails, Purchases, ReceivedTransferDetails, ReceivedTransfers, Refills,
     RolePermissions, Roles, Sales, SalesDetails, Settings, StockAdjustment, StockAdjustmentPending, StockAdjustmentSessions,

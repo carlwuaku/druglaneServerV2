@@ -1,7 +1,7 @@
 import { logger } from './logger';
 import { constants } from '../../utils/constants'
 
-export const config: {[key:string]: any}= {
+export const sqliteConfig: {[key:string]: any}= {
     "development": {
         "dialect": "sqlite",
         "storage": constants.db_path,
@@ -16,6 +16,34 @@ export const config: {[key:string]: any}= {
     "production": {
         "dialect": "sqlite",
         "storage": constants.db_path,
+        logging: (msg: any) => logger.debug(msg),
+    }
+}
+
+export const config: { [key: string]: any } = {
+    "development": {
+        host: "127.0.0.1",
+        dialect: "mariadb",
+        username: "root",
+        password: "r00t",
+        database: "dev",
+        logging: (msg: any) => logger.debug(msg),
+    },
+    "test": {
+        host: "127.0.0.1",
+        dialect: "mariadb",
+        username: "root",
+        password: "r00t",
+        database: "test",
+        "logging": false
+        // logging: (msg: any) => logger.debug(msg),
+    },
+    "production": {
+        host: "127.0.0.1",
+        dialect: "mariadb",
+        username: "root",
+        password: "r00t",
+        database: "druglane",
         logging: (msg: any) => logger.debug(msg),
     }
 }

@@ -9,7 +9,7 @@ import { logger } from './config/logger';
 import { runMigrations } from './config/migrations/migrations';
 import { Settings } from './models/Settings';
 import { ServerEvents } from "../utils/ServerEvents";
-import { SERVER_STATE_CHANGED, SERVER_URL_UPDATED } from '../utils/stringKeys'
+import { SERVER_MESSAGE_RECEIVED, SERVER_RUNNING, SERVER_STATE_CHANGED, SERVER_URL_UPDATED } from '../utils/stringKeys'
 const serverEventEmitter = new ServerEvents();
 
 dotenv.config();
@@ -65,6 +65,7 @@ import saleController from './controllers/sale.controller';
 import transfersController from './controllers/transfers.controller';
 import usersController from './controllers/users.controller';
 import vendorController from './controllers/vendor.controller';
+import { Server } from 'http';
 
 app.use('/api_admin', adminController);
 app.use('/api_staff', usersController);
@@ -134,12 +135,14 @@ app.use(async (req, res, next): Promise<void> => {
 
 
 });
-
+let server: Server;
 
 const startServer = async () => {
     //make sure the app has been activated
     try {
-        app.listen(constants.port, () => {
+       
+        
+        server = app.listen(constants.port, () => {
             logger.info("server started successfully on " + constants.port);
             const ipAddress = ip.address();
             const serverUrl = `http://${ipAddress}:${constants.port}`;
@@ -149,20 +152,38 @@ const startServer = async () => {
                 /**
                  * If Node.js was not spawned with an IPC channel, process.send will be undefined
                  */
-                process.send({message:`Server running on http://${ipAddress}:${constants.port}`, event: SERVER_STATE_CHANGED});
+                process.send({message:SERVER_RUNNING, event: SERVER_STATE_CHANGED});
                 
 
                 logger.info("process.send defined")
             } catch (error) {
                 // console.log("process.send not defined")
-                logger.error("process.send not defined.");
-                process.send(`Error: ${error}`)
+                logger.error({message: "process.send not defined."});
             }
         })
     } catch (error) {
-        console.log(error)
+        process.send({ message: `Server encountered an error: ${error}`, event: SERVER_MESSAGE_RECEIVED });
+        logger.error({ message: error });
+        // console.log(error)
     }
    
+}
+
+const stopServer = async () => {
+    //make sure the app has been activated
+    try {
+        server?.close(() => {
+            logger.error({ message: "server stopped successfully" });
+            process.send({ message: `Server was stopped successfully`, event: SERVER_MESSAGE_RECEIVED });
+
+        });
+      
+    } catch (error) {
+        process.send({ message: `Server encountered an error: ${error}`, event: SERVER_MESSAGE_RECEIVED });
+        logger.error({ message: error });
+        // console.log(error)
+    }
+
 }
 startServer();
 

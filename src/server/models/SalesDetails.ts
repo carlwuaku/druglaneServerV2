@@ -1,8 +1,8 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo, PrimaryKey } from "sequelize-typescript";
+import { sequelize } from "../config/sequelize-config";
+import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, PrimaryKey } from "sequelize-typescript";
 import { Products } from "./Products";
-import { Purchases } from "./Purchases";
 import { Sales } from "./Sales";
-import { Users } from "./Users";
+import { Op } from "sequelize";
 
 @Table({
   tableName: "sales_details",
@@ -10,6 +10,19 @@ import { Users } from "./Users";
   paranoid: true,
 })
  export class SalesDetails extends Model{
+  static async getTotalSales(start: string, end: string):Promise<number> {
+    let object = await this.findOne({
+      attributes: [
+        [sequelize.literal(`sum(price * quantity)`),'total_amount'],
+        [sequelize.fn("SUM", sequelize.col('amount')), 'total']
+      ],
+      where: {
+        date: { [Op.between]: [new Date(start), new Date(end)] },
+        
+      }
+    });
+    return object.total_amount || 0
+  }
   @PrimaryKey
   @Column({
     type: DataType.INTEGER,
@@ -64,6 +77,10 @@ import { Users } from "./Users";
   @Index
   @Column
   expiry: string;
+
+  total_amount?: number;
+  num_of_items?: number;
+  display_name?: string;
  }
 
 

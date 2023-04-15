@@ -1,11 +1,10 @@
 import { InputMigrations } from "umzug";
 import {
     STRING, INTEGER, DATE, DOUBLE, NOW, Op, QueryInterface, QueryOptions,
-    DataTypes, Sequelize
+    Sequelize
 } from 'sequelize';
 import { Products } from "../../models/Products";
-import models from '../../models/index'
-import { query } from "express";
+import {models} from '../../models/index'
 import { sequelize } from "../sequelize-config";
 import { Customers } from "../../models/Customers";
 import { Activities } from "../../models/Activities";
@@ -39,6 +38,18 @@ import { OutgoingPayments } from "../../models/OutgoingPayments";
 import { OnlineBackups } from "../../models/OnlineBackups";
 import { DbSync } from "../../models/DbSync";
 import { IncomingPayments } from "../../models/IncomingPayments";
+
+async function getIndexes(tableName:string, queryInterface:QueryInterface): Promise<string[]>{
+    let index_names: string[] = [];
+    const indexes: { [key: string]: any } = await queryInterface.showIndex(tableName);
+    for (const key in indexes) {
+        if (Object.prototype.hasOwnProperty.call(indexes, key)) {
+            const element = indexes[key];
+            index_names.push(element['name'])
+        }
+    }
+    return index_names
+}
 
 export const migrationsList: InputMigrations<QueryInterface> = [
     {
@@ -293,7 +304,9 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            //check if the indexes exists before adding them
+            let index_names: string[] = await getIndexes(InsuranceProviders.tableName, queryInterface)
+            if (index_names.indexOf(`${InsuranceProviders.tableName}_name`))
             await queryInterface.addIndex(InsuranceProviders.tableName,
                 ['name']);
 
@@ -350,7 +363,9 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            //check if the indexes exists before adding them
+            let index_names: string[] = await getIndexes(Vendors.tableName, queryInterface)
+            if (index_names.indexOf(`${Vendors.tableName}_name`) === -1)
             await queryInterface.addIndex(Vendors.tableName,
                 ['name'], {
                 unique: true
@@ -400,7 +415,9 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            //check if the indexes exists before adding them
+            let index_names: string[] = await getIndexes(Branches.tableName, queryInterface)
+            if (index_names.indexOf(`${Branches.tableName}_name`) === -1)
             await queryInterface.addIndex(Branches.tableName,
                 ['name'], {
                 unique: true
@@ -438,7 +455,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(Settings.tableName, queryInterface)
+            if (index_names.indexOf(`${Settings.tableName}_name`) === -1)
             await queryInterface.addIndex(Settings.tableName,
                 ['name'], {
                 unique: true
@@ -510,11 +528,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: ''
                 }
             });
-
+            let index_names: string[] = await getIndexes(Users.tableName, queryInterface)
+            if (index_names.indexOf(`${Users.tableName}_username`) === -1)
             await queryInterface.addIndex(Users.tableName,
                 ['username'], {
                     unique: true
-                });
+            });
+
+            if (index_names.indexOf(`${Users.tableName}_email`) === -1)
             await queryInterface.addIndex(Users.tableName,
                 ['email'], {
                 unique: true
@@ -552,7 +573,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
                 }
             });
-
+            let index_names: string[] = await getIndexes(UserSessions.tableName, queryInterface)
+            if (index_names.indexOf(`${UserSessions.tableName}_user_id_token_expires`) === -1)
             await queryInterface.addIndex(UserSessions.tableName,
                 ['user_id','token','expires'], {
                 unique: true
@@ -647,20 +669,49 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
 
+            
+            //check if the indexes exists before adding them
+            let index_names: string[] = await getIndexes(Products.tableName, queryInterface)
+            if (index_names.indexOf(`${Products.tableName}_name`) === -1)
             await queryInterface.addIndex(Products.tableName,
                 ['name'], {
-                unique: true
+                unique: true,
+
             });
 
+            if(index_names.indexOf(`${Products.tableName}_price`) === -1)
             await queryInterface.addIndex(Products.tableName,
-                ['price', 'category', 'max_stock', 'min_stock', 'expiry',
-                    'current_stock', 'last_modified',
-                    'status']);
+                ['price']);
+            
+            if (index_names.indexOf(`${Products.tableName}_category`) === -1)
             await queryInterface.addIndex(Products.tableName,
-                [ 'expiry']);
+                ['category']);
+            
+            if (index_names.indexOf(`${Products.tableName}_max_stock`) === -1)
             await queryInterface.addIndex(Products.tableName,
-                [
-                    'current_stock']);
+                ['max_stock']);
+            
+            if (index_names.indexOf(`${Products.tableName}_min_stock`) === -1)
+            await queryInterface.addIndex(Products.tableName,
+                ['min_stock']);
+            
+            if (index_names.indexOf(`${Products.tableName}_expiry`) === -1)
+            await queryInterface.addIndex(Products.tableName,
+                ['expiry']);
+            
+            if (index_names.indexOf(`${Products.tableName}_current_stock`) === -1)
+            await queryInterface.addIndex(Products.tableName,
+                ['current_stock']);
+            
+            if (index_names.indexOf(`${Products.tableName}_last_modified`) === -1)
+            await queryInterface.addIndex(Products.tableName,
+                ['last_modified']);
+            
+            if (index_names.indexOf(`${Products.tableName}_status`) === -1)
+            await queryInterface.addIndex(Products.tableName,
+                [ 'status']);
+            
+            if (index_names.indexOf(`${Products.tableName}_description`) === -1)
             await queryInterface.addIndex(Products.tableName,
                 ['description']);
         },
@@ -743,16 +794,21 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 
                 
             });
-
+            let index_names: string[] = await getIndexes(Sales.tableName, queryInterface)
+            if (index_names.indexOf(`${Sales.tableName}_code`) === -1)
             await queryInterface.addIndex(Sales.tableName,
                 ['code'], {
                 unique: true
             });
-
+            if (index_names.indexOf(`${Sales.tableName}_payment_method`) === -1)
             await queryInterface.addIndex(Sales.tableName,
-                ['payment_method',]);
+                ['payment_method']);
+            
+            if (index_names.indexOf(`${Sales.tableName}_date`) === -1)
             await queryInterface.addIndex(Sales.tableName,
                 ['date',]);
+            
+            if (index_names.indexOf(`${Sales.tableName}_customer`) === -1)
             await queryInterface.addIndex(Sales.tableName,
                 ['customer',]);
             
@@ -761,9 +817,10 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 {
                     fields: ['insurance_provider'],
                     type: 'foreign key',
+                    name: 'sales_insurance_provider',
                     references: {
                         table: InsuranceProviders.tableName,
-                        field: 'id',
+                        field: 'name',
                     },
                     onDelete: 'restrict',
                     onUpdate: 'cascade'
@@ -821,10 +878,12 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(SalesDetails.tableName, queryInterface)
+            if (index_names.indexOf(`${SalesDetails.tableName}_code`) === -1)
             await queryInterface.addIndex(SalesDetails.tableName,
                 ['code']);
 
+            if (index_names.indexOf(`${SalesDetails.tableName}_date`) === -1)
             await queryInterface.addIndex(SalesDetails.tableName,
                 ['date',]);
 
@@ -919,15 +978,22 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
             });
 
+            let index_names: string[] = await getIndexes(Purchases.tableName, queryInterface)
+            if (index_names.indexOf(`${Purchases.tableName}_code`) === -1)
             await queryInterface.addIndex(Purchases.tableName,
                 ['code'], {
                 unique: true
             });
 
+            if (index_names.indexOf(`${Purchases.tableName}_payment_method`) === -1)
             await queryInterface.addIndex(Purchases.tableName,
                 ['payment_method',]);
+            
+            if (index_names.indexOf(`${Purchases.tableName}_date`) === -1)
             await queryInterface.addIndex(Purchases.tableName,
                 ['date',]);
+            
+            if (index_names.indexOf(`${Purchases.tableName}_vendor`) === -1)
             await queryInterface.addIndex(Purchases.tableName,
                 ['vendor',]);
 
@@ -1004,10 +1070,12 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(PurchaseDetails.tableName, queryInterface)
+            if (index_names.indexOf(`${PurchaseDetails.tableName}_code`) === -1)
             await queryInterface.addIndex(PurchaseDetails.tableName,
                 ['code']);
 
+            if (index_names.indexOf(`${PurchaseDetails.tableName}_date`) === -1)
             await queryInterface.addIndex(PurchaseDetails.tableName,
                 ['date']);
 
@@ -1081,16 +1149,22 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(ReceivedTransfers.tableName, queryInterface)
+            if (index_names.indexOf(`${ReceivedTransfers.tableName}_code`) === -1)
             await queryInterface.addIndex(ReceivedTransfers.tableName,
                 ['code'], {
                 unique: true
             });
 
+            if (index_names.indexOf(`${ReceivedTransfers.tableName}_invoice`) === -1)
             await queryInterface.addIndex(ReceivedTransfers.tableName,
                 ['invoice',]);
+            
+            if (index_names.indexOf(`${ReceivedTransfers.tableName}_date`) === -1)
             await queryInterface.addIndex(ReceivedTransfers.tableName,
                 ['date',]);
+            
+            if (index_names.indexOf(`${ReceivedTransfers.tableName}_sender`) === -1)
             await queryInterface.addIndex(ReceivedTransfers.tableName,
                 ['sender',]);
 
@@ -1164,10 +1238,12 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(ReceivedTransferDetails.tableName, queryInterface)
+            if (index_names.indexOf(`${ReceivedTransferDetails.tableName}_code`) === -1)
             await queryInterface.addIndex(ReceivedTransferDetails.tableName,
                 ['code']);
 
+            if (index_names.indexOf(`${ReceivedTransferDetails.tableName}_date`) === -1)
             await queryInterface.addIndex(ReceivedTransferDetails.tableName,
                 ['date']);
 
@@ -1241,14 +1317,18 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(Transfers.tableName, queryInterface)
+            if (index_names.indexOf(`${Transfers.tableName}_code`) === -1)
             await queryInterface.addIndex(Transfers.tableName,
                 ['code'], {
                 unique: true
             });
 
+            if (index_names.indexOf(`${Transfers.tableName}_date`) === -1)
             await queryInterface.addIndex(Transfers.tableName,
                 ['date',]);
+            
+            if (index_names.indexOf(`${Transfers.tableName}_receiver`) === -1)
             await queryInterface.addIndex(Transfers.tableName,
                 ['receiver',]);
 
@@ -1322,10 +1402,12 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(TransferDetails.tableName, queryInterface)
+            if (index_names.indexOf(`${TransferDetails.tableName}_code`) === -1)
             await queryInterface.addIndex(TransferDetails.tableName,
                 ['code']);
-
+            
+            if (index_names.indexOf(`${TransferDetails.tableName}_date`) === -1)
             await queryInterface.addIndex(TransferDetails.tableName,
                 ['date']);
 
@@ -1439,14 +1521,20 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(StockAdjustment.tableName, queryInterface)
+            if (index_names.indexOf(`${StockAdjustment.tableName}_code`) === -1)
             await queryInterface.addIndex(StockAdjustment.tableName,
                 ['code']);
 
+            if (index_names.indexOf(`${StockAdjustment.tableName}_date`) === -1)
             await queryInterface.addIndex(StockAdjustment.tableName,
                 ['date',]);
+            
+            if (index_names.indexOf(`${StockAdjustment.tableName}_created_on`) === -1)
             await queryInterface.addIndex(StockAdjustment.tableName,
                 ['created_on',]);
+            
+            if (index_names.indexOf(`${StockAdjustment.tableName}_product`) === -1)
             await queryInterface.addIndex(StockAdjustment.tableName,
                 ['product',]);
 
@@ -1504,13 +1592,15 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(StockAdjustmentSessions.tableName, queryInterface)
+            if (index_names.indexOf(`${StockAdjustmentSessions.tableName}_code`) === -1)
             await queryInterface.addIndex(StockAdjustmentSessions.tableName,
                 ['code'],
                 {
                 unique: true
             });
 
+            if (index_names.indexOf(`${StockAdjustmentSessions.tableName}_created_on`) === -1)
             await queryInterface.addIndex(StockAdjustmentSessions.tableName,
                 ['created_on']);
 
@@ -1558,6 +1648,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
             });
 
+            let index_names: string[] = await getIndexes(CustomerDiagnostics.tableName, queryInterface)
+            if (index_names.indexOf(`${CustomerDiagnostics.tableName}_test`) === -1)
             await queryInterface.addIndex(CustomerDiagnostics.tableName,
                 ['test'], {
                     unique: true
@@ -1613,7 +1705,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(DiagnosticTests.tableName, queryInterface)
+            if (index_names.indexOf(`${DiagnosticTests.tableName}_test_name`) === -1)
             await queryInterface.addIndex(DiagnosticTests.tableName,
                 ['test_name'], {
                     unique: true
@@ -1732,14 +1825,20 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(StockAdjustmentPending.tableName, queryInterface)
+            if (index_names.indexOf(`${StockAdjustmentPending.tableName}_code`) === -1)
             await queryInterface.addIndex(StockAdjustmentPending.tableName,
                 ['code']);
 
+            if (index_names.indexOf(`${StockAdjustmentPending.tableName}_date`) === -1)
             await queryInterface.addIndex(StockAdjustmentPending.tableName,
                 ['date',]);
+            
+            if (index_names.indexOf(`${StockAdjustmentPending.tableName}_created_on`) === -1)
             await queryInterface.addIndex(StockAdjustmentPending.tableName,
                 ['created_on',]);
+            
+            if (index_names.indexOf(`${StockAdjustmentPending.tableName}_product`) === -1)
             await queryInterface.addIndex(StockAdjustmentPending.tableName,
                 ['product',]);
 
@@ -1801,10 +1900,10 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(DbBackups.tableName, queryInterface)
+            if (index_names.indexOf(`${DbBackups.tableName}_file_name_created_on`) === -1)
             await queryInterface.addIndex(DbBackups.tableName,
-                ['file_name', 'created_on', 'description', 'uploaded',
-                    'db_version']);
+                ['file_name', 'created_on']);
 
 
 
@@ -1868,18 +1967,23 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(Refills.tableName, queryInterface)
+            if (index_names.indexOf(`${Refills.tableName}_end_date`) === -1)
             await queryInterface.addIndex(Refills.tableName,
                 ['end_date']);
+            
+            if (index_names.indexOf(`${Refills.tableName}_start_date`) === -1)
             await queryInterface.addIndex(Refills.tableName,
                 ['start_date']);
+            
+            if (index_names.indexOf(`${Refills.tableName}_status`) === -1)
             await queryInterface.addIndex(Refills.tableName,
                 ['status']);
             
             await queryInterface.addConstraint(
                 Refills.tableName,
                 {
-                    fields: ['product'],
+                    fields: ['product_id'],
                     type: 'foreign key',
                     references: {
                         table: Products.tableName,
@@ -1991,13 +2095,20 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(OutgoingPayments.tableName, queryInterface)
+            if (index_names.indexOf(`${OutgoingPayments.tableName}_date`) === -1)
             await queryInterface.addIndex(OutgoingPayments.tableName,
                 ['date']);
+            
+            if (index_names.indexOf(`${OutgoingPayments.tableName}_type`) === -1)
             await queryInterface.addIndex(OutgoingPayments.tableName,
                 ['type']);
+            
+            if (index_names.indexOf(`${OutgoingPayments.tableName}_recipient`) === -1)
             await queryInterface.addIndex(OutgoingPayments.tableName,
                 ['recipient']);
+            
+            if (index_names.indexOf(`${OutgoingPayments.tableName}_created_on`) === -1)
             await queryInterface.addIndex(OutgoingPayments.tableName,
                 ['created_on']);
 
@@ -2034,7 +2145,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
             });
-
+            let index_names: string[] = await getIndexes(OnlineBackups.tableName, queryInterface)
+            if (index_names.indexOf(`${OnlineBackups.tableName}_date`) === -1)
             await queryInterface.addIndex(OnlineBackups.tableName,
                 ['date']);
 
@@ -2075,6 +2187,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
             });
 
+            let index_names: string[] = await getIndexes(DbSync.tableName, queryInterface)
+            if (index_names.indexOf(`${DbSync.tableName}_created_on`) === -1)
             await queryInterface.addIndex(DbSync.tableName,
                 ['created_on']);
 
@@ -2139,12 +2253,20 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
             });
 
+            let index_names: string[] = await getIndexes(IncomingPayments.tableName, queryInterface)
+            if (index_names.indexOf(`${IncomingPayments.tableName}_date`) === -1)
             await queryInterface.addIndex(IncomingPayments.tableName,
                 ['date']);
+            
+            if (index_names.indexOf(`${IncomingPayments.tableName}_type`) === -1)
             await queryInterface.addIndex(IncomingPayments.tableName,
                 ['type']);
+            
+            if (index_names.indexOf(`${IncomingPayments.tableName}_payer`) === -1)
             await queryInterface.addIndex(IncomingPayments.tableName,
                 ['payer']);
+            
+            if (index_names.indexOf(`${IncomingPayments.tableName}_created_on`) === -1)
             await queryInterface.addIndex(IncomingPayments.tableName,
                 ['created_on']);
 
@@ -3088,23 +3210,29 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             });
 
 
-
+            let index_names: string[] = await getIndexes('sales_payment_methods', queryInterface)
+            if (index_names.indexOf(`sales_payment_methods_payment_method`) === -1)
             await queryInterface.addIndex('sales_payment_methods',
                 {
                     fields: ['payment_method'],
 
                 });
+            
+            if (index_names.indexOf(`sales_payment_methods_created_on`) === -1)
             await queryInterface.addIndex('sales_payment_methods',
                 {
                     fields: ['created_on'],
 
                 });
+            
+            if (index_names.indexOf(`sales_payment_methods_date`) === -1)
             await queryInterface.addIndex('sales_payment_methods',
                 {
                     fields: ['date'],
 
                 });
 
+            if (index_names.indexOf(`sales_payment_methods_amount_paid`) === -1)
             await queryInterface.addIndex('sales_payment_methods',
                 {
                     fields: ['amount_paid'],
@@ -3353,17 +3481,6 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 ['date'], {
                     unique: true
                 });
-        },
-        async down({ context: queryInterface }) {
-        }
-    },
-    {
-        name: "20230321000000-addIndexToStockAdjustment",
-        async up({ context: queryInterface }) {
-            await queryInterface.addIndex(StockAdjustment.tableName,
-                ['product']);
-            await queryInterface.addIndex(StockAdjustment.tableName,
-                ['code']);
         },
         async down({ context: queryInterface }) {
         }

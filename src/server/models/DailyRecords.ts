@@ -1,4 +1,5 @@
 
+import { sequelize } from "../config/sequelize-config";
 import { Table, Model, Column, DataType,  CreatedAt, HasMany, Index, ForeignKey, PrimaryKey } from "sequelize-typescript";
 import { Users } from "./Users";
 
@@ -9,6 +10,26 @@ import { Users } from "./Users";
 })
 
 export class DailyRecords extends Model{
+    
+    static async getTotalSummary(date: string):Promise<DailyRecords> {
+      let object = await this.findOne({
+        attributes: [
+          [sequelize.fn("SUM", sequelize.col('cash')), 'cash'],
+          [sequelize.fn("SUM", sequelize.col('momo')), 'momo'],
+          [sequelize.fn("SUM", sequelize.col('pos')), 'pos'],
+          [sequelize.fn("SUM", sequelize.col('cheque')), 'cheque'],
+          [sequelize.fn("SUM", sequelize.col('other')), 'other'],
+          [sequelize.fn("SUM", sequelize.col('credit')), 'credit'],
+          [sequelize.fn("SUM", sequelize.col('insurance')), 'insurance'],
+
+        
+        ],
+        where: {
+          date: date,
+        }
+      });
+      return object
+    }
   @PrimaryKey
   @Column({
     type: DataType.INTEGER,
@@ -86,5 +107,8 @@ created_by:number
 @CreatedAt
 created_on:number
 
+  computer_sales?: string;
+  difference?: number;
+  total_sales?: number;
 
 }
