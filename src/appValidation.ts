@@ -7,30 +7,18 @@ export const isAppActivated = ():boolean => {
     return fs.existsSync(constants.db_path)
 }
 
-export async function verifyLicenseKey(key: string) {
+export async function verifyLicenseKey(key: string):Promise<any> {
     
     try {
         console.log("calling verify license")
-        const options = new Map()
-        options.set('k', key)
-        const request = getData(`${constants.server_url}/api_admin/findBranchByKey`, options)
         
-        request.on("response", (res) => {
-            console.log("verify key response", res);
-            console.log(`STATUS: ${res.statusCode}`);
-            console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
-
-            res.on('data', (chunk) => {
-                console.log(`BODY: ${chunk}`)
-            });
-        })
-        
-        // request.setHeader('Content-Type', 'application/json');
-        request.end();
-    
+        return getData(`${constants.server_url}/api_admin/findBranchByKey?k=${key}`)
+       
     } catch (error) {
         console.log("verify key", error)
         logger.error({ message: error })
+        throw new Error(error)
+        
     }
     
 }//3Wordsnocaps!

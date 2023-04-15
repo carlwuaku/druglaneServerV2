@@ -22,6 +22,11 @@ const logger = winston.createLogger({
             format:  defaultFormat,
         }),
         new winston.transports.File({
+            filename: path.resolve(constants.settings_location, 'logs', `${getToday()} info.log`),
+            level: 'info',
+            format: defaultFormat,
+        }),
+        new winston.transports.File({
             filename: path.resolve(constants.settings_location, 'logs', `${getToday()} error.log`),
             level: 'error',
             format: defaultFormat,
