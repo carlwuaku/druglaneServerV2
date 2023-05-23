@@ -12,7 +12,7 @@ export class StockValues extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column({
@@ -22,12 +22,12 @@ export class StockValues extends Model{
       isDate: true
     }
   })
-  date: string;
+  date!: string;
 
   @Column({
     type: DataType.DATE
   })
-  last_modified: string;
+  last_modified!: string;
 
   @Index
   @Column({
@@ -35,7 +35,7 @@ export class StockValues extends Model{
     allowNull: false,
     defaultValue: 0
   })
-  selling_value:number;
+  selling_value!: number;
 
   @Index
   @Column({
@@ -43,9 +43,9 @@ export class StockValues extends Model{
     allowNull: false,
     defaultValue: 0
   })
-  cost_value:number;
+  cost_value!: number;
 
   @CreatedAt
-  created_on:string;
+  created_on!: string;
   
 }

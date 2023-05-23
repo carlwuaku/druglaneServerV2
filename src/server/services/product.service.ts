@@ -32,7 +32,7 @@ export async function _getList(_data: { [key: string]: any }): Promise<Products[
         let param = _data.param;
         //if user specifies a search query
         let where: WhereOptions = getWhereWithMode(mode, param);
-        
+
         let objects = await Products.findAll({
             limit,
             offset,
@@ -40,10 +40,10 @@ export async function _getList(_data: { [key: string]: any }): Promise<Products[
             where
         });
 
-        
+
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -56,7 +56,7 @@ export async function _getList(_data: { [key: string]: any }): Promise<Products[
  * @param mode a string like stock_out, near_min, etc
  * @returns the options param
  */
-function getWhereWithMode(mode: string, param:string):WhereOptions {
+function getWhereWithMode(mode: string, param: string): WhereOptions {
     switch (mode) {
         case "stock_near_min":
             return {
@@ -85,18 +85,18 @@ function getWhereWithMode(mode: string, param:string):WhereOptions {
                     [Op.lte]: 0
                 }
             }
-        
+
 
         default:
             //if param was provided or is not a valid json string,
             //return nothing
             try {
                 return parseSearchQuery(JSON.parse(param))
- 
-            } catch (error) {
-                return {} 
+
+            } catch (error: any) {
+                return {}
             }
-            
+
     }
 }
 
@@ -119,7 +119,7 @@ export async function _getCount(_data: { [key: string]: any }): Promise<Number> 
         });
 
         return count;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -147,8 +147,7 @@ export async function save(_data: { [key: string]: any }): Promise<Products> {
                 //create
                 //if the barcode is not provided, generate one
                 object = await Products.create(_data, {
-                    transaction: t,
-                    logging: console.log
+                    transaction: t
                 });
                 //create the stock adjustment object
                 let stock_object = {
@@ -158,16 +157,18 @@ export async function save(_data: { [key: string]: any }): Promise<Products> {
                     created_on: `${getToday("timestamp")}`, quantity_expired: 0, quantity_damaged: 0
                 };
 
-                console.log(stock_object)
 
                 await StockAdjustment.create(stock_object, {
-                    transaction: t,
-                    logging: console.log
+                    transaction: t
                 });
 
             }
             else {
-                object = await Products.findByPk(id);
+                let product = await Products.findByPk(id);
+                if (!product) {
+                    throw new Error(`Product not found id while trying to update ${id}`)
+                }
+                object = product;
                 if (change_unit === 'yes') {
                     _data.unit = _data.new_unit;
                 }
@@ -182,8 +183,7 @@ export async function save(_data: { [key: string]: any }): Promise<Products> {
                         cost_price: _data.cost_price,
                         created_on: `${getToday("timestamp")}`
                     }, {
-                        transaction: t,
-                        logging: console.log
+                        transaction: t
                     })
                     //update the current stock
                     _data.current_stock = _data.new_stock
@@ -211,7 +211,7 @@ export async function save(_data: { [key: string]: any }): Promise<Products> {
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -225,9 +225,13 @@ export async function save(_data: { [key: string]: any }): Promise<Products> {
 export async function find(_data: { [key: string]: any }): Promise<Products> {
     try {
         let id = _data.id;
-        return Products.findByPk(id)
 
-    } catch (error) {
+        let product = await Products.findByPk(id)
+        if (!product) {
+            throw new Error(`Product not found id ${id}`)
+        }
+        return product;
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -243,7 +247,7 @@ export async function get_stock(_data: { [key: string]: any }): Promise<Number> 
         let id = _data.id;
         return calculateCurrentStock(id)
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -253,12 +257,12 @@ export async function delete_product(_data: { [key: string]: any }): Promise<boo
     try {
         const result = await sequelize.transaction(async (t: Transaction) => {
             let product = await Products.findByPk(_data.id, { transaction: t });
-            await product.destroy({ transaction: t });
+            await product?.destroy({ transaction: t });
             t.afterCommit(() => {
                 //update stock value
                 updateStockValue();
                 Activities.create({
-                    activity: `deleted a product ${product.name} `,
+                    activity: `deleted a product ${product?.name} `,
                     user_id: `${_data.user_id}`,
                     module: module_name
                 });
@@ -269,7 +273,7 @@ export async function delete_product(_data: { [key: string]: any }): Promise<boo
 
 
         return result;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -279,12 +283,12 @@ export async function restore_deleted_product(_data: { [key: string]: any }): Pr
     try {
         const result = await sequelize.transaction(async (t: Transaction) => {
             let product = await Products.findByPk(_data.id, { transaction: t });
-            await product.restore({ transaction: t });
+            await product?.restore({ transaction: t });
             t.afterCommit(() => {
                 //update stock value
                 updateStockValue();
                 Activities.create({
-                    activity: `restored a product ${product.name} `,
+                    activity: `restored a product ${product?.name} `,
                     user_id: `${_data.user_id}`,
                     module: module_name
                 });
@@ -295,7 +299,7 @@ export async function restore_deleted_product(_data: { [key: string]: any }): Pr
 
 
         return result;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -335,7 +339,7 @@ export async function mass_edit(_data: { [key: string]: any }): Promise<boolean>
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -357,7 +361,7 @@ export async function create_stock_adjustment_session(_data: { date: string; cre
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -393,7 +397,7 @@ export async function close_stock_adjustment_session(_data: { code: string; user
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -432,7 +436,7 @@ export async function get_latest_session(_data: { date: string; created_on: stri
         return code;
 
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -504,7 +508,7 @@ export async function save_stock_adjustment(_data: { code: string; items: string
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -551,7 +555,7 @@ export async function save_stock_adjustment_to_pending(_data: { code: string; it
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -561,14 +565,17 @@ export async function save_single_stock_adjustment(_data: { [key: string]: any }
     try {
 
         let object = await Products.findByPk(_data.product);
+        
         const result = await sequelize.transaction(async (t: Transaction) => {
-
+            if (!object) {
+                throw new Error(`Product not found id ${_data.product}`)
+            }
 
             await StockAdjustment.create(_data, {
                 transaction: t
             });
 
-            
+
             let old_stock = object.current_stock
             await object.update({
                 current_stock: _data.quantity_counted
@@ -582,7 +589,7 @@ export async function save_single_stock_adjustment(_data: { [key: string]: any }
                 //update stock value
                 updateStockValue();
                 Activities.create({
-                    activity: `added new stock adjustment for ${object.name} from ${old_stock} to ${object.current_stock}`,
+                    activity: `added new stock adjustment for ${object?.name} from ${old_stock} to ${object?.current_stock}`,
                     user_id: `${_data.user_id}`,
                     module: module_name
                 })
@@ -592,7 +599,7 @@ export async function save_single_stock_adjustment(_data: { [key: string]: any }
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -616,14 +623,14 @@ export async function save_pending_single_stock_adjustment(_data: { [key: string
             });
 
             let object = await Products.findByPk(_data.product);
-
+            
 
 
             t.afterCommit(() => {
                 //update stock value
                 updateStockValue();
                 Activities.create({
-                    activity: `added new stock adjustment pending authorization for ${object.name} to be changed from ${object.current_stock} to ${_data.quantity_counted}`,
+                    activity: `added new stock adjustment pending authorization for ${object?.name} to be changed from ${object?.current_stock} to ${_data.quantity_counted}`,
                     user_id: `${_data.user_id}`,
                     module: module_name
                 })
@@ -633,7 +640,7 @@ export async function save_pending_single_stock_adjustment(_data: { [key: string
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -657,14 +664,15 @@ export async function get_pending_stock_quantity(_data: { code: string; product:
             }
         })
         if (!object) {
-            return null
+            throw new Error(`StockAdjustmentPending not found id ${_data.code}`)
         }
+        
         else {
             return object.quantity_counted
         }
 
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -697,7 +705,7 @@ export async function get_stock_adjustment_sessions(_data: { [key: string]: any 
 
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -741,7 +749,7 @@ export async function get_stock_adjustments(_data: { [key: string]: any }): Prom
          */
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -794,7 +802,7 @@ export async function get_pending_stock_adjustments_by_code(_data: { [key: strin
          */
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -832,8 +840,8 @@ export async function get_stock_changes(_data: { product: number }): Promise<Sto
                 timestamp: Date.parse(obj.created_on),
                 quantity: obj.quantity_counted,
                 type: "stock_adjustment",
-                previous_stock: null,
-                new_stock: null,
+                previous_stock: 0,
+                new_stock: 0,
                 invoice: obj.code,
                 display_name: ""
             })
@@ -845,8 +853,8 @@ export async function get_stock_changes(_data: { product: number }): Promise<Sto
                 timestamp: Date.parse(obj.created_on),
                 quantity: obj.quantity,
                 type: "sale",
-                previous_stock: null,
-                new_stock: null,
+                previous_stock: 0,
+                new_stock: 0,
                 invoice: obj.code,
                 display_name: ""
             })
@@ -858,8 +866,8 @@ export async function get_stock_changes(_data: { product: number }): Promise<Sto
                 timestamp: Date.parse(obj.created_on),
                 quantity: obj.quantity,
                 type: "purchase",
-                previous_stock: null,
-                new_stock: null,
+                previous_stock: 0,
+                new_stock: 0,
                 invoice: obj.code,
                 display_name: ""
             })
@@ -871,8 +879,8 @@ export async function get_stock_changes(_data: { product: number }): Promise<Sto
                 timestamp: Date.parse(obj.created_on),
                 quantity: obj.quantity,
                 type: "transfer",
-                previous_stock: null,
-                new_stock: null,
+                previous_stock: 0,
+                new_stock: 0,
                 invoice: obj.code,
                 display_name: ""
             })
@@ -884,8 +892,8 @@ export async function get_stock_changes(_data: { product: number }): Promise<Sto
                 timestamp: Date.parse(obj.created_on),
                 quantity: obj.quantity,
                 type: "transfer_out",
-                previous_stock: null,
-                new_stock: null,
+                previous_stock: 0,
+                new_stock: 0,
                 invoice: obj.code,
                 display_name: ""
             })
@@ -922,7 +930,7 @@ export async function get_stock_changes(_data: { product: number }): Promise<Sto
             }
         });
         return results;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -939,7 +947,7 @@ export async function get_distinct_field_values(_data: { field: string }): Promi
         })
         return distinct
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -961,7 +969,7 @@ export async function get_changed_stock(_data: { code: string }): Promise<StockA
         });
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -977,7 +985,7 @@ export async function refresh_current_stock(_data: { id: string }): Promise<bool
             await refreshCurrentStock(parseInt(id))
         }
         return true;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }

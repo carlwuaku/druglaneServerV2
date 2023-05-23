@@ -14,7 +14,7 @@ export class StockAdjustmentSessions extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column({
@@ -24,23 +24,23 @@ export class StockAdjustmentSessions extends Model{
       isDate: true
     }
   })
-  date:string;
+  date!: string;
 
   @Index
   @Column({
     unique: true
   })
-  code:string;
+  code!: string;
 
   @CreatedAt
-  created_on:string;
+  created_on!: string;
 
-  @ForeignKey(()=> Users)
+  @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 
 
 }

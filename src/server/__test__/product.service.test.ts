@@ -157,7 +157,7 @@ describe('Products Service', () => {
         // expect(sadj).toBe(true)
         //check if the new stock is what was adjusted
         let obj = await Products.findByPk(product);
-        expect (obj.current_stock).toBe(40)
+        expect (obj!.current_stock).toBe(40)
 
         
 

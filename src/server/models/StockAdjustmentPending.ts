@@ -15,7 +15,7 @@ export class StockAdjustmentPending extends Model {
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
 
   @Index
   @Column({
@@ -24,7 +24,7 @@ export class StockAdjustmentPending extends Model {
       isDate: true
     }
   })
-  date: string;
+  date!: string;
 
 
   @ForeignKey(() => Products)
@@ -32,7 +32,7 @@ export class StockAdjustmentPending extends Model {
     type: DataType.INTEGER,
     allowNull: false
   })
-  product: number;
+  product!: number;
 
   @Index
   @Column({
@@ -44,7 +44,7 @@ export class StockAdjustmentPending extends Model {
       notNull: true
     }
   })
-  quantity_counted: number;
+  quantity_counted!: number;
 
   @Index
   @Column({
@@ -55,7 +55,7 @@ export class StockAdjustmentPending extends Model {
       isNumeric: true
     }
   })
-  quantity_expected: number;
+  quantity_expected!: number;
 
 
   @Column({
@@ -67,27 +67,27 @@ export class StockAdjustmentPending extends Model {
       notNull: true
     }
   })
-  current_price: number;
+  current_price!: number;
 
   @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 
   @Column
-  code: string;
+  code!: string;
 
   @CreatedAt
-  created_on: string;
+  created_on!: string;
 
 
   @Column
-  category: string;
+  category!: string;
 
   @Column
-  size: string;
+  size!: string;
 
   @Column({
     type: DataType.DATE,
@@ -95,10 +95,10 @@ export class StockAdjustmentPending extends Model {
       isDate: true
     }
   })
-  expiry: string;
+  expiry!: string;
 
   @Column
-  comments: string;
+  comments!: string;
 
   @Index
   @Column({
@@ -110,7 +110,7 @@ export class StockAdjustmentPending extends Model {
       notNull: true
     }
   })
-  quantity_expired: number;
+  quantity_expired!: number;
 
   @Index
   @Column({
@@ -122,11 +122,11 @@ export class StockAdjustmentPending extends Model {
       notNull: true
     }
   })
-  quantity_damaged: number;
+  quantity_damaged!: number;
 
   @Column
-  shelf: string;
+  shelf!: string;
 
   @Column
-  unit: string
+  unit!: string;
 }

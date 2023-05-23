@@ -15,31 +15,31 @@ export class CustomerDiagnostics extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
-  @ForeignKey(()=> Customers)
+  @ForeignKey(() => Customers)
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  customer:number
+  customer!: number;
 
   @Column
-  test:string
+  test!: string;
 
   @Column
-  data:string
+  data!: string;
 
   @Column
-  comments:string
+  comments!: string;
 
   @Index
   @Column
-  date:string
+  date!: string;
 
   @Index
   @CreatedAt
-  created_on:string
+  created_on!: string;
 
 
 }

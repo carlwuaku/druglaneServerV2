@@ -13,19 +13,19 @@ export class RolePermissions extends Model{
   @Column({
     type: DataType.INTEGER
   })
-  role_id:number;
+  role_id!: number;
 
   @ForeignKey(() => Permissions)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  permission_id: number;
+  permission_id!: number;
   
   @CreatedAt
-  created_on: string
+  created_on!: string;
 
-  updatedAt: false
+  updatedAt: false = false;
 }
 
 

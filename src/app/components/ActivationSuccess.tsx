@@ -1,20 +1,22 @@
 import { Card } from 'primereact/card';
+import { Message } from 'primereact/message';
 import React from 'react';
 
-const ActivationSuccess = ({ data }: { [key: string]: any }) => {
+const ActivationSuccess = ({ name }: { name:string }) => {
+    const content = (
+        <div className="flex align-items-center">
+            <i className="pi pi-check-circle"></i>
+            <div className="ml-2">Activation key confirmed successfully for {name} !.</div>
+        </div>
+    );
     return (
-        <Card header={"Activation Code Confirmed"} subTitle={`The details associated with the key are as follows. 
-        You can edit them from the settings menu later`}>
-            {
-                Object.keys(data).map(key => {
-                  return  <div key={Math.random()}>
-                      <b>{key}</b><br />
-                      {data[key]}
-                    </div>
-                })
-            }
-            
-        </Card>
+
+        <Message
+            className="border-primary w-full justify-content-start"
+            severity="success"
+            content={content}
+        />
+
     )
 }
 

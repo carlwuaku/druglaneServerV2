@@ -14,35 +14,35 @@ export class Transfers extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @ForeignKey(() => Branches)
   @Column({
     type: DataType.INTEGER
   })
-  receiver: number;
+  receiver!: number;
 
   @Index
   @Column({
     type: DataType.DATE
   })
-  date: string;
+  date!: string;
 
   @Index
   @Column
-  code: string;
+  code!: string;
 
   @Column
-  status: string;
+  status!: string;
 
   @CreatedAt
-  created_on:string;
+  created_on!: string;
 
-  @ForeignKey(()=> Users)
+  @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 }
 

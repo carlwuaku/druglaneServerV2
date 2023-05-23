@@ -15,66 +15,66 @@ export class TransferDetails extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  product: number;
+  product!: number;
 
   @Index
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  quantity: number;
+  quantity!: number;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  cost_price: number;
+  cost_price!: number;
 
   @Column
-  unit: string;
+  unit!: string;
 
   @CreatedAt
-  created_on: string;
+  created_on!: string;
 
   @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  markup: number;
+  markup!: number;
 
   @Index
-  @ForeignKey(()=> Transfers)
+  @ForeignKey(() => Transfers)
   @Column
-  code: string;
+  code!: string;
 
   @Index
   @Column({
     type: DataType.DATE
   })
-  date: string;
+  date!: string;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  price: number;
+  price!: number;
   
   @Column({
     type: DataType.DATE
   })
-  expiry:string;
+  expiry!: string;
 }

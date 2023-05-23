@@ -17,7 +17,7 @@ export async function save_outgoing_payment_function  (_data: { [key: string]: a
         
 
         return object
-    } catch (error) {
+    } catch (error: any) {
     
         logger.error({ message: error })
         throw new Error(error)
@@ -36,7 +36,7 @@ export async function find_outgoing_payments_between_dates_function(_data: { [ke
             }
         });
         return objects;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error)
     }
@@ -52,6 +52,8 @@ export async function delete_payment_function(_data: { [key: string]: any}):Prom
                 id: id
             }
         })
+        if (!object) throw new Error(`delete_payment_function object not found by id ${id}`);
+        
         await object.destroy();
         Activities.create({
             activity: `deleted payment record to ${object.recipient} made on ${object.date}`,
@@ -60,7 +62,7 @@ export async function delete_payment_function(_data: { [key: string]: any}):Prom
         })
         return true
         
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message: error})
         throw new Error(error)
     }
@@ -91,7 +93,7 @@ export async function find_vendor_outgoing_payments_between_dates_function (_dat
         });
        
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message: error})
         throw new Error(error)
     }
@@ -168,7 +170,7 @@ export async function find_vendor_outgoing_payments_between_dates_function (_dat
 //             formula
 
 //         }
-//     } catch (error) {
+//     } catch (error: any) {
 //         await helper.closeConnection();
 //         // if(process.env.NODE_ENV != "production") console.log(error)
 

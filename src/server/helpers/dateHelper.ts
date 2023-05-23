@@ -45,7 +45,7 @@ export function formatDateTime (date:string):string {
  * @param date 
  * @returns {string}
  */
-export function getToday  (type:'timestamp'|'timestamp_string'|'month'|'' = '', date:string|Date|null = null):string {
+export function getToday  (type:'timestamp'|'timestamp_string'|'month'|'time'|'' = '', date:string|Date|null = null):string {
     let today = new Date();
     if (date != null) {
         today = new Date(date);
@@ -73,21 +73,22 @@ export function getToday  (type:'timestamp'|'timestamp_string'|'month'|'' = '', 
         mm_string = mm.toString()
     }
     let hrs = "", mins = "", secs = "";
+    hrs = padZero(today.getHours());
+    mins = padZero(today.getMinutes());
+    secs = padZero(today.getSeconds());
     switch (type) {
         case "timestamp":
-            hrs = padZero(today.getHours());
-             mins = padZero(today.getMinutes());
-            secs = padZero(today.getSeconds());
+            
             return yyyy + '-' + mm_string + '-' + dd_string + ' ' + hrs + ':' + mins + ':' + secs;
 
         case "timestamp_string":
-             hrs = padZero(today.getHours());
-            mins = padZero(today.getMinutes());
-            secs = padZero(today.getSeconds());
+            
             return yyyy + '' + mm_string + '' + dd_string + '' + hrs + '' + mins + '' + secs;
 
         case "month":
             return mm_string;
+        case "time":
+            return hrs + ':' + mins + ':' + secs;
         default:
             return yyyy + '-' + mm_string + '-' + dd_string;
     }

@@ -28,6 +28,7 @@ export const config: { [key: string]: any } = {
         password: "r00t",
         database: "dev",
         logging: (msg: any) => logger.debug(msg),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     },
     "test": {
         host: "127.0.0.1",
@@ -35,7 +36,9 @@ export const config: { [key: string]: any } = {
         username: "root",
         password: "r00t",
         database: "test",
-        "logging": false
+        "logging": false,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+
         // logging: (msg: any) => logger.debug(msg),
     },
     "production": {
@@ -45,5 +48,7 @@ export const config: { [key: string]: any } = {
         password: "r00t",
         database: "druglane",
         logging: (msg: any) => logger.debug(msg),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+
     }
 }

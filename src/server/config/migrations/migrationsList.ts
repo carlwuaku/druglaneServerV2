@@ -4,7 +4,7 @@ import {
     Sequelize
 } from 'sequelize';
 import { Products } from "../../models/Products";
-import {models} from '../../models/index'
+import models from '../../models/index'
 import { sequelize } from "../sequelize-config";
 import { Customers } from "../../models/Customers";
 import { Activities } from "../../models/Activities";
@@ -732,7 +732,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 },
                 customer: {
                     type: STRING,
-                    allowNull: false
+                    allowNull: true,
+                    defaultValue: null
                 },
                 code: {
                     type: STRING,
@@ -745,14 +746,16 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 },
                 date: {
                     type: STRING,
-                    defaultValue: null
+                    allowNull: false
                 },
                 amount_paid: {
                     type: DOUBLE,
+                    allowNull: false,
                     defaultValue: 0
                 },
                 payment_method: {
                     type: STRING,
+                    allowNull: false,
                     defaultValue: 'Cash'
                 },
                 momo_reference: {
@@ -781,6 +784,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 },
                 discount: {
                     type: DOUBLE,
+                    allowNull: false,
                     defaultValue: 0
                 },
                 created_on: {
@@ -789,7 +793,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 },
                 shift: {
                     type: STRING,
-                    defaultValue: null
+                    allowNull: false,
+                    defaultValue: 'Not Set'
                 }
                 
                 
@@ -3293,7 +3298,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 },
                 cc: {
                     type: STRING,
-                    allowNull: null,
+                    allowNull: true,
                     defaultValue: null
                 }
             });
@@ -3337,7 +3342,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
                
                 transaction.commit();
-            } catch (error) {
+            } catch (error: any) {
                 transaction.rollback();
                 throw new Error(error);
 
@@ -3379,7 +3384,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
                 
                 transaction.commit();
-            } catch (error) {
+            } catch (error:any) {
                 transaction.rollback();
                 throw new Error(error);
                 
@@ -3441,7 +3446,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
                 
                 transaction.commit();
-            } catch (error) {
+            } catch (error: any) {
                 transaction.rollback();
                 throw new Error(error);
 

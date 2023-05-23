@@ -11,13 +11,13 @@ export class InsuranceProviders extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Column
-  name: string;
+  name!: string;
   
   @CreatedAt
-  created_on: string
+  created_on!: string;
 
-  updatedAt: false
+  updatedAt!: false;
 }

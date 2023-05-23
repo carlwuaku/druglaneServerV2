@@ -14,7 +14,7 @@ export async function verifyLicenseKey(key: string):Promise<any> {
         
         return getData(`${constants.server_url}/api_admin/findBranchByKey?k=${key}`)
        
-    } catch (error) {
+    } catch (error: any) {
         console.log("verify key", error)
         logger.error({ message: error })
         throw new Error(error)

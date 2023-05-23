@@ -14,23 +14,23 @@ export class DbBackups extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id:number
+  id!: number;
 
   
   @Column
-  file_name: string;
+  file_name!: string;
 
   @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER
   })
-  created_by: string;
+  created_by!: string;
   @Column
-  description: string;
+  description!: string;
   @Column
-  uploaded: string;
+  uploaded!: string;
   @Column
-  db_version: string;
+  db_version!: string;
   @CreatedAt
-  created_on: string
+  created_on!: string;
 }

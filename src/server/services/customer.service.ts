@@ -44,7 +44,7 @@ export async function _getList  (_data: { [key: string]: any}):Promise<Customers
         // }
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
        
         logger.error({message: error})
         throw new Error(error);
@@ -66,7 +66,7 @@ export async function _getCount(_data: { [key: string]: any }): Promise<Number> 
         });
 
         return count;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -96,7 +96,7 @@ export async function _getCount(_data: { [key: string]: any }): Promise<Number> 
 //         //TODO: calculate the amount paid, etc here
 
 //         return objects
-//     } catch (error) {
+//     } catch (error: any) {
 //        logger.error({message: error})
 //         throw new Error(error);
 //     }
@@ -118,7 +118,7 @@ export async function _save (_data: { [key: string]: any}):Promise<Customers>  {
             module: 'customers'
         })
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -128,15 +128,15 @@ export async function _save (_data: { [key: string]: any}):Promise<Customers>  {
 export async function _delete  (_data: { [key: string]: any}):Promise<boolean>  {
     try {
         let object = await Customers.findByPk(_data.id);
-        await object.destroy();
+        await object?.destroy();
         Activities.create({
-            activity: `deleted customer ${object.name} `,
+            activity: `deleted customer ${object?.name} `,
             user_id: `${_data.user_id}`,
             module: 'customers'
         })
         return true
        
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -160,8 +160,9 @@ export async function _findById(_data: { [key: string]: any }):Promise<Customers
         // object.total_paid = paid.toLocaleString();
         // let balance = total_credit - paid;
         // object.balance = balance.toLocaleString()
+        if(!object) throw new Error(`Customer ${id} not found`)
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -178,7 +179,7 @@ export async function _saveDiagnostics (_data: { [key: string]: any})  {
             module: 'customers'
         })
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -197,7 +198,7 @@ export async function _saveDiagnostics (_data: { [key: string]: any})  {
 //             status: '1',
 //             data: object
 //         }
-//     } catch (error) {
+//     } catch (error: any) {
 //         if (constants.isSqliteError(error)) await helper.closeConnection();
 //         log.error(error)
 //         throw new Error(error);
@@ -217,7 +218,7 @@ export async function _saveDiagnostics (_data: { [key: string]: any})  {
 //         await helper.connection.exec("COMMIT");
 
 //         return { status: '1', data: null }
-//     } catch (error) {
+//     } catch (error: any) {
 //         await helper.closeConnection();
 //         if (constants.isSqliteError(error)) await helper.closeConnection();
 //         if (process.env.NODE_ENV != "production") console.log(error)
@@ -259,7 +260,7 @@ exports._getCustomerDiagnosticsList = async (_data: { [key: string]: any}):Promi
 
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -277,7 +278,7 @@ export async function _getDiagnosticsList  (_data: { [key: string]: any}):Promis
 
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -295,7 +296,7 @@ export async function _addRefill (_data: { [key: string]: any}):Promise<Refills>
             module: 'customers'
         })
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -320,7 +321,7 @@ export async function _addMultipleRefill(_data: { [key: string]: any}):Promise<b
             module: 'customers'
         })
         return true;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -353,7 +354,7 @@ export async function _deleteRefill (_data: { [key: string]: any}):Promise<boole
 
 
         return true
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -400,7 +401,7 @@ export async function _getRefillList(_data: { [key: string]: string }):Promise<R
 
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -433,7 +434,7 @@ export async function _countRefills(_data: { [key: string]: string }):Promise<nu
             where
         });
         return count;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }

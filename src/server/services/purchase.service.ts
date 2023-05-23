@@ -78,7 +78,7 @@ export async function getList(_data: { [key: string]: any }): Promise<Purchases[
 
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -192,7 +192,7 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -234,7 +234,7 @@ export async function getDetails(_data: { param?: any; vendor?:any }): Promise<P
             ],
         });
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -285,7 +285,7 @@ export async function deletePurchases(_data: { [key: string]: any }): Promise<bo
             return true;
         });
         return result;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -321,8 +321,12 @@ export async function find(_data: { [key: string]: any }): Promise<Purchases> {
                 attributes: ['display_name']
             }]
         });
+        if (!object) {
+            throw new Error(`Purchase not found: ${_data.id}`);
+            
+        }
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }

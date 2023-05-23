@@ -8,79 +8,74 @@ import { Op } from "sequelize";
   tableName: "sales_details",
   modelName: 'SalesDetails',
   paranoid: true,
+  createdAt: false
 })
  export class SalesDetails extends Model{
-  static async getTotalSales(start: string, end: string):Promise<number> {
-    let object = await this.findOne({
-      attributes: [
-        [sequelize.literal(`sum(price * quantity)`),'total_amount'],
-        [sequelize.fn("SUM", sequelize.col('amount')), 'total']
-      ],
-      where: {
-        date: { [Op.between]: [new Date(start), new Date(end)] },
-        
-      }
-    });
-    return object.total_amount || 0
-  }
+  
   @PrimaryKey
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  product: number;
+  product!: number;
 
   @Index
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  quantity: number;
+  quantity!: number;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  price: number;
+  price!: number;
 
   @Column
-  unit: string;
+  unit!: string;
 
-  @CreatedAt
-  created_on: string;
+  @Column({
+    type: DataType.DATE,
+    allowNull: false
+  })
+  created_on!: string;
 
   @Column
-  label: string;
+  label!: string;
   
   @Index
-  @ForeignKey(()=> Sales)
+  @ForeignKey(() => Sales)
   @Column
-  code: string;
+  code!: string;
 
   @Index
   @Column
-  date: string;
+  date!: string;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  cost_price: number;
+  cost_price!: number;
 
   @Index
   @Column
-  expiry: string;
+  expiry!: string;
 
-  total_amount?: number;
+  total?: number;
   num_of_items?: number;
   display_name?: string;
+  product_name?: string;
+  product_id?: string;
+  
  }
 
 

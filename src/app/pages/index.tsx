@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 
 import { ipcRenderer } from 'electron';
 import Header from '../components/Header';
-import { COMPANY_NAME_RECEIVED, GET_COMPANY_NAME } from '@/utils/stringKeys';
+import { BACKUP_TIME, COMPANY_NAME_RECEIVED, GET_COMPANY_NAME, PORT } from '@/utils/stringKeys';
 import ServerState from '../components/ServerState';
 import { Button } from 'primereact/button';
 import { Link } from 'react-router-dom';
 import ServerLogs from '../components/ServerLogs';
 import SettingItem from '../components/SettingItem';
+import axios from "axios";
 
 const Index = () => {
 
@@ -30,11 +31,17 @@ const Index = () => {
 
 
         const getCompanyDetails = async () => {
-            const res = await fetch('http://127.0.0.1:5100/api_admin/settings');
-            const data = res.json();
-            console.log(data)
-        };
+          //   const res = await fetch('http://127.0.0.1:5100/api_admin/settings');
+          // const data = res.json();
+          const response = await axios.get('http://localhost:5100/api_admin');
+          // logger.info({ message: `response received: ${JSON.stringify(response.data)}` })
+
+          console.log(response)
+      };
+      setTimeout(() => {
         getCompanyDetails().catch(error => { console.log(error) })
+
+      }, 5000);
 
     }, [])
 
@@ -52,8 +59,8 @@ const Index = () => {
 
                 </div>
           <div className="col-4">
-            <SettingItem name={'Port'} value={'5000'} type={'input'}></SettingItem>
-            <SettingItem name={'Backup Time'} value={'19'} type={'select'} options={['1','19','20']}></SettingItem>
+            <SettingItem name={PORT} key="setting_port"  type={'input'}></SettingItem>
+            <SettingItem name={BACKUP_TIME}  key="setting_backup" type={'select'} options={['1','19','20']}></SettingItem>
 
                 <ServerLogs></ServerLogs>
                 </div>

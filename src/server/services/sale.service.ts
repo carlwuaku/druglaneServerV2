@@ -11,8 +11,10 @@ import { Customers } from "../models/Customers";
 import { Users } from "../models/Users";
 import { getDatesBetween, getToday, setDates } from "../helpers/dateHelper";
 import { IncomingPayments } from '../models/IncomingPayments';
-import { getDailySalesWithPaymentMethods, getDiscountReportByPaymentMethodSpecific, getDiscountTaxReportByUser, getSalesByPaymentMethod, getSalesReportByShift, getSalesReportByUser, getUserSales } from "../helpers/salesHelper";
+import { getDailySalesWithPaymentMethods, getDiscountReportByPaymentMethodSpecific, getDiscountTaxReportByUser, getSalesByPaymentMethod, getSalesReportByShift, getSalesReportByUser, getTotalIncomingPaid, getTotalSales, getTotalSummary, getUserSales } from "../helpers/salesHelper";
 import { DailyRecords } from "../models/DailyRecords";
+import * as crypto from 'crypto'
+import { STRING_DISCOUNT, STRING_NUMBER_OF_ITEMS, STRING_TOTAL, STRING_TOTAL_AMOUNT } from "../utils/strings";
 
 const module_name = "sales";
 const attributes: Includeable[] = [{
@@ -26,7 +28,7 @@ const attributes: Includeable[] = [{
 {
     model: SalesDetails,
     attributes: [
-        [sequelize.literal('sum(quantity * price)'), 'total_amount'],
+        [sequelize.literal('sum(quantity * price)'), STRING_TOTAL_AMOUNT],
         [sequelize.literal('count(id)'), 'num_items']
 
     ],
@@ -39,7 +41,13 @@ const attributes: Includeable[] = [{
  * @param _data an object where param is a json string
  * @returns list of matching Sales
  */
-export async function getList(_data: { [key: string]: any }): Promise<Sales[]> {
+export async function getList(_data: {
+    limit?: string,
+    offset?: string,
+    param?: string,
+    product?: string
+
+}): Promise<Sales[]> {
     try {
 
         let limit = _data.limit ? parseInt(_data.limit) : 100;
@@ -65,38 +73,43 @@ export async function getList(_data: { [key: string]: any }): Promise<Sales[]> {
             detailsWhere['product'] = { [Op.in]: product_ids }
         }
         let objects = await Sales.findAll({
-            attributes: {
-                include: [
-                    [sequelize.literal(`(select count(id) from ${SalesDetails.tableName} where code = Sales.code)`), 'num_items'],
-                    [sequelize.literal(`(select sum(price * quantity) from ${SalesDetails.tableName} where code = Sales.code)`), 'total_amount'],
-                ]
-            },
+
             limit,
             offset,
             where,
-            include: [{
-                model: Customers,
-                attributes: ['name', 'id']
-            },
-            {
-                model: Users,
-                attributes: ['display_name']
-            },
-            {
-                model: SalesDetails,
-                attributes: [],
-                where: detailsWhere
-            }
+            include: [
+                {
+                    model: Customers,
+
+                    attributes: ['name', 'id']
+                },
+                {
+                    model: Users,
+                    attributes: ['display_name']
+                },
+
+                {
+                    model: SalesDetails,
+                    as: SalesDetails.tableName,
+
+                    attributes: [
+                        [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+                        [sequelize.literal(`count(${SalesDetails.tableName}.id)`), STRING_NUMBER_OF_ITEMS]
+                    ]
+
+                }
             ],
-            logging(sql, timing?) {
-                console.log(sql, timing)
-            },
+
+            raw: true,
+            group: "code",
+            subQuery: false
+
         });
 
 
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -105,18 +118,45 @@ export async function getList(_data: { [key: string]: any }): Promise<Sales[]> {
 };
 
 /**
- * save or update a purchase. if a code is provided, an update is performed, else an insert. 
- * @param _data details of the purchase such invoice number, vendor and date, and the details of the items
+ * save or update a sale. if a code is provided, an update is performed, else an insert. 
+ * in case of a return sale, be sure to add prop return:yes to the _data
+ * @param _data details of the sale such as customer, payment_method, and date, and the details of the items
  * @returns the code of the saved purchase
  */
-export async function save(_data: { [key: string]: any }): Promise<string> {
+export async function save(_data: { 
+    date?: string,
+    items?: string,
+    code?: string,
+    created_on?: string,
+    return?: string, 
+    created_by: string,
+    user_id: string,
+    customer?: string,
+    amount_paid: string,
+    payment_method: string,
+    momo_reference?: string,
+    insurance_provider?: string,
+    insurance_member_name?: string,
+    insurance_member_id?: string,
+    creditor_name?: string,
+    credit_paid?: string,
+    discount?: string,
+    shift?: string,
+    tax?: string
+
+ }): Promise<string> {
     try {
-        //the data should come with the purchase data and
-        //the details data
-        let items: any[] = JSON.parse(_data.items);
+        //the data should come with the sale data and
+        //the details data.
+
+        let items: any[] = _data.items ? JSON.parse(_data.items) : [];
         //if no code was given, generate one and create. else
         //delete that code and re-insert
         let code = _data.code;
+        const date = _data.date || getToday();
+        const timestamp = _data.created_on || getToday("timestamp")
+        //in case of a return sale, append RT to the code for easy identification
+        const isReturn: boolean = _data.return === "yes";
         let activity = "";
         const result = await sequelize.transaction(async (t: Transaction) => {
 
@@ -126,28 +166,54 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
                     where: { code: code }
                 })
                 activity = `updated sales item with code ${code}.`
-
-                await object.update(_data, {
-                    transaction: t
+                if (!object) {
+                    throw new Error(`Unable to update sale with code: ${code}. Not found`);
+                }
+                Sales.update(_data, {
+                    transaction: t,
+                    where: {
+                        code: code
+                    }
                 });
+                // await object.update(_data, {
+                //     transaction: t,
+                //     logging(sql, timing?) {
+                //         console.log(sql, timing)
+                //     },
+                // });
+                //update the created_on for the products as well
+                await SalesDetails.update({
+                    created_on: timestamp
+                }, {
+                    transaction: t,
+                    where: {
+                        code: code
+                    }
+                })
 
             }
             else {
                 //generate code
                 code = crypto.randomUUID();
-
+                if (isReturn) {
+                    code = "RT-" + code;
+                }
                 activity = `created sale item with code ${code}`
 
 
                 _data.code = code;
                 _data.created_by = _data.user_id;
+                _data.created_on = timestamp;
+                _data.date = date;
                 await Sales.create(_data, {
                     transaction: t
                 });
                 items.map(item => {
                     item.code = code;
                     item.date = _data.date;
-                    item.created_by = _data.user_id
+                    item.created_by = _data.user_id;
+                    item.date = date;
+                    item.created_on = timestamp;
                 })
 
                 await SalesDetails.bulkCreate(items,
@@ -178,7 +244,7 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -189,13 +255,13 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
  * @param _data must contain some search params
  * @returns a list of purchase details
  */
-export async function getDetails(_data: { [key: string]: any }): Promise<SalesDetails[]> {
+export async function getDetails(_data: { customer?: string, param?: string }): Promise<SalesDetails[]> {
     try {
 
         let where: WhereOptions = {};
         //if customer..
         if (_data.customer) {
-            where['code'] = sequelize.literal(`(code in (select code fom ${sequelize.col(Sales.tableName)} where customer = '${_data.customer}'))`)
+            where['code'] = sequelize.literal(`(code in (select code from ${Sales.tableName} where customer = '${_data.customer}'))`)
         }
         if (_data.param) {
             let searchQuery = JSON.parse(_data.param)
@@ -204,18 +270,21 @@ export async function getDetails(_data: { [key: string]: any }): Promise<SalesDe
         let objects = await SalesDetails.findAll({
             attributes: {
                 include: [
-                    [sequelize.literal('price * quantity'), 'total']
+                    [sequelize.literal(`${SalesDetails.name + '.price'} * ${SalesDetails.name + '.quantity'}`), STRING_TOTAL],
+                    [sequelize.col('Product.name'), 'product_name'], // Alias the attribute to 'product_name'
+                    [sequelize.col('Product.id'), 'product_id']
                 ]
             },
             where: where,
             include: [{
                 model: Products,
-                attributes: [['name', 'product_name'], ['id', 'product_id']]
+                attributes: []
             }
-            ]
+            ],
+            raw: true
         });
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -224,9 +293,9 @@ export async function getDetails(_data: { [key: string]: any }): Promise<SalesDe
 
 /**
  * delete Sales using the codes
- * @param _data must contain the ids to be deleted as an array stringified
+ * @param _data must contain the codes to be deleted as an array stringified
  */
-export async function deleteSales(_data: { [key: string]: any }): Promise<boolean> {
+export async function deleteSales(_data: { codes: string, user_id: string }): Promise<boolean> {
     try {
         let codes: any[] = JSON.parse(_data.codes);
         //get all the items in the codes
@@ -265,7 +334,7 @@ export async function deleteSales(_data: { [key: string]: any }): Promise<boolea
             return true;
         });
         return result;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -273,19 +342,14 @@ export async function deleteSales(_data: { [key: string]: any }): Promise<boolea
 
 
 /**
- * get a single purchase object using the id or code    
- * @param _data must contain the id or code of the purchase
+ * get a single sale object using the id or code    
+ * @param _data must contain the id or code of the sale
  * @returns a purchase item
  */
-export async function find(_data: { [key: string]: any }): Promise<Sales> {
+export async function find(_data: { id: string }): Promise<Sales> {
     try {
         let object = await Sales.findOne({
-            attributes: {
-                include: [
-                    [sequelize.literal(`(select count(id) from ${SalesDetails.tableName} where code = '${_data.id}')`), 'num_items'],
-                    [sequelize.literal(`(select sum(price * quantity) from ${SalesDetails.tableName}  where code = '${_data.id}')`), 'total_amount'],
-                ]
-            },
+
             where: {
                 [Op.or]: [
                     { id: _data.id },
@@ -294,15 +358,41 @@ export async function find(_data: { [key: string]: any }): Promise<Sales> {
             },
             include: [{
                 model: Customers,
-                attributes: ['name', 'id']
+                attributes: [
+                    ['id', 'customer_id'],
+                    ['name', 'customer_name']
+
+                ]
             },
             {
                 model: Users,
-                attributes: ['display_name']
-            }]
+                attributes: [
+                    'display_name'
+                ]
+            },
+
+            {
+                model: SalesDetails,
+                as: SalesDetails.tableName,
+
+                attributes: [
+
+                    [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+                    [sequelize.literal(`count(${SalesDetails.tableName}.id)`), STRING_NUMBER_OF_ITEMS]
+
+                ]
+
+            }
+            ],
+            raw: true,
+
         });
+        if (!object) {
+            throw new Error(`Unable to find sale with code: ${_data.id}. Not found`);
+        }
+
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -310,12 +400,12 @@ export async function find(_data: { [key: string]: any }): Promise<Sales> {
 
 
 /**
- * get the total sale, total credit, total paid and balance amounts for a specified time and 
+ * get the total sale, total credit, total discount, total paid and balance amounts for a specified time and 
  * customer. defaults to no customer and the current month
  * @param _data may contain the start and end dates, and vendor
  * @returns an object
  */
-export async function getTotals(_data: { [key: string]: any }): Promise<ITotals> {
+export async function getTotals(_data: { start_date?: string, end_date?:string, customer?: string }): Promise<ITotals> {
     try {
         let start = _data.start_date || setDates("this_month").startDate;
         let end = _data.end_date || setDates("this_month").endDate;
@@ -323,41 +413,85 @@ export async function getTotals(_data: { [key: string]: any }): Promise<ITotals>
 
         let total_where: WhereOptions = {};
         let payment_where: WhereOptions = {};
-        total_where['created_on'] = { [Op.between]: [new Date(start), new Date(end)] };
+        const end_date = new Date(end);
+        end_date.setHours(23);
+        end_date.setMinutes(59);
+        end_date.setSeconds(59)
+        total_where['created_on'] = { [Op.between]: [new Date(start), end_date] };
         if (customer) {
             total_where['code'] = {
                 [Op.in]: sequelize.literal(`(select code from ${Sales.tableName} where customer = ${customer})`)
             };
             payment_where['payer'] = customer;
         }
-        const total = await SalesDetails.sum("quantity * price", {
-            where: total_where
+        const getTotal = await SalesDetails.findOne({
+            attributes: [
+                [
+                    sequelize.fn('SUM', sequelize.literal('price * quantity')),
+                    STRING_TOTAL
+                ]
+            ],
+            where: total_where,
+            raw: true
         });
+        let total = getTotal?.total || 0
+
+        const getTotalDiscount = await Sales.findOne({
+            attributes: [
+                [
+                    sequelize.fn('SUM', sequelize.literal('discount')),
+                    STRING_DISCOUNT
+                ]
+            ],
+            where: total_where,
+            raw: true
+        });
+        const discount = getTotalDiscount?.discount || 0
+        total -= discount;
+
         //add the payment method
-        total_where['payment_method'] = {
+        total_where['code'] = {
             [Op.in]: sequelize.literal(`(select code from ${Sales.tableName} where payment_method = 'Credit')`)
 
         }
-        const total_credit = await SalesDetails.sum("quantity * price", {
-            where: total_where
+        const getTotalCredit = await SalesDetails.findOne({
+            attributes: [
+                [
+                    sequelize.fn('SUM', sequelize.literal('price * quantity')),
+                    STRING_TOTAL
+                ]
+            ],
+            where: total_where,
+            raw: true,
+            logging(sql, timing?) {
+                console.log(sql)
+            },
         });
 
 
-        const total_paid = await IncomingPayments.sum("amount", {
-            where: payment_where
+        const total_credit = getTotalCredit?.total || 0
+
+        const getTotalPaid = await IncomingPayments.sum("amount", {
+            where: payment_where,
+            logging(sql, timing?) {
+                console.log(sql)
+            },
         })
+        const total_paid = getTotalPaid || 0
 
         let balance = total - total_paid;
+
         return {
             total: total.toLocaleString(),
             total_credit: total_credit.toLocaleString(),
             total_paid: total_paid.toLocaleString(),
-            balance: balance.toLocaleString()
+            balance: balance.toLocaleString(),
+            total_discount: discount.toLocaleString()
 
         }
 
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -368,14 +502,14 @@ export async function findUserSummaryBetweenDates(_data: { [key: string]: any })
 
         let start = _data.start_date || getToday();
         let end = _data.end_date || getToday();
-        let data = await getSalesReportByUser(start,end)
+        let data = await getSalesReportByUser(start, end)
 
-        let discount_tax_data = await getDiscountTaxReportByUser(start,end)
+        let discount_tax_data = await getDiscountTaxReportByUser(start, end)
 
         let overall_total = 0, overall_tax = 0, overall_discount = 0;
         let results = [];
 
-        let hash:{[key:string]:any} = {};
+        let hash: { [key: string]: any } = {};
         let last_created_by = undefined;
         let count = 0;
 
@@ -404,9 +538,9 @@ export async function findUserSummaryBetweenDates(_data: { [key: string]: any })
                 obj.total;
             // hash[obj.created_by]['discount'] += obj.discount;
             // hash[obj.created_by]['tax'] += obj.tax;
-            hash[obj.created_by]['total_amount'] += obj.total;
+            hash[obj.created_by][STRING_TOTAL_AMOUNT] += obj.total;
             hash[obj.created_by]['display_name'] = obj.display_name;
-            overall_total += obj.total;
+            overall_total += obj.total!;
 
             last_created_by = obj.created_by;
             count++;
@@ -459,7 +593,7 @@ export async function findUserSummaryBetweenDates(_data: { [key: string]: any })
             overall_tax
         }
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -477,7 +611,7 @@ export async function findShiftSummaryBetweenDates(_data: { [key: string]: any }
         let results = [];
 
         let hash: { [key: string]: any } = {};
-        
+
 
         data.forEach(obj => {
 
@@ -504,9 +638,9 @@ export async function findShiftSummaryBetweenDates(_data: { [key: string]: any }
                 obj.total;
             // hash[obj.shift]['discount'] += obj.discount;
             // hash[obj.shift]['tax'] += obj.tax;
-            hash[obj.shift]['total_amount'] += obj.total;
+            hash[obj.shift][STRING_TOTAL_AMOUNT] += obj.total;
             hash[obj.shift]['shift'] = obj.shift;
-            overall_total += obj.total;
+            overall_total += obj.total!;
 
 
         });
@@ -554,7 +688,7 @@ export async function findShiftSummaryBetweenDates(_data: { [key: string]: any }
             overall_tax
         }
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -571,35 +705,35 @@ export async function findPaymentMethodSummaryBetweenDates(_data: { start_date: 
 
         for (var i = 0; i < objects.length; i++) {
             var obj = objects[i];
-            total_sales += obj.total;
-            num_sales += obj.num_of_items;
+            total_sales += obj.total!;
+            num_sales += obj.num_of_items!;
         }
 
         let all = await getSalesByPaymentMethod(start, end);
-        
+
         let cash = 0, momo = 0, cheque = 0, pos = 0, credit = 0, insurance = 0, other = 0;
         all.forEach(sale => {
             switch (sale.payment_method) {
                 case "Cash":
-                    cash = sale.total
+                    cash = sale.total!
                     break;
                 case "Mobile Money":
-                    momo = sale.total;
+                    momo = sale.total!;
                     break;
                 case "Cheque":
-                    cheque = sale.total;
+                    cheque = sale.total!;
                     break;
                 case "POS":
-                    pos = sale.total;
+                    pos = sale.total!;
                     break;
                 case "Credit":
-                    credit = sale.total;
+                    credit = sale.total!;
                     break;
                 case "Insurance":
-                    insurance = sale.total;
+                    insurance = sale.total!;
                     break;
                 case "Other":
-                    other = sale.total;
+                    other = sale.total!;
                     break;
                 default:
                     break;
@@ -617,8 +751,8 @@ export async function findPaymentMethodSummaryBetweenDates(_data: { start_date: 
             insurance: insurance.toLocaleString(),
             other: other.toLocaleString(),
             data: objects
-        } 
-    } catch (error) {
+        }
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -629,7 +763,7 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
         let start = _data.start_date || getToday();
         let end = _data.end_date || getToday();
         let queries = await getDailySalesWithPaymentMethods(start, end);
-        let hash: {[key:string]:any} = {};
+        let hash: { [key: string]: any } = {};
         let overall_total = 0;
         let overall_cost = 0;
         let total_credit = 0;
@@ -682,11 +816,11 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
                 hash[q.date].total_sales += q.total;
                 hash[q.date].cost += q.total_cost;
 
-                overall_total += q.total;
-                overall_cost += q.total_cost;
+                overall_total += q.total!;
+                overall_cost += q.total_cost!;
                 // overall_discount += q.discount;
                 if (q.payment_method == "Credit") {
-                    total_credit += q.total;
+                    total_credit += q.total!;
                 }
 
 
@@ -730,9 +864,9 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
         }
 
 
-        let total_credit_paid = await IncomingPayments.getTotalPaid('', start, end)
+        let total_credit_paid = await getTotalIncomingPaid('', start, end)
         let credit_balance = total_credit - total_credit_paid;
-        
+
         return {
             data: objects,
             // best_sellers: best_sellers,
@@ -746,14 +880,14 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
             credit_balance: credit_balance.toLocaleString(),
             total_discount: overall_discount.toLocaleString()
         }
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
 }
 
-export async function getBranchDailyRecords(_data: { start_date: string; end_date: string; }):Promise<DailyRecords[]> {
-    try { 
+export async function getBranchDailyRecords(_data: { start_date: string; end_date: string; }): Promise<DailyRecords[]> {
+    try {
         let start = _data.start_date || getToday();
         let end = _data.end_date || getToday();
         let range = getDatesBetween(start, end);
@@ -762,9 +896,9 @@ export async function getBranchDailyRecords(_data: { start_date: string; end_dat
             let start = range[i];
             let end = range[i];
             // let objects  =  await detailsHelper.getDailySales(start, end);
-            let obj = await DailyRecords.getTotalSummary(start);
+            let obj = await getTotalSummary(start);
             //computer sales
-            let total = await SalesDetails.getTotalSales(start, end);
+            let total = await getTotalSales(start, end);
             let keys = ["momo", "cash", "cheque", "insurance", "other", "credit", "pos"]
             // keys.forEach(k => {
             //     obj[k] = obj[k] == null ? 0 : obj[k];
@@ -780,13 +914,13 @@ export async function getBranchDailyRecords(_data: { start_date: string; end_dat
             objects.push(obj)
         }
         return objects;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
 }
 
-export async function getCategorySales(_data: { start_date: string; end_date: string; limit: number; }): Promise<Products[]>{
+export async function getCategorySales(_data: { start_date: string; end_date: string; limit: number; }): Promise<Products[]> {
     let start = _data.start_date || getToday();
     let end = _data.end_date || getToday();
     let limit = _data.limit || 10;
@@ -794,12 +928,12 @@ export async function getCategorySales(_data: { start_date: string; end_date: st
         limit,
         attributes: [
             'category',
-            [sequelize.literal(`(select sum(price * quantity) as total_amount from sales_details)`), 'total_amount']
+            [sequelize.literal(`(select sum(price * quantity) as total_amount from sales_details)`), STRING_TOTAL_AMOUNT]
         ],
         where: {
             ...(start && { date: { [Op.gte]: new Date(start) } }),
             ...(end && { date: { [Op.lte]: new Date(end) } })
-            
+
         },
         order: [['total', 'DESC']],
         group: ['category'],
@@ -816,6 +950,7 @@ interface ITotals {
     total_credit: string;
     total_paid: string;
     balance: string;
+    total_discount: string;
 }
 
 interface SaleSummary {
@@ -825,7 +960,7 @@ interface SaleSummary {
     overall_tax: number;
 }
 
-interface PaymentMethodSummary{
+interface PaymentMethodSummary {
     num_sales: number;
     total: string;
     momo: string;
@@ -838,7 +973,7 @@ interface PaymentMethodSummary{
     data: any[]
 }
 
-interface DailyBranchSaleSummary{
+interface DailyBranchSaleSummary {
     data: any[],
     // best_sellers: best_sellers,
     // worst_sellers: worst_sellers,

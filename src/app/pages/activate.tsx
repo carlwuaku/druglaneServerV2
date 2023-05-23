@@ -10,16 +10,39 @@ import { TabPanel, TabView } from 'primereact/tabview';
 import { Toast } from 'primereact/toast';
 import { MenuItem } from 'primereact/menuitem';
 import Settings from '../components/settings';
+import { Dialog } from 'primereact/dialog';
+import { useFormik, FormikProps, FormikErrors, Form, } from 'formik';
+import SetAdminPassword from '../components/SetAdminPassword';
+
 const Activate = () => {
   //define the url. since the https version fails
   //sometimes, retry with the http version when 
   //necessary
+  const formik = useFormik({
+    initialValues: {
+      code: ''
+    },
+    validate: (values: { code: string }) => {
+      let errors: FormikErrors<{code:string}> = {};
+      if (!values.code) {
+        errors.code = 'Required';
+      }
+      return errors;
+    },
+    onSubmit: (data) => {
+
+      //validate and emit data to parent
+      setLoading(true)
+      ipcRenderer.send(CALL_ACTIVATION, data.code)
+    }
+  });
   const [loading, setLoading] = useState(false)
   const keyField = useRef<HTMLInputElement>();
-  const [requestStatus, setRequestStatus] = useState(null);
+  const [requestStatus, setRequestStatus] = useState<{status:string, data:any}>({status: "", data:{}});
   const toast = useRef(null);
-  const settingsData: { [key: string]: any } = {
+  const [errorVisible, setErrorVisible] = useState(false);
 
+  const [settingsData, setSettingsData] = useState({
     number_of_shifts: '',
     restrict_zero_stock_sales: '',
     tax: '',
@@ -40,30 +63,73 @@ const Activate = () => {
     email: '',
     address: '',
     digital_address: '',
-    admin_password: ''
+    admin_password: '',
+    company_id: ''
+  })
+
+  const settingsSubmitted = () => {
+    //navigate to next tab
+    setActiveIndex(2)
   }
 
-  function sendValidation() {
-    if (keyField.current.value) {
-      setLoading(true)
-      ipcRenderer.send(CALL_ACTIVATION, keyField.current.value)
-    }
+  const adminPasswordSet = () => {
+    console.log("passwords et")
   }
+
+  // function sendValidation() {
+  //   if (keyField.current.value) {
+  //     setLoading(true)
+  //     ipcRenderer.send(CALL_ACTIVATION, keyField.current.value)
+  //   }
+  // }
 
   useEffect(() => {
     ipcRenderer.on(ACTIVATION_RESULT, (event, data) => {
       setLoading(false)
-
-      setRequestStatus(data.data)
-      console.log(data)
+      //incase of an incorect key the data returned is 
+//       "data": {
+//         "status": "-1"
+//       },
+//       "error": false,
+//         "message": ""
+//     }
+// }
+      
+      console.log(data.data)
       if (data.data.status === "1") {
-        for (const key in data.data.data) {
-          if (Object.hasOwn(settingsData, key)) {
-            settingsData[key] = data.data[key]
-          }
-        }
+        setRequestStatus(data.data)
+        setSettingsData({
+          number_of_shifts: data.data.data.number_of_shifts,
+          restrict_zero_stock_sales: data.data.data.restrict_zero_stock_sales,
+          tax: '0',
+          logo: '',
+          receipt_logo: 'no',
+          tax_title: 'Local Sales Tax',
+          show_tax_on_receipt: 'no',
+          receipt_show_credits: 'yes',
+          receipt_extra_info: '',
+          receipt_footer: '',
+          receipt_show_customer: 'yes',
+          receipt_product_data: '',
+          receipt_font_size: '13px',
+          receipt_show_borders: 'no',
+          duplicate_record_timeout: '',
+          company_name: data.data.data.name,
+          phone: data.data.data.phone,
+          email: data.data.data.email,
+          address: data.data.data.address,
+          digital_address: data.data.data.digital_address,
+          admin_password: '',
+          company_id: data.data.data.id
+        })
+        
+        console.log(settingsData)
 
         setActiveIndex(1)
+      }
+      else {
+        //show dialog for error
+        setErrorVisible(true)
       }
 
     })
@@ -73,22 +139,30 @@ const Activate = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (
-    <div className='flex flex-column justify-content-center align-items-center '>
+    <div className='flex flex-column gap-3 justify-content-center align-items-center '>
       <h2>Activate Your System</h2>
-      <Button><Link to="/">hOME</Link></Button>
-      <TabView activeIndex={activeIndex} onTabChange={(e) => setActiveIndex(e.index)}>
-        <TabPanel header="Enter Activation Code">
-          <form>
-            <div className="flex flex-column justify-content-center align-items-center">
+      <Button><Link to="/">HOME</Link></Button>
+      <TabView activeIndex={activeIndex}  onTabChange={(e) => setActiveIndex(e.index)}>
+        <TabPanel header="Enter Activation Code" disabled>
+          <form onSubmit={formik.handleSubmit} >
+            <div className="flex flex-column gap-3 justify-content-center align-items-center">
 
               <div >
                 <b>Please enter your activation code. If you do not have one, please contact us via our form at
-                  <a href="http://calronsoftwares.com">http://calronsoftwares.com</a>
+                  <a href="http://calronsoftwares.com"> http://calronsoftwares.com</a>
                 </b>
               </div>
-
-              <InputText required ref={keyField} />
-              <Button type='submit' label='Submit' loading={loading} onClick={sendValidation} ></Button>
+           
+                <label htmlFor="location">Activation Code</label>
+              <InputText id="code" className='wide-input'
+                  aria-describedby="code-help"
+                  value={formik.values.code}
+                  onChange={(e) => {
+                    formik.setFieldValue('code', e.target.value);
+                  }}
+                />
+            
+              <Button type='submit' label='Submit' loading={loading} ></Button>
               {
                 requestStatus && requestStatus.data.status === "-1" ? <ActivationFailed /> : null
               }
@@ -96,41 +170,34 @@ const Activate = () => {
 
           </form>
         </TabPanel>
-        <TabPanel header="Settings">
-          <div>
+        <TabPanel header="Settings" disabled>
+          <div className='flex flex-column justify-content-center align-items-center'>
             {
-              requestStatus && requestStatus.data.status === "1" ?
+              requestStatus && requestStatus.status === "1" ?
                 <div>
-                  <ActivationSuccess data={requestStatus.data.data} />
-                  <Settings address={settingsData.address} number_of_shifts={settingsData.number_of_shifts}
-                    restrict_zero_stock_sales={settingsData.restrict_zero_stock_sales} tax={settingsData.tax}
-                    logo={settingsData.logo} receipt_logo={settingsData.receipt_logo} tax_title={settingsData.tax_title}
-                    show_tax_on_receipt={settingsData.show_tax_on_receipt} receipt_show_credits={settingsData.receipt_show_credits}
-                    receipt_extra_info={settingsData.receipt_extra_info} receipt_footer={settingsData.receipt_footer}
-                    receipt_show_customer={settingsData.receipt_show_customer} receipt_product_data={settingsData.receipt_product_data}
-                    receipt_font_size={settingsData.receipt_font_size}
-                    receipt_show_borders={settingsData.receipt_show_borders} duplicate_record_timeout={settingsData.duplicate_record_timeout}
-                    company_name={settingsData.company_name}
-                    phone={settingsData.phone} email={settingsData.email} digital_address={settingsData.digital_address}
-                    admin_password={settingsData.admin_password} ></Settings>
+                  <ActivationSuccess name={requestStatus.data.name} />
+                  <Settings data={settingsData} onSubmit={settingsSubmitted}  ></Settings>
                 </div> : null
             }
 
           </div>
         </TabPanel>
-        <TabPanel header="Header III">
-          <p className="m-0">
-            At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti
-            quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in
-            culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.
-            Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.
-          </p>
+        <TabPanel header="Set Administrator Password" disabled>
+          <div className='flex flex-column justify-content-center align-items-center'>
+            <SetAdminPassword onSubmit={adminPasswordSet}></SetAdminPassword>
+          </div>
         </TabPanel>
-        <TabPanel header="Header IV" disabled></TabPanel>
       </TabView>
 
 
-
+      <Dialog  visible={errorVisible} style={{ width: '50vw' }}
+        footer={<Button label="Close" icon="pi pi-times" onClick={() => setErrorVisible(false)} className="p-button-text" />
+}
+        onHide={() => setErrorVisible(false)}>
+        <p className="m-0">
+          Your activation key is invalid. Please check and try again
+        </p>
+      </Dialog>
 
 
     </div>

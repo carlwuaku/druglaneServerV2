@@ -116,12 +116,12 @@ describe('Puchase Service', () => {
         let updated_product1 = await Products.findByPk(1);
         let updated_product2 = await Products.findByPk(2);
         let updated_product5 = await Products.findByPk(5);
-        expect(updated_product1.current_stock).toEqual(product1Stock + 9);
-        expect(updated_product2.current_stock).toEqual(product2Stock + 20);
-        expect(updated_product5.current_stock).toEqual(product5Stock + 50);
-        expect(updated_product1.price).toEqual(4);
-        expect(updated_product2.price).toEqual(7);
-        expect(updated_product5.price).toEqual(30);
+        expect(updated_product1!.current_stock).toEqual(product1Stock + 9);
+        expect(updated_product2!.current_stock).toEqual(product2Stock + 20);
+        expect(updated_product5!.current_stock).toEqual(product5Stock + 50);
+        expect(updated_product1!.price).toEqual(4);
+        expect(updated_product2!.price).toEqual(7);
+        expect(updated_product5!.price).toEqual(30);
 
     });
         
@@ -248,18 +248,18 @@ describe('Puchase Service', () => {
         let updated_product9 = await Products.findByPk(9);
         let updated_product10 = await Products.findByPk(10);
         //at the end of it, the one that wasnt changed whould remain the same
-        expect(updated_product1.current_stock).toEqual(product1Stock);
+        expect(updated_product1!.current_stock).toEqual(product1Stock);
         //the ones that were removed should have their qantities reduced by their previous quantities
-        expect(updated_product2.current_stock).toEqual(product2Stock - 20);
-        expect(updated_product5.current_stock).toEqual(product5Stock - 50);
+        expect(updated_product2!.current_stock).toEqual(product2Stock - 20);
+        expect(updated_product5!.current_stock).toEqual(product5Stock - 50);
 
-        expect(updated_product7.current_stock).toEqual(product7Stock + 58);
-        expect(updated_product9.current_stock).toEqual(product9Stock + 8);
-        expect(updated_product10.current_stock).toEqual(product10Stock + 12);
+        expect(updated_product7!.current_stock).toEqual(product7Stock + 58);
+        expect(updated_product9!.current_stock).toEqual(product9Stock + 8);
+        expect(updated_product10!.current_stock).toEqual(product10Stock + 12);
 
-        expect(updated_product7.price).toEqual(300);
-        expect(updated_product9.price).toEqual(3);
-        expect(updated_product10.price).toEqual(5);
+        expect(updated_product7!.price).toEqual(300);
+        expect(updated_product9!.price).toEqual(3);
+        expect(updated_product10!.price).toEqual(5);
 
     });
 
@@ -470,7 +470,7 @@ describe('Puchase Service', () => {
             })
         );
         let search1 = await getList({ param: JSON.stringify([{ field: 'date', operator: 'dates_between', param: ['2023-01-01', '2023-04-30'] }]) })
-        expect(search1).toHaveLength(5);
+        expect(search1).toHaveLength(4);
         let search2 = await getList({ param: JSON.stringify([{ field: 'date', operator: 'dates_between', param: ['2023-05-01', '2023-12-31'] }]) })
         expect(search2).toHaveLength(8);
 

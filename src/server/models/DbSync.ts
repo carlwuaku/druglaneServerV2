@@ -12,18 +12,18 @@ export class DbSync extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Column
-  type: string;
+  type!: string;
 
   @Column
-  action: string;
+  action!: string;
 
   @Column
-  data: string;
+  data!: string;
 
   @CreatedAt
-  created_on: string
+  created_on!: string;
 }
 

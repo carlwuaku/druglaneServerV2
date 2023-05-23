@@ -11,8 +11,8 @@ export class ItemActiveIngredients extends Model{
     type: DataType.INTEGER,
     allowNull: false
   })
-  product:number;
+  product!: number;
 
   @Column
-  ingredient:string;
+  ingredient!: string;
 }

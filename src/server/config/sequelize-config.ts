@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript'
-import { models } from '../models/index'
-import { config, sqliteConfig } from './config';
+import allModels from '../models/index';
+import { config } from './config';
 import { Branches } from '../models/Branches';
 import { CustomerDiagnostics } from '../models/CustomerDiagnostics';
 import { Customers } from '../models/Customers';
@@ -24,19 +24,7 @@ import { Vendors } from '../models/Vendors';
 import { Activities } from '../models/Activities';
 import { IncomingPayments } from '../models/IncomingPayments';
 import { logger } from './logger';
-import { DailyRecords } from '../models/DailyRecords';
-import { DbBackups } from '../models/DbBackups';
-import { DbSync } from '../models/DbSync';
-import { DiagnosticTests } from '../models/DiagnosticTests';
-import { InsuranceProviders } from '../models/InsuranceProviders';
-import { OnlineBackups } from '../models/OnlineBackups';
-import { OutgoingPayments } from '../models/OutgoingPayments';
-import { ProductBatches } from '../models/ProductBatches';
-import { Settings } from '../models/Settings';
-import { StockAdjustmentSessions } from '../models/StockAdjustmentSessions';
-import { StockValues } from '../models/StockValues';
-import { UserSessions } from '../models/UserSessions';
-const connection = new Sequelize(config[process.env.NODE_ENV]);
+import { flattenNestedProperties } from '../helpers/salesHelper';
 // const databaseNames: { [key:string]:string} = {test:'test', development: 'dev'}
 /**
  * SequelizeConnectionError: This error is thrown if Sequelize is unable to establish a connection to the database. This could be due to various reasons such as an incorrect database name, hostname, port, or authentication credentials.
@@ -57,316 +45,323 @@ code: 'ER_BAD_DB_ERROR'
 SequelizeDatabaseError: (conn=60, no: 1046, SQLState: 3D000) No database selected
 */
 
+const connection = new Sequelize(config[process.env.NODE_ENV!]);
 
-// export async function authenticate():Promise<boolean> {
-//     try {
-//         await connection.authenticate();
-//         return true;
-//     } catch (error) {
-//         logger.error({ message: error });
-//         throw new Error(error);
+export async function authenticate():Promise<boolean> {
+    try {
+        await connection.authenticate();
+        return true;
+    } catch (error: any) {
+        logger.error({ message: error });
+        throw new Error(error);
         
-//     }
-// }
+    }
+}
 
-// logger.error({message: models.toString()})
-// console.log('models',models)
-// const _models = [Activities, Branches, CustomerDiagnostics, Customers, DailyRecords, DbBackups, DbSync,
-//     DiagnosticTests, IncomingPayments, InsuranceProviders, OnlineBackups, OutgoingPayments,
-//     Permissions, ProductBatches, Products, PurchaseDetails, Purchases, ReceivedTransferDetails, ReceivedTransfers, Refills,
-//     RolePermissions, Roles, Sales, SalesDetails, Settings, StockAdjustment, StockAdjustmentPending, StockAdjustmentSessions,
-//     StockValues, TransferDetails, Transfers, Users, UserSessions, Vendors]
-// connection.addModels(_models);
+connection.addModels(allModels);
 
-// Permissions.belongsToMany(Roles, {
-//     through: RolePermissions,
-//     foreignKey: 'permission_id'
-// });
+Permissions.belongsToMany(Roles, {
+    through: RolePermissions,
+    foreignKey: 'permission_id'
+});
 
-// Roles.belongsToMany(Permissions, {
-//     through: RolePermissions,
-//     foreignKey: 'role_id'
-// });
+Roles.belongsToMany(Permissions, {
+    through: RolePermissions,
+    foreignKey: 'role_id'
+});
 
-// Roles.hasMany(Users, {
-//     foreignKey: 'role_id'
-// })
+Roles.hasMany(Users, {
+    foreignKey: 'role_id'
+})
 
-// Customers.hasMany(CustomerDiagnostics, {
-//     foreignKey: 'customer', 
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// })
-// CustomerDiagnostics.belongsTo(Customers, {
-//     foreignKey: 'customer'
-// })
+Customers.hasMany(CustomerDiagnostics, {
+    foreignKey: 'customer', 
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+CustomerDiagnostics.belongsTo(Customers, {
+    foreignKey: 'customer'
+})
 
-// Customers.hasMany(SalesDetails, {
-//     foreignKey: 'customer',
-//     onDelete: 'SET NULL',
-//     onUpdate: 'CASCADE'
-// })
-// SalesDetails.belongsTo(Customers, {
-//     foreignKey: 'customer'
-// });
+Customers.hasMany(Sales, {
+    foreignKey: 'customer',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE'
+})
+Sales.belongsTo(Customers, {
+    foreignKey: 'customer'
+});
 
-// Products.hasMany(SalesDetails, {
-//     foreignKey: 'product',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// SalesDetails.belongsTo(Products, {
-//     foreignKey: 'product'
-// })
+Products.hasMany(SalesDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+SalesDetails.belongsTo(Products, {
+    foreignKey: 'product'
+})
 
 
-// Products.hasMany(PurchaseDetails, {
-//     foreignKey: 'product',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// PurchaseDetails.belongsTo(Products, {
-//     foreignKey: 'product'
-// })
+Products.hasMany(PurchaseDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+PurchaseDetails.belongsTo(Products, {
+    foreignKey: 'product'
+})
 
 
-// Products.hasMany(TransferDetails, {
-//     foreignKey: 'product',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// TransferDetails.belongsTo(Products, {
-//     foreignKey: 'product'
-// })
+Products.hasMany(TransferDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+TransferDetails.belongsTo(Products, {
+    foreignKey: 'product'
+})
 
-// Products.hasMany(ReceivedTransferDetails, {
-//     foreignKey: 'product',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// ReceivedTransferDetails.belongsTo(Products, {
-//     foreignKey: 'product'
-// })
+Products.hasMany(ReceivedTransferDetails, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+ReceivedTransferDetails.belongsTo(Products, {
+    foreignKey: 'product'
+})
 
-// Products.hasMany(StockAdjustment, {
-//     foreignKey: 'product',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// StockAdjustment.belongsTo(Products, {
-//     foreignKey: 'product'})
+Products.hasMany(StockAdjustment, {
+    foreignKey: 'product',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+StockAdjustment.belongsTo(Products, {
+    foreignKey: 'product'})
 
-// Products.hasMany(StockAdjustmentPending, {
-//     foreignKey: 'product',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// })
-// StockAdjustmentPending.belongsTo(Products, {
-//     foreignKey: 'product'})
+Products.hasMany(StockAdjustmentPending, {
+    foreignKey: 'product',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+StockAdjustmentPending.belongsTo(Products, {
+    foreignKey: 'product'})
 
-// Purchases.hasMany(PurchaseDetails, {
-//     foreignKey: 'code',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE',
-//     sourceKey:'code'
+Purchases.hasMany(PurchaseDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    sourceKey:'code'
 
-// });
-// PurchaseDetails.belongsTo(Purchases, {
-//     foreignKey: 'code',
-//     targetKey: 'code',
-// });
+});
+PurchaseDetails.belongsTo(Purchases, {
+    foreignKey: 'code',
+    targetKey: 'code',
+});
 
-// Vendors.hasMany(Purchases, {
-//     foreignKey: 'vendor',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// Purchases.belongsTo(Vendors, {
-//     foreignKey: 'vendor'});
+Vendors.hasMany(Purchases, {
+    foreignKey: 'vendor',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+Purchases.belongsTo(Vendors, {
+    foreignKey: 'vendor'});
 
-// ReceivedTransfers.hasMany(ReceivedTransferDetails, {
-//     foreignKey: 'code',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// })
-// ReceivedTransferDetails.belongsTo(ReceivedTransfers, {
-//     foreignKey: 'code'
-// });
+ReceivedTransfers.hasMany(ReceivedTransferDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+ReceivedTransferDetails.belongsTo(ReceivedTransfers, {
+    foreignKey: 'code'
+});
 
-// Branches.hasMany(ReceivedTransfers, {
-//     foreignKey: 'sender',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// ReceivedTransfers.belongsTo(Branches, {
-//     foreignKey: 'sender'
-// });
+Branches.hasMany(ReceivedTransfers, {
+    foreignKey: 'sender',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+ReceivedTransfers.belongsTo(Branches, {
+    foreignKey: 'sender'
+});
 
-// Customers.hasMany(Refills, {
-//     foreignKey: "customer_id",
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// });
-// Refills.belongsTo(Customers, {
-//     foreignKey: "customer_id"
-// });
+Customers.hasMany(Refills, {
+    foreignKey: "customer_id",
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+Refills.belongsTo(Customers, {
+    foreignKey: "customer_id"
+});
 
-// Sales.hasMany(SalesDetails, {
-//     foreignKey: 'code',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// });
-// SalesDetails.belongsTo(Sales, {
-//     foreignKey: 'code',
-//     targetKey: 'code'
-// });
+Sales.hasMany(SalesDetails, {
+    foreignKey: 'code',
+    sourceKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+    as: SalesDetails.tableName
+});
+SalesDetails.belongsTo(Sales, {
+    foreignKey: 'code',
+    targetKey: 'code',
+    as: Sales.tableName
+});
 
-// Customers.hasMany(Sales, {
-//     foreignKey: 'customer',
-//     onDelete: 'SET NULL',
-//     onUpdate: 'CASCADE'
-// });
-// Sales.belongsTo(Customers, {
-//     foreignKey: 'customer'
-// });
-
-
-// Transfers.hasMany(TransferDetails, {
-//     foreignKey: 'code',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// })
-// TransferDetails.belongsTo(Transfers, {
-//     foreignKey: 'code',
-//     targetKey: 'code'
-// });
-
-// Branches.hasMany(Transfers, {
-//     foreignKey: 'recipient',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// })
-// Transfers.belongsTo(Branches, {
-//     foreignKey: 'recipient'
-// });
-
-// Users.hasMany(StockAdjustmentPending, {
-//     foreignKey: 'created_by',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// })
-// StockAdjustmentPending.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(StockAdjustment, {
-//     foreignKey: 'created_by',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// });
-// StockAdjustment.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(Activities, {
-//     foreignKey: 'user_id',
-//     onDelete: 'CASCADE',
-//     onUpdate: 'CASCADE'
-// });
-// Activities.belongsTo(Users, {
-//     foreignKey: 'user_id'
-// });
-
-// Users.hasMany(IncomingPayments, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// IncomingPayments.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(PurchaseDetails, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// PurchaseDetails.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(Purchases, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// Purchases.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(ReceivedTransferDetails, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// ReceivedTransferDetails.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(ReceivedTransfers, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// ReceivedTransfers.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(Refills, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// Refills.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(Sales, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// Sales.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
-
-// Users.hasMany(SalesDetails, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// SalesDetails.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
+Customers.hasMany(Sales, {
+    foreignKey: 'customer',
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE'
+});
+Sales.belongsTo(Customers, {
+    foreignKey: 'customer'
+});
 
 
-// Users.hasMany(TransferDetails, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// TransferDetails.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
+Transfers.hasMany(TransferDetails, {
+    foreignKey: 'code',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+TransferDetails.belongsTo(Transfers, {
+    foreignKey: 'code',
+    targetKey: 'code'
+});
 
-// Users.hasMany(Transfers, {
-//     foreignKey: 'created_by',
-//     onDelete: 'RESTRICT',
-//     onUpdate: 'CASCADE'
-// });
-// Transfers.belongsTo(Users, {
-//     foreignKey: 'created_by'
-// });
+Branches.hasMany(Transfers, {
+    foreignKey: 'recipient',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+})
+Transfers.belongsTo(Branches, {
+    foreignKey: 'recipient'
+});
+
+Users.hasMany(StockAdjustmentPending, {
+    foreignKey: 'created_by',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+})
+StockAdjustmentPending.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(StockAdjustment, {
+    foreignKey: 'created_by',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+StockAdjustment.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(Activities, {
+    foreignKey: 'user_id',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+});
+Activities.belongsTo(Users, {
+    foreignKey: 'user_id'
+});
+
+Users.hasMany(IncomingPayments, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+IncomingPayments.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(PurchaseDetails, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+PurchaseDetails.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(Purchases, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+Purchases.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(ReceivedTransferDetails, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+ReceivedTransferDetails.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(ReceivedTransfers, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+ReceivedTransfers.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(Refills, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+Refills.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(Sales, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+Sales.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(SalesDetails, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+SalesDetails.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+
+Users.hasMany(TransferDetails, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+TransferDetails.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Users.hasMany(Transfers, {
+    foreignKey: 'created_by',
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE'
+});
+Transfers.belongsTo(Users, {
+    foreignKey: 'created_by'
+});
+
+Sales.addHook('afterFind', (results) => {
+    if (Array.isArray(results)) {
+        results.forEach((result) => {
+            flattenNestedProperties(result);
+        });
+    } else {
+        flattenNestedProperties(results);
+    }
+})
 
 
 
