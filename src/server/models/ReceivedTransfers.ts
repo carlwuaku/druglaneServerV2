@@ -19,7 +19,7 @@ export class ReceivedTransfers extends Model{
   id!: number;
   
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
   date!: string;

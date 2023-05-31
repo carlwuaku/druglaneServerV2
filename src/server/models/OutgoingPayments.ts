@@ -18,7 +18,7 @@ export class OutgoingPayments extends Model{
   
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
   date!: string;

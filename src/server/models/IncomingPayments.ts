@@ -20,7 +20,7 @@ export class IncomingPayments extends Model{
   
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   date!: string;
 

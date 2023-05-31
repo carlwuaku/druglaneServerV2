@@ -19,7 +19,7 @@ export class StockAdjustmentPending extends Model {
 
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     validate: {
       isDate: true
     }
@@ -90,7 +90,7 @@ export class StockAdjustmentPending extends Model {
   size!: string;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     validate: {
       isDate: true
     }

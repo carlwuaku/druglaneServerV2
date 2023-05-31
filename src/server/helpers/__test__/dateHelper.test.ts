@@ -1,4 +1,4 @@
-import { addDaystoDate, formatDateTime, getDayName, getFirstDayOfWeek, getMonthName, getMonths, getToday } from "../dateHelper";
+import { addDaystoDate, formatDateTime, getDatesBetween, getDayName, getFirstDayOfWeek, getMonthName, getMonths, getToday } from "../dateHelper";
 
 describe('dateHelper', () => {
     it('adds correct days to date', () => {
@@ -79,5 +79,13 @@ describe('dateHelper', () => {
         expect(months[9]).toEqual("October");
         expect(months[10]).toEqual("November");
         expect(months[11]).toEqual("December");
-    })
+    });
+
+    it("gets the correct list of dates", () => {
+        const datelist = getDatesBetween("2023-05-21", "2023-06-03");
+        expect(datelist.length).toEqual(13);
+
+        const datelist2 = getDatesBetween("2023-12-01", "2024-01-03");
+        expect(datelist2.length).toEqual(34);
+    });
 })

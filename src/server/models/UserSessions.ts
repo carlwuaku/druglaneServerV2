@@ -30,7 +30,7 @@ export class UserSessions extends Model{
   created_on!: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   expires!: string;
 }

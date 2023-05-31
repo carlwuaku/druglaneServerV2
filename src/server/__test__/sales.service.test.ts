@@ -10,11 +10,38 @@ import { StockAdjustment } from "../models/StockAdjustment";
 import { StockAdjustmentPending } from "../models/StockAdjustmentPending";
 import { TransferDetails } from "../models/TransferDetails";
 import { Vendors } from "../models/Vendors";
-import { deleteSales, find, getDetails, getList, getTotals, save } from "../services/sale.service";
+import { deleteSales, find, findPaymentMethodSummaryBetweenDates, findShiftSummaryBetweenDates, findUserSummaryBetweenDates, getBranchDailyRecords, getBranchDailySalesSummary, getDetails, getList, getTotals, save, saveDailyRecord } from "../services/sale.service";
 import { sampleProducts } from "./sample_products";
 import { getToday } from "../helpers/dateHelper";
 import { _save } from "../services/customer.service";
+import { Users } from "../models/Users";
+import { save_user_function } from "../services/admin.service";
 
+const userCarl = {
+    "name": "carl",
+    "role_id": 1,
+    "email": "wuakuc@gmail.com",
+    username: "carl",
+    "display_name": "Carl Kojo",
+    "active": 1,
+    "phone": "0203934",
+    "allow_online": "yes",
+    "password": "1234",
+    "id": 1
+};
+
+const userDoris = {
+    "name": "doris",
+    "role_id": 1,
+    "email": "doris@gmail.com",
+    username: "doris",
+    "display_name": "Abena Dross",
+    "active": 1,
+    "phone": "020399874",
+    "allow_online": "yes",
+    "password": "2345",
+    "id": 2
+};
 
 const customerDoris = {
     "name": "doris wuaku",
@@ -68,6 +95,9 @@ describe('Sales Service', () => {
             force: true
         });
 
+        await Users.destroy({ truncate: true, force: true });
+        await save_user_function({ ...userCarl, user_id: "1" });
+        await save_user_function({ ...userDoris, user_id: "1" });
     });
 
     beforeEach(async () => {
@@ -228,81 +258,7 @@ describe('Sales Service', () => {
         expect(updated_product2!.current_stock).toEqual(product2Stock);
     });
 
-    test('edit a sale', async () => {
-
-        let code = await save({
-            created_by: '1',
-            amount_paid: '1120',
-            payment_method: 'Mobile Money',
-            momo_reference: '12345',
-            discount: '15',
-            tax: '0',
-            shift: 'Morning',
-            items: `[
-                {
-                    "product": 1,
-                    "created_by": 1,
-                    "cost_price": 3,
-                    "quantity": 9,
-                    "price": 4,
-                    "unit": "tablet",
-                    "label":"no label",
-                    "expiry": "2024-01-02"
-                },
-                {
-                    "product": 2,
-                    "created_by": 1,
-                    "cost_price": 5,
-                    "quantity": 20,
-                    "price": 7,
-                    "unit": "tablet",
-                    "label": "take 2 tablets 3 times daily",
-                    "expiry": "2024-01-02"
-                },
-                {
-                    "product": 5,
-                    "created_by": 1,
-                    "cost_price": 20,
-                    "quantity": 50,
-                    "price": 30,
-                    "unit": "strip",
-                    "label": "take 4 tabs a day",
-                    "expiry": "2025-01-02"
-                }
-            ]`,
-            user_id: '1'
-        });
-
-        const customer = await _save({ ...customerDoris, user_id: "1" });
-        await save({
-            created_by: '1',
-            customer: customer.id.toString(),
-            amount_paid: '1100',
-            payment_method: 'Cash',
-            created_on: '2023-06-01 09:08:33',
-            user_id: '1',
-            code: code
-        });
-        //update the customer and the date and time of the sale
-        const salesObject = await Sales.findOne({
-            where: { code: code }
-        });
-        expect(salesObject!.created_on).toEqual("2023-06-01 09:08:33.000");
-        expect(salesObject!.amount_paid).toEqual(1100);
-        expect(salesObject!.payment_method).toEqual("Cash");
-        expect(salesObject!.customer).toEqual(customer.id.toString());
-        const details = await SalesDetails.findAll({
-            where: { code: code }
-        })
-        expect(details).toHaveLength(3)
-        //check the details, the dates created on should change
-        expect(details[0].created_on).toEqual("2023-06-01 09:08:33.000")
-        expect(details[1].created_on).toEqual("2023-06-01 09:08:33.000")
-        expect(details[2].created_on).toEqual("2023-06-01 09:08:33.000")
-
-
-    });
-
+    
     test('search sales details', async () => {
         const customer = await _save({ ...customerDoris, user_id: "1" });
 
@@ -1116,24 +1072,1309 @@ describe('Sales Service', () => {
             start_date: '2023-05-21',
             end_date: '2023-05-21'
         });
-        console.log(totals)
+
+
         expect(totals.total).toEqual("2,570.5");
         expect(totals.total_credit).toEqual("461");
         expect(totals.total_paid).toEqual("0");
         expect(totals.balance).toEqual("2,570.5");
-        expect(totals.total_discount).toEqual("27.5")
+        expect(totals.total_discount).toEqual("27.5");
 
     });
 
-    // test('get the monthly report. make sure the expected dates are present', async () => {
+    test('findUserSummaryBetweenDates', async () => {
+        const customer = await _save({ ...customerDoris, user_id: "1" });
 
-    // });
+        let code1 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code2 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Credit',
+            momo_reference: '',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:03:00',
+            discount: '8.5',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '2'
+        });
+        let code3 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-05-22',
+            created_on: '2023-05-21 13:01:00',
+            discount: '4',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code4 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code5 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:03:00',
+            discount: '1.3',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+        let code6 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-06-22',
+            created_on: '2023-06-21 13:01:00',
+            discount: '10',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let userSummary1 = await findUserSummaryBetweenDates({
+            start_date: '2023-05-21',
+            end_date: '2023-05-21'
+        });
+        expect(userSummary1.data.length).toBe(2);
+        expect(userSummary1.data[0]).toHaveProperty("total_amount");
+        expect(userSummary1.data[0]).toHaveProperty("mobile_money");
+        expect(userSummary1.data[0]).toHaveProperty("cash");
+        expect(userSummary1.data[0]).toHaveProperty("pos");
+        expect(userSummary1.data[0]).toHaveProperty("cheque");
+        expect(userSummary1.data[0]).toHaveProperty("credit");
+        expect(userSummary1.data[0]).toHaveProperty("insurance");
+        expect(userSummary1.data[0]).toHaveProperty("other");
+        expect(userSummary1.data[0]).toHaveProperty("discount");
+        expect(userSummary1.data[0]).toHaveProperty("discounted_total");
+        expect(userSummary1.data[0]).toHaveProperty("tax");
+        expect(userSummary1.data[0]).toHaveProperty("display_name");
+    });
 
 
-    // test('get payment reports by various payment methods', async () => {
+    test('findShiftSummaryBetweenDates', async () => {
+        const customer = await _save({ ...customerDoris, user_id: "1" });
 
-    // });
+        let code1 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
 
+        let code2 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Credit',
+            momo_reference: '',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:03:00',
+            discount: '8.5',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '2'
+        });
+        let code3 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-05-22',
+            created_on: '2023-05-21 13:01:00',
+            discount: '4',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code4 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code5 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:03:00',
+            discount: '1.3',
+            tax: '0',
+            shift: 'Afternoon',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+        let code6 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-06-22',
+            created_on: '2023-06-21 13:01:00',
+            discount: '10',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let summary1 = await findShiftSummaryBetweenDates({
+            start_date: '2023-05-21',
+            end_date: '2023-05-21'
+        });
+        expect(summary1.data.length).toBe(2);
+        expect(summary1.data[0]).toHaveProperty("total_amount");
+        expect(summary1.data[0]).toHaveProperty("mobile_money");
+        expect(summary1.data[0]).toHaveProperty("cash");
+        expect(summary1.data[0]).toHaveProperty("pos");
+        expect(summary1.data[0]).toHaveProperty("cheque");
+        expect(summary1.data[0]).toHaveProperty("credit");
+        expect(summary1.data[0]).toHaveProperty("insurance");
+        expect(summary1.data[0]).toHaveProperty("other");
+        expect(summary1.data[0]).toHaveProperty("discount");
+        expect(summary1.data[0]).toHaveProperty("discounted_total");
+        expect(summary1.data[0]).toHaveProperty("tax");
+        expect(summary1.data[0]).toHaveProperty("shift");
+
+        expect(parseFloat(summary1.data[0].total_amount)).toEqual(parseFloat(summary1.data[0].discount) + parseFloat(summary1.data[0].discounted_total))
+    });
+
+    test('findPaymentMethodSummaryBetweenDates', async () => {
+        const customer = await _save({ ...customerDoris, user_id: "1" });
+
+        let code1 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code2 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Credit',
+            momo_reference: '',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:03:00',
+            discount: '8.5',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '2'
+        });
+        let code3 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-05-22',
+            created_on: '2023-05-21 13:01:00',
+            discount: '4',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code4 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code5 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:03:00',
+            discount: '1.3',
+            tax: '0',
+            shift: 'Afternoon',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+        let code6 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-06-22',
+            created_on: '2023-06-21 13:01:00',
+            discount: '10',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let summary1 = await findPaymentMethodSummaryBetweenDates({
+            start_date: '2023-05-21',
+            end_date: '2023-06-22'
+        });
+
+        expect(parseFloat(summary1.total.replace(",", ""))).toEqual(
+            parseFloat(summary1.momo.replace(",", "")) +
+            parseFloat(summary1.cash.replace(",", "")) +
+            parseFloat(summary1.pos.replace(",", "")) +
+            parseFloat(summary1.cheque.replace(",", "")) +
+            parseFloat(summary1.credit.replace(",", "")) +
+            parseFloat(summary1.insurance.replace(",", "")) +
+            parseFloat(summary1.other.replace(",", ""))
+        );
+
+        expect(summary1.num_sales).toBe(12);
+    });
+
+    //total sales: 5196, total cost: 3002, total
+    /**
+     * code 1: total: 1676, cost: 1127, date: 2023-05-21, discount: 15, Mobile Money,
+     * code 2: total: 461, cost: 187,date: 2023-05-21, discount: 8.5, Credit
+     * code 3: total: 461, cost: 187, date: 2023-05-22, discount: 4, Cash
+     * code 4: total: 461, cost: 187, date: 2023-04-21, discount: 15, Mobile Money
+     * code 5: total: 1676, cost: 1127, date: 2023-04-21, discount: 1.3, Cash
+     * code 6: total: 461, cost: 187, date: 2023-06-22, discount: 10, Cash
+
+     */
+
+    async function insertSampleSales() {
+        const customer = await _save({ ...customerDoris, user_id: "1" });
+        let code1 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:01:00',
+            tax: '0.5',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code2 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Credit',
+            momo_reference: '',
+            date: '2023-05-21',
+            created_on: '2023-05-21 13:03:00',
+            discount: '8.5',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '2'
+        });
+        let code3 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-05-22',
+            created_on: '2023-05-21 13:01:00',
+            discount: '4',
+            tax: '0',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code4 = await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:01:00',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        let code5 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+            date: '2023-04-21',
+            created_on: '2023-04-21 13:03:00',
+            discount: '1.3',
+            tax: '0',
+            shift: 'Afternoon',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 6,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 3,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+        let code6 = await save({
+            created_by: '1',
+            amount_paid: '150',
+            payment_method: 'Cash',
+            momo_reference: '',
+
+            date: '2023-06-22',
+            created_on: '2023-06-21 13:01:00',
+            discount: '10',
+            tax: '4',
+            shift: 'Evening',
+            items: `[
+                {
+                    "product": 4,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 34,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 10,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 9,
+                    "created_by": 1,
+                    "cost_price": 12,
+                    "quantity": 5,
+                    "price": 3,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+    }
+
+    test('getBranchDailySalesSummary', async () => {
+        await insertSampleSales();
+
+
+
+        let summary1 = await getBranchDailySalesSummary({
+            start_date: '2023-05-21',
+            end_date: '2023-06-22'
+        });
+
+        expect(summary1.data.length).toBe(33);
+        expect(summary1.total).toBe('3,059');
+        expect(summary1.total_discount).toBe('37.5');
+        expect(summary1.total_credit).toBe('461');
+        expect(summary1.cost).toBe('1,688');
+        expect(summary1.profit).toBe('1,371');
+        expect(summary1.total_tax).toBe('4.5')
+    });
+
+    test('getBranchDailyRecords', async () => {
+        await insertSampleSales();
+
+        await saveDailyRecord({
+            date: '2023-05-21',
+            shift: 'Morning',
+            amount: '3500',
+            cash: '2000',
+            momo: '1000',
+            insurance: '0',
+            credit: '500',
+            pos: '0',
+            cheque: '0',
+            created_by: '1',
+            other: '0',
+            user_id: '1'
+        });
+
+        let summary1 = await getBranchDailyRecords({
+            start_date: '2023-05-21',
+            end_date: '2023-06-22'
+        });
+
+        console.log(summary1)
+        expect(summary1).toBeTruthy();
+    });
+
+    test('edit a sale', async () => {
+
+        let code = await save({
+            created_by: '1',
+            amount_paid: '1120',
+            payment_method: 'Mobile Money',
+            momo_reference: '12345',
+            discount: '15',
+            tax: '0',
+            shift: 'Morning',
+            items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "cost_price": 3,
+                    "quantity": 9,
+                    "price": 4,
+                    "unit": "tablet",
+                    "label":"no label",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "cost_price": 5,
+                    "quantity": 20,
+                    "price": 7,
+                    "unit": "tablet",
+                    "label": "take 2 tablets 3 times daily",
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "cost_price": 20,
+                    "quantity": 50,
+                    "price": 30,
+                    "unit": "strip",
+                    "label": "take 4 tabs a day",
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+            user_id: '1'
+        });
+
+        const customer = await _save({ ...customerDoris, user_id: "1" });
+        await save({
+            created_by: '1',
+            customer: customer.id.toString(),
+            amount_paid: '1100',
+            payment_method: 'Cash',
+            created_on: '2023-06-01 09:08:33',
+            user_id: '1',
+            code: code
+        });
+        //update the customer and the date and time of the sale
+        const salesObject = await Sales.findOne({
+            where: { code: code },
+            raw: true
+        });
+        console.log('salesobject', salesObject)
+        expect(salesObject!.created_on).toEqual("2023-06-01 09:08:33");
+        expect(salesObject!.amount_paid).toEqual(1100);
+        expect(salesObject!.payment_method).toEqual("Cash");
+        expect(salesObject!.customer).toEqual(customer.id.toString());
+        const details = await SalesDetails.findAll({
+            where: { code: code },
+            raw: true
+        })
+        expect(details).toHaveLength(3)
+        //check the details, the dates created on should change
+        expect(details[0].created_on).toEqual("2023-06-01 09:08:33")
+        expect(details[1].created_on).toEqual("2023-06-01 09:08:33")
+        expect(details[2].created_on).toEqual("2023-06-01 09:08:33")
+
+
+    });
 
 })
 

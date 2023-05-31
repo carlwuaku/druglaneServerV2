@@ -24,7 +24,7 @@ export class Transfers extends Model{
 
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   date!: string;
 

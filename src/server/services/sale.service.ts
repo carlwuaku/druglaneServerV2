@@ -11,10 +11,11 @@ import { Customers } from "../models/Customers";
 import { Users } from "../models/Users";
 import { getDatesBetween, getToday, setDates } from "../helpers/dateHelper";
 import { IncomingPayments } from '../models/IncomingPayments';
-import { getDailySalesWithPaymentMethods, getDiscountReportByPaymentMethodSpecific, getDiscountTaxReportByUser, getSalesByPaymentMethod, getSalesReportByShift, getSalesReportByUser, getTotalIncomingPaid, getTotalSales, getTotalSummary, getUserSales } from "../helpers/salesHelper";
+import { getDailySalesWithPaymentMethods, getDiscountReportByPaymentMethodSpecific, getDiscountTaxReportByShift, getDiscountTaxReportByUser, getSalesByPaymentMethod, getSalesReportByShift, getSalesReportByUser, getTotalIncomingPaid, getTotalSales, getTotalSalesList, getTotalSummary, getUserSales } from "../helpers/salesHelper";
 import { DailyRecords } from "../models/DailyRecords";
 import * as crypto from 'crypto'
 import { STRING_DISCOUNT, STRING_NUMBER_OF_ITEMS, STRING_TOTAL, STRING_TOTAL_AMOUNT } from "../utils/strings";
+import { Console } from "console";
 
 const module_name = "sales";
 const attributes: Includeable[] = [{
@@ -123,12 +124,12 @@ export async function getList(_data: {
  * @param _data details of the sale such as customer, payment_method, and date, and the details of the items
  * @returns the code of the saved purchase
  */
-export async function save(_data: { 
+export async function save(_data: {
     date?: string,
     items?: string,
     code?: string,
     created_on?: string,
-    return?: string, 
+    return?: string,
     created_by: string,
     user_id: string,
     customer?: string,
@@ -144,7 +145,7 @@ export async function save(_data: {
     shift?: string,
     tax?: string
 
- }): Promise<string> {
+}): Promise<string> {
     try {
         //the data should come with the sale data and
         //the details data.
@@ -243,6 +244,51 @@ export async function save(_data: {
         })
 
         return result
+
+    } catch (error: any) {
+        logger.error({ message: error })
+        throw new Error(error);
+    }
+}
+
+export async function saveDailyRecord(_data: {
+    date: string,
+    shift: string,
+    created_on?: string,
+    amount: string,
+    created_by: string,
+    user_id: string,
+    cash: string,
+    momo: string,
+    insurance: string,
+    credit: string,
+    pos: string,
+    cheque: string,
+    other: string
+
+}): Promise<void> {
+    try {
+
+        //check if something had been submitted for the date and shift. if so update, else insert.
+        //we could rely on the unique constraint of the date+shift
+        let existing = await DailyRecords.findOne({
+            where: {
+                date: _data.date,
+                shift: _data.shift
+            }
+        });
+        console.log('existing',existing)
+        if (!existing) {
+            await DailyRecords.create(_data)
+        }
+        else {
+            await DailyRecords.update(_data, {
+                where: {
+                    id: existing.id
+                }
+            })
+        }
+        
 
     } catch (error: any) {
         logger.error({ message: error })
@@ -405,7 +451,7 @@ export async function find(_data: { id: string }): Promise<Sales> {
  * @param _data may contain the start and end dates, and vendor
  * @returns an object
  */
-export async function getTotals(_data: { start_date?: string, end_date?:string, customer?: string }): Promise<ITotals> {
+export async function getTotals(_data: { start_date?: string, end_date?: string, customer?: string }): Promise<ITotals> {
     try {
         let start = _data.start_date || setDates("this_month").startDate;
         let end = _data.end_date || setDates("this_month").endDate;
@@ -462,20 +508,14 @@ export async function getTotals(_data: { start_date?: string, end_date?:string, 
                 ]
             ],
             where: total_where,
-            raw: true,
-            logging(sql, timing?) {
-                console.log(sql)
-            },
+            raw: true
         });
 
 
         const total_credit = getTotalCredit?.total || 0
 
         const getTotalPaid = await IncomingPayments.sum("amount", {
-            where: payment_where,
-            logging(sql, timing?) {
-                console.log(sql)
-            },
+            where: payment_where
         })
         const total_paid = getTotalPaid || 0
 
@@ -497,14 +537,14 @@ export async function getTotals(_data: { start_date?: string, end_date?:string, 
     }
 }
 
-export async function findUserSummaryBetweenDates(_data: { [key: string]: any }): Promise<SaleSummary> {
+export async function findUserSummaryBetweenDates(_data: { start_date?: string, end_date?: string }): Promise<SaleSummary> {
     try {
 
         let start = _data.start_date || getToday();
         let end = _data.end_date || getToday();
         let data = await getSalesReportByUser(start, end)
 
-        let discount_tax_data = await getDiscountTaxReportByUser(start, end)
+        let discount_tax_data = await getDiscountTaxReportByUser(start, end);
 
         let overall_total = 0, overall_tax = 0, overall_discount = 0;
         let results = [];
@@ -518,7 +558,7 @@ export async function findUserSummaryBetweenDates(_data: { [key: string]: any })
             // {payment_method, total, discount,created_by, tax, cost, display_name}
             //the created_by holds the user's id or null. if seen, update the payment method. else insert 
             //it with the current payment method
-            if (hash[obj.created_by] == undefined) {
+            if (!hash[obj.created_by]) {
                 hash[obj.created_by] = {
                     total_amount: 0,
                     mobile_money: 0,
@@ -550,7 +590,6 @@ export async function findUserSummaryBetweenDates(_data: { [key: string]: any })
         discount_tax_data.forEach(obj => {
             //all the users will have been created in the hash by the previous query
             //after getting all the numbers added, compute the overall discount and discounted totals
-
             hash[obj.created_by]['discount'] += obj.discount;
             hash[obj.created_by]['tax'] += obj.tax;
 
@@ -561,15 +600,12 @@ export async function findUserSummaryBetweenDates(_data: { [key: string]: any })
         let payment_method_discount_data = await getDiscountReportByPaymentMethodSpecific(start, end, "created_by")
 
         payment_method_discount_data.forEach(obj => {
+
             //all the users will have been created in the hash by the previous query
             //get actual amounts for each payment method by subtractin it's discount
             hash[obj.created_by][obj.payment_method.toLowerCase().replace(" ", "_")] =
                 (hash[obj.created_by][obj.payment_method.toLowerCase().replace(" ", "_")]
                     - obj.discount).toLocaleString();
-            // hash[obj.created_by]['discount'] += obj.discount;
-
-            // overall_discount += obj.discount;
-            // overall_tax += obj.tax;
 
         })
 
@@ -605,7 +641,7 @@ export async function findShiftSummaryBetweenDates(_data: { [key: string]: any }
         let start = _data.start_date || getToday();
         let end = _data.end_date || getToday();
         let data = await getSalesReportByShift(start, end)
-        let discount_tax_data = await getDiscountTaxReportByUser(start, end)
+        let discount_tax_data = await getDiscountTaxReportByShift(start, end)
 
         let overall_total = 0, overall_tax = 0, overall_discount = 0;
         let results = [];
@@ -658,7 +694,6 @@ export async function findShiftSummaryBetweenDates(_data: { [key: string]: any }
         });
 
         let payment_method_discount_data = await getDiscountReportByPaymentMethodSpecific(start, end, "shift")
-
         payment_method_discount_data.forEach(obj => {
             //all the shifts will have been created in the hash by the previous query
             //get actual amounts for each payment method by subtractin it's discount
@@ -703,10 +738,10 @@ export async function findPaymentMethodSummaryBetweenDates(_data: { start_date: 
         let total_sales = 0;
         let num_sales = 0;
 
-        for (var i = 0; i < objects.length; i++) {
-            var obj = objects[i];
-            total_sales += obj.total!;
-            num_sales += obj.num_of_items!;
+        for (let i = 0; i < objects.length; i++) {
+            let obj = objects[i];
+            total_sales += obj.total || 0;
+            num_sales += obj.num_of_items || 0;
         }
 
         let all = await getSalesByPaymentMethod(start, end);
@@ -768,20 +803,13 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
         let overall_cost = 0;
         let total_credit = 0;
         let overall_discount = 0;
-        let objects = []
-        // console.log(queries)
+        let objects = [];
+        let overall_tax = 0;
         //get the range
         if (queries.length > 0) {
-
             let range = getDatesBetween(start, end);
-
-            // console.log(range)
-
-            for (var i = 0; i < range.length; i++) {
-                let curr_date = range[i]
-                // console.log(curr_date)
-                // let discount = await helper.getTotalDiscount(curr_date, curr_date);
-                // let tax = await helper.getTotalTax(curr_date, curr_date);
+            for (let i = 0; i < range.length; i++) {
+                let curr_date = range[i];
                 hash[curr_date] = {
                     date: curr_date,
                     total_sales: 0,
@@ -816,9 +844,8 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
                 hash[q.date].total_sales += q.total;
                 hash[q.date].cost += q.total_cost;
 
-                overall_total += q.total!;
-                overall_cost += q.total_cost!;
-                // overall_discount += q.discount;
+                overall_total += q.total || 0;
+                overall_cost += q.total_cost || 0;
                 if (q.payment_method == "Credit") {
                     total_credit += q.total!;
                 }
@@ -843,7 +870,7 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
 
         //get the discount and tax for each date in the range the range
         let payment_method_discount_data = await
-            getDiscountReportByPaymentMethodSpecific(start, end, "date")
+            getDiscountReportByPaymentMethodSpecific(start, end, "date");
         //{discount, tax, payment_method, date}
         payment_method_discount_data.forEach(obj => {
             //all the payment methods will have been created in the hash by the previous query
@@ -854,6 +881,8 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
 
             hash[obj.date].tax += obj.tax;
             hash[obj.date].discount += obj.discount;
+            overall_discount += obj.discount;
+            overall_tax += obj.tax;
 
         });
         for (const key in hash) {
@@ -878,7 +907,8 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
             total_credit: total_credit.toLocaleString(),
             total_credit_paid: total_credit_paid.toLocaleString(),
             credit_balance: credit_balance.toLocaleString(),
-            total_discount: overall_discount.toLocaleString()
+            total_discount: overall_discount.toLocaleString(),
+            total_tax: overall_tax.toLocaleString()
         }
     } catch (error: any) {
         logger.error({ message: error })
@@ -886,34 +916,70 @@ export async function getBranchDailySalesSummary(_data: { start_date: string; en
     }
 }
 
+/**
+ * return a list of dates and their totals. total cash, discount,
+ * @param _data an object containing the start and end dates
+ * @returns a list of dates and their totals
+ */
 export async function getBranchDailyRecords(_data: { start_date: string; end_date: string; }): Promise<DailyRecords[]> {
     try {
         let start = _data.start_date || getToday();
         let end = _data.end_date || getToday();
-        let range = getDatesBetween(start, end);
-        let objects = []
-        for (var i = 0; i < range.length; i++) {
-            let start = range[i];
-            let end = range[i];
-            // let objects  =  await detailsHelper.getDailySales(start, end);
-            let obj = await getTotalSummary(start);
-            //computer sales
-            let total = await getTotalSales(start, end);
-            let keys = ["momo", "cash", "cheque", "insurance", "other", "credit", "pos"]
-            // keys.forEach(k => {
-            //     obj[k] = obj[k] == null ? 0 : obj[k];
-            // });
-            let entered_total = obj.momo + obj.cash + obj.credit +
-                obj.insurance + obj.credit + obj.other + obj.pos;
+        let queries = await getTotalSummary(start, end);
+        //an object to hold the data for each date
+        let hash: { [key: string]: any } = {};
+        //the list of total sold from the sales details table
+        let totalSales = await getTotalSalesList(start, end, ["date"])
+        const results:DailyRecords[] = []
+        if (queries.length > 0) {
+            let range = getDatesBetween(start, end);
+            for (let i = 0; i < range.length; i++) {
+                let curr_date = range[i];
+                hash[curr_date] = {
+                    date: curr_date,
+                   
+                    mobile_money: 0,
+                    cash: 0,
+                    pos: 0,
+                    cheque: 0,
+                    credit: 0,
+                    insurance: 0,
+                    other: 0,
+                    total: 0,
+                    computer_sales: 0,
+                    difference: 0
+                }
+            } 
+            console.log('queries', queries)
 
+            queries.forEach(q => {
+                
+                //once the date changes, push to the final objects
+                hash[q.date]['cash'] = q.cash;
+                hash[q.date]['mobile_money'] = q.momo;
+                hash[q.date]['cheque'] = q.cheque;
+                hash[q.date]['credit'] = q.credit;
+                hash[q.date]['insurance'] = q.insurance;
+                hash[q.date]['other'] = q.other;
+                hash[q.date]['pos'] = q.pos;
+                hash[q.date]['total_sales'] = q.amount;
 
-            obj.date = start;
-            obj.computer_sales = total.toLocaleString()
-            obj.difference = entered_total - total;
-            obj.total_sales = entered_total;
-            objects.push(obj)
+            });
+
+            totalSales.forEach(sale => {
+                hash[sale.date]['computer_sales'] = sale.total;
+                hash[sale.date]['difference'] = hash[sale.date]['difference'] - (sale.total || 0);
+            })
         }
-        return objects;
+        for (const key in hash) {
+            if (Object.hasOwnProperty.call(hash, key)) {
+                results.push(hash[key]);
+
+            }
+        }
+
+
+        return results;
     } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
@@ -954,10 +1020,25 @@ interface ITotals {
 }
 
 interface SaleSummary {
-    data: any[];
+    data: SaleSummaryData[];
     overall_discount: number;
     overall_total: number;
     overall_tax: number;
+}
+
+interface SaleSummaryData {
+    total_amount: string;
+    mobile_money: string;
+    cash: number;
+    pos: number;
+    cheque: number;
+    credit: number;
+    insurance: number;
+    other: number;
+    discount: string;
+    discounted_total: string;
+    tax: string;
+    shift: string;
 }
 
 interface PaymentMethodSummary {
@@ -985,5 +1066,5 @@ interface DailyBranchSaleSummary {
     total_credit_paid: string;
     credit_balance: string;
     total_discount: string;
-
+    total_tax: string;
 }

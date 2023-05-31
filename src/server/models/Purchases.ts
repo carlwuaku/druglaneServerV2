@@ -23,7 +23,7 @@ export class Purchases extends Model{
   vendor!: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
   date!: string;
@@ -61,7 +61,7 @@ export class Purchases extends Model{
   amount_paid!: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
   })
   last_payment_date!: string;
 

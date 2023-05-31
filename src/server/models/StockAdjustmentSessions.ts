@@ -18,7 +18,7 @@ export class StockAdjustmentSessions extends Model{
   
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false,
     validate: {
       isDate: true

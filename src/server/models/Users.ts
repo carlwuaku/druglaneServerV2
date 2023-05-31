@@ -47,7 +47,7 @@ export class Users extends Model{
 
     @Column({
     allowNull: true,
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
   })
   last_login!: string;
 

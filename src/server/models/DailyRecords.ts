@@ -22,7 +22,7 @@ export class DailyRecords extends Model{
   
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   date!: string;
 

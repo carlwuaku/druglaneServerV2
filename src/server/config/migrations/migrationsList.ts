@@ -1,7 +1,8 @@
 import { InputMigrations } from "umzug";
 import {
     STRING, INTEGER, DATE, DOUBLE, NOW, Op, QueryInterface, QueryOptions,
-    Sequelize
+    Sequelize,
+    DATEONLY
 } from 'sequelize';
 import { Products } from "../../models/Products";
 import models from '../../models/index'
@@ -38,6 +39,7 @@ import { OutgoingPayments } from "../../models/OutgoingPayments";
 import { OnlineBackups } from "../../models/OnlineBackups";
 import { DbSync } from "../../models/DbSync";
 import { IncomingPayments } from "../../models/IncomingPayments";
+import { DailyRecords } from "../../models/DailyRecords";
 
 async function getIndexes(tableName:string, queryInterface:QueryInterface): Promise<string[]>{
     let index_names: string[] = [];
@@ -73,8 +75,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+                    type: DATE,
+                    defaultValue: NOW,
                 },
                 deleted: {
                     allowNull: true,
@@ -116,8 +118,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: STRING
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+                    type: DATE,
+                    defaultValue: NOW,
                 }
             });
         },
@@ -353,8 +355,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
                 legacy_id: {
                     type: STRING,
@@ -409,8 +411,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -506,9 +508,9 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: ''
                 },
                 created_on: {
-                    type: STRING,
+                    type: DATE,
                     allowNull: false,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    defaultValue: NOW
                 },
                 display_name: {
                     type: STRING,
@@ -569,8 +571,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
             });
             let index_names: string[] = await getIndexes(UserSessions.tableName, queryInterface)
@@ -664,8 +666,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: 1
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
             });
 
@@ -745,7 +747,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false
                 },
                 amount_paid: {
@@ -788,8 +790,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: 0
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
                 shift: {
                     type: STRING,
@@ -861,7 +863,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 price: {
@@ -877,8 +879,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -948,7 +950,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 amount_paid: {
@@ -968,7 +970,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 last_payment_date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 status: {
@@ -976,8 +978,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1046,7 +1048,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 price: {
@@ -1069,8 +1071,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: STRING,
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1140,7 +1142,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 invoice: {
@@ -1148,8 +1150,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1217,7 +1219,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 expiry: {
@@ -1237,8 +1239,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1308,7 +1310,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 status: {
@@ -1316,8 +1318,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: 'Pending'
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1381,7 +1383,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 expiry: {
@@ -1401,8 +1403,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1460,7 +1462,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 product: {
@@ -1489,8 +1491,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
                 
                 cost_price: {
@@ -1574,7 +1576,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false
                 },
                 
@@ -1583,8 +1585,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
                 status: {
                     type: STRING,
@@ -1646,8 +1648,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1704,8 +1706,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -1756,7 +1758,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     defaultValue: null
                 },
                 product: {
@@ -1785,8 +1787,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
 
                 cost_price: {
@@ -1891,8 +1893,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
                 uploaded: {
                     type: STRING,
@@ -1938,12 +1940,12 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 start_date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false,
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 },
                 product_id: {
                     type: INTEGER,
@@ -1954,7 +1956,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false,
                 },
                 end_date: {
-                    type: STRING,
+                    type: DATE,
                     defaultValue: null
                 },
                 status: {
@@ -2016,12 +2018,12 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false
                 },
                 last_modified: {
                     type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    defaultValue: NOW
                 },
                 selling_value: {
                     type: DOUBLE,
@@ -2032,8 +2034,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -2058,7 +2060,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false
                 },
                 amount: {
@@ -2094,8 +2096,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -2136,7 +2138,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false
                 },
                 url: {
@@ -2144,8 +2146,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: false
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -2185,8 +2187,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -2215,7 +2217,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     type: INTEGER
                 },
                 date: {
-                    type: STRING,
+                    type: DATEONLY,
                     allowNull: false
                 },
                 amount: {
@@ -2251,8 +2253,8 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 },
                 created_on: {
-                    type: STRING,
-                    defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+                    type: DATE,
+                    defaultValue: NOW
                 }
 
 
@@ -2303,7 +2305,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
             await queryInterface.addColumn(Customers.tableName, 'date_of_birth',
                 {
-                    type: DATE
+                    type: DATEONLY
                 });
         },
         async down({ context: queryInterface }) {
@@ -2390,7 +2392,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
                 },
                 date: {
-                    type: DATE
+                    type: DATEONLY
                 }, amount: {
                     type: DOUBLE
                 }, shift: {
@@ -2474,7 +2476,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
                 },
                 date: {
-                    type: DATE
+                    type: DATEONLY
                 },
                 batch_number: {
                     type: STRING
@@ -2895,7 +2897,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 },
                 date: {
                     allowNull: false,
-                    type: DATE,
+                    type: DATEONLY,
                 },
                 created_by: {
                     defaultValue: null,
@@ -3200,7 +3202,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 date: {
                     defaultValue: null,
                     allowNull: true,
-                    type: DATE,
+                    type: DATEONLY,
 
                 },
                 amount_paid: {
@@ -3486,6 +3488,18 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 ['date'], {
                     unique: true
                 });
+        },
+        async down({ context: queryInterface }) {
+        }
+    },
+    
+    {
+        name: "20230527000000-addUniqueIndexToDailyRecords",
+        async up({ context: queryInterface }) {
+            await queryInterface.addIndex(DailyRecords.tableName,
+                ['date','shift'], {
+                unique: true
+            });
         },
         async down({ context: queryInterface }) {
         }

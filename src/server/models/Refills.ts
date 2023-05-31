@@ -38,14 +38,14 @@ export class Refills extends Model{
 
     @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
   start_date!: string;
 
     @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
   })
   end_date!: string;
 

@@ -73,7 +73,7 @@ export class Products extends Model{
 
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false,
     validate: {
       isDate: true
@@ -96,7 +96,7 @@ export class Products extends Model{
   current_stock!: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: true
   })
   last_modified!: string;

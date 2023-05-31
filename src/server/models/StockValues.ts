@@ -16,7 +16,7 @@ export class StockValues extends Model{
   
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     unique: true,
     validate: {
       isDate: true
@@ -25,7 +25,7 @@ export class StockValues extends Model{
   date!: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   last_modified!: string;
 

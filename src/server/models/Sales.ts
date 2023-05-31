@@ -6,6 +6,7 @@ import { Users } from "./Users";
   tableName: "sales",
   modelName: 'Sales',
   paranoid: true,
+  createdAt: false
 })
 
 export class Sales extends Model{
@@ -38,7 +39,9 @@ export class Sales extends Model{
   })
   created_by!: number;
 
-  @CreatedAt
+  @Column({
+    type: DataType.DATE
+  })
   created_on!: string;
 
   @Column({

@@ -191,9 +191,10 @@ export function getDatesBetween (startDate:string|Date, stopDate:string|Date):st
     let dateArray:string[] = [];
     let currentDate = typeof(startDate) == 'string' ? new Date(startDate) : startDate;
     let endDate = typeof (stopDate) == 'string' ? new Date(stopDate) : stopDate;
+
     while (currentDate <= endDate) {
-        dateArray.push(getToday('', currentDate) )
-        currentDate =new Date(currentDate.getDate() + 1);
+        dateArray.push(getToday('', currentDate));
+        currentDate.setDate(currentDate.getDate() + 1)
     }
     return dateArray;
 }

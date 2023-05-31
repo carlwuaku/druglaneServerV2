@@ -5,68 +5,131 @@ import { sequelize } from "../config/sequelize-config";
 import { Sales } from "../models/Sales";
 import { DailyRecords } from "../models/DailyRecords";
 import { IncomingPayments } from "../models/IncomingPayments";
+import { STRING_NUMBER_OF_ITEMS, STRING_TOTAL, STRING_TOTAL_COST } from "../utils/strings";
+import { getToday } from "./dateHelper";
 
+/**
+ * get the discount and tax grouped by payment method and e.g. the users or shift
+ * @param start a start date
+ * @param end an end date
+ * @param field a field to group by
+ * @returns list of sales objects
+ */
 export async function getDiscountReportByPaymentMethodSpecific(start: string, end: string, field: string): Promise<Sales[]> {
     let objects = await Sales.findAll({
         attributes: [
-            [sequelize.literal(`(select sum(tax)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'total_amount'],
-            [sequelize.literal(`(select sum(discount)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'discount'],
+            [sequelize.literal(`sum(tax)`), 'tax'],
+            [sequelize.literal(`sum(discount)`), 'discount'],
             "payment_method",
             field
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
 
         },
-        group: ['payment_method', field]
+        group: ['payment_method', field],
+        subQuery: false,
+        raw: true
     });
     return objects
 }
 
+/**
+ * get a list of total discount and tax per user, ignoring the payment method
+ * @param start a start date
+ * @param end the end date
+ * @returns list of sales objects
+ */
 export async function getDiscountTaxReportByUser(start: string, end: string): Promise<Sales[]> {
     let objects = await Sales.findAll({
         attributes: [
-            [sequelize.literal(`(select sum(tax)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'total_amount'],
-            [sequelize.literal(`(select sum(discount)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'discount'],
+            'created_by',
+            [sequelize.literal(`sum(tax)`), 'tax'],
+            [sequelize.literal(`sum(discount)`), 'discount'],
 
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
 
         },
-        group: ['created_by'],
-        order: [['created_by', 'asc']],
+        group: [sequelize.col(`${Sales.tableName}.created_by`)],
+        order: [[sequelize.col(`${Sales.tableName}.created_by`), 'asc']],
+        raw: true,
+        subQuery: false,
         include: [
             {
                 model: Users,
                 attributes: ['display_name']
-            },
-            {
-                model: SalesDetails,
-                attributes: []
             }
         ]
     });
+
     return objects
 }
 
-export async function getSalesReportByUser(start: string, end: string): Promise<Sales[]> {
-    let objects = Sales.findAll({
+/**
+ * get a list of total discount and tax per shift, ignoring the payment method
+ * @param start a start date
+ * @param end the end date
+ * @returns list of sales objects
+ */
+export async function getDiscountTaxReportByShift(start: string, end: string): Promise<Sales[]> {
+    let objects = await Sales.findAll({
         attributes: [
-            "payment_method",
-            "display_name",
-            [sequelize.literal(`(select sum(price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total'],
-            [sequelize.literal(`(select sum(tax)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'total_amount'],
-            [sequelize.literal(`(select sum(discount)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'discount'],
-            [sequelize.literal(`(select sum(cost_price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total_cost'],
+            'shift',
+            [sequelize.literal(`sum(tax)`), 'tax'],
+            [sequelize.literal(`sum(discount)`), 'discount'],
 
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
 
         },
-        group: ['created_by', 'payment_method'],
-        order: [['created_by', 'asc']],
+        group: [sequelize.col(`${Sales.tableName}.shift`)],
+        order: [[sequelize.col(`${Sales.tableName}.shift`), 'asc']],
+        raw: true,
+        subQuery: false
+    });
+
+    return objects
+}
+
+/**
+ * get total amount, total cost of items sold,total discount and tax per user per payment 
+ * method
+ * @param start a start date
+ * @param end the end date
+ * @returns a list of sales objects
+ */
+export async function getSalesReportByUser(start: string, end: string): Promise<Sales[]> {
+    let objects = await Sales.findAll({
+        attributes: [
+            "payment_method",
+            "created_by",
+            [sequelize.literal(`sum(tax)`), 'tax'],
+            [sequelize.literal(`sum(discount)`), 'discount'],
+
+        ],
+        where: {
+            date: {
+                 [Op.gte]: start ,
+                 [Op.lte]: end 
+            },
+
+        },
+        group: [sequelize.col(`${Sales.tableName}.created_by`), 'payment_method'],
+        subQuery: false,
+        raw: true,
+        order: [[sequelize.col(`${Sales.tableName}.created_by`), 'asc']],
         include: [
             {
                 model: Users,
@@ -74,10 +137,17 @@ export async function getSalesReportByUser(start: string, end: string): Promise<
             },
             {
                 model: SalesDetails,
-                attributes: []
+                as: SalesDetails.tableName,
+
+                attributes: [
+                    [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+                    [sequelize.literal('SUM(quantity * cost_price)'), STRING_TOTAL_COST],
+                ]
+
             }
         ]
     });
+
     return objects
 }
 
@@ -86,23 +156,33 @@ export async function getSalesReportByShift(start: string, end: string): Promise
         attributes: [
             "payment_method",
             "shift",
-            [sequelize.literal(`(select sum(price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total'],
-            [sequelize.literal(`(select sum(tax)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'total_amount'],
-            [sequelize.literal(`(select sum(discount)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'discount'],
-            [sequelize.literal(`(select sum(cost_price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total_cost'],
+            [sequelize.literal(`sum(tax) `), 'tax'],
+            [sequelize.literal(` sum(discount) `), 'discount'],
 
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
 
         },
         group: ['shift', 'payment_method'],
+        subQuery: false,
+        raw: true,
         order: [['shift', 'asc']],
         include: [
 
+            
             {
                 model: SalesDetails,
-                attributes: []
+                as: SalesDetails.tableName,
+
+                attributes: [
+                    [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+                    [sequelize.literal('SUM(quantity * cost_price)'), STRING_TOTAL_COST],
+                ]
+
             }
         ]
     });
@@ -113,17 +193,17 @@ export async function getUserSales(start: string, end: string): Promise<Sales[]>
     let objects = Sales.findAll({
         attributes: [
             "created_by",
-            "display_name",
-            [sequelize.fn('COUNT', sequelize.col('code')), 'num_of_items'],
-
-            [sequelize.literal(`(select sum(price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total'],
-
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
 
         },
-        group: ['created_by'],
+        group: [sequelize.col(`${Sales.tableName}.created_by`)],
+        subQuery: false,
+        raw: true,
         include: [
             {
                 model: Users,
@@ -131,58 +211,94 @@ export async function getUserSales(start: string, end: string): Promise<Sales[]>
             },
             {
                 model: SalesDetails,
-                attributes: []
+                as: SalesDetails.tableName,
+
+                attributes: [
+                    [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+                    [sequelize.literal('SUM(quantity * cost_price)'), STRING_TOTAL_COST],
+                    [sequelize.literal(`count(${SalesDetails.tableName}.id)`), STRING_NUMBER_OF_ITEMS]
+
+                ]
+
             }
         ]
     });
     return objects
 }
 
-
+/**
+ * get the total sold per payment method between some dates
+ * @param start start date
+ * @param end end date
+ * @param payment_method optional
+ * @returns payment_method, total
+ */
 export async function getSalesByPaymentMethod(start: string, end: string, payment_method?: string): Promise<Sales[]> {
     let objects = Sales.findAll({
         attributes: [
             "payment_method",
-            [sequelize.literal(`(select sum(price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total'],
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
+            ...(payment_method && { payment_method: payment_method })
+
         },
         group: ['payment_method'],
+        subQuery: false,
+        raw: true,
         include: [
 
             {
                 model: SalesDetails,
-                attributes: [],
-                where: {
-                    ...(payment_method && { payment_method: payment_method })
-                }
+                as: SalesDetails.tableName,
+                attributes: [
+                    [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+
+                ]
             }
         ]
     });
     return objects
 }
 
+/**
+ * 
+ * @param start the start date
+ * @param end the end date
+ * @returns a list of of dates, payment_method, total, total_cost, tax and discount
+ */
 export async function getDailySalesWithPaymentMethods(start: string, end: string): Promise<Sales[]> {
     let objects = Sales.findAll({
         attributes: [
             "payment_method",
             "date",
-            [sequelize.literal(`(select sum(price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total'],
-            [sequelize.literal(`(select sum(tax)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'total_amount'],
-            [sequelize.literal(`(select sum(discount)  from ${Sales.tableName} where ${Sales.tableName}.code = ${Sales.tableName}.code))`), 'discount'],
-            [sequelize.literal(`(select sum(cost_price * quantity)  from ${SalesDetails.tableName} where ${SalesDetails.tableName}.code = ${Sales.tableName}.code)`), 'total_cost'],
+            [sequelize.literal(` sum(tax)`), 'tax'],
+            [sequelize.literal(`sum(discount)`), 'discount'],
 
         ],
         where: {
-            date: { [Op.between]: [new Date(start), new Date(end)] }
+            date: {
+                [Op.gte]: start,
+                [Op.lte]: end
+            },
+
         },
         group: ['date', 'payment_method'],
+        subQuery: false,
+        raw: true,
         include: [
 
             {
                 model: SalesDetails,
-                attributes: [],
+                as: SalesDetails.tableName,
+                attributes: [
+                    [sequelize.literal('SUM(quantity * price)'), STRING_TOTAL],
+                    [sequelize.literal('SUM(quantity * cost_price)'), STRING_TOTAL_COST],
+
+                ],
 
             }
         ]
@@ -190,28 +306,41 @@ export async function getDailySalesWithPaymentMethods(start: string, end: string
     return objects
 }
 
-export async function getTotalSummary(date: string): Promise<DailyRecords> {
+/**
+ * get an object with the total of each payment method
+ * @param date a date
+ * @returns a daily records object
+ */
+export async function getTotalSummary(start: string, end:string): Promise<DailyRecords[]> {
     try {
-        let object = await DailyRecords.findOne({
+        let objects = await DailyRecords.findAll({
             attributes: [
-                [sequelize.fn("SUM", sequelize.col('cash')), 'cash'],
-                [sequelize.fn("SUM", sequelize.col('momo')), 'momo'],
-                [sequelize.fn("SUM", sequelize.col('pos')), 'pos'],
-                [sequelize.fn("SUM", sequelize.col('cheque')), 'cheque'],
-                [sequelize.fn("SUM", sequelize.col('other')), 'other'],
-                [sequelize.fn("SUM", sequelize.col('credit')), 'credit'],
-                [sequelize.fn("SUM", sequelize.col('insurance')), 'insurance'],
+                'date',
+                'amount',
+                [sequelize.literal('SUM(cash)'), 'cash'],
+                [sequelize.literal('SUM(momo)'), 'momo'],
+                [sequelize.literal('SUM(pos)'), 'pos'],
+                [sequelize.literal('SUM(cheque)'), 'cheque'],
+                [sequelize.literal('SUM(other)'), 'other'],
+                [sequelize.literal('SUM(credit)'), 'credit'],
+                [sequelize.literal('SUM(insurance)'), 'insurance'],
 
 
             ],
             where: {
-                date: date,
-            }
+                date: {
+                    [Op.gte]: start,
+                    [Op.lte]: end
+                },
+            },
+            group: ['date'],
+            subQuery: false,
+            raw: true
         });
-        if (!object) {
+        if (!objects) {
             throw new Error("getTotalSummary object not found");
         }
-        return object
+        return objects
     } catch (error: any) {
         throw new Error(error)
     }
@@ -246,11 +375,13 @@ export async function getTotalSales(start: string, end: string): Promise<number>
     try {
         let object = await SalesDetails.findOne({
             attributes: [
-                [sequelize.literal(`sum(price * quantity)`), 'total_amount'],
-                [sequelize.fn("SUM", sequelize.col('amount')), 'total']
+                [sequelize.literal(`sum(price * quantity)`), STRING_TOTAL]
             ],
             where: {
-                date: { [Op.between]: [new Date(start), new Date(end)] },
+                date: {
+                    [Op.gte]: start,
+                    [Op.lte]: end
+                },
 
             }
         });
@@ -264,16 +395,58 @@ export async function getTotalSales(start: string, end: string): Promise<number>
     
 }
 
+/**
+ * get a list of total sales by date
+ * @param start the start date
+ * @param end the end date
+ * @returns list of {date, total}
+ */
+export async function getTotalSalesList(start: string, end: string, group_by:string[] = ["date"]): Promise<SalesDetails[]> {
+    try {
+        let objects = await SalesDetails.findAll({
+            attributes: [
+                ...group_by,
+                [sequelize.literal(`sum(price * quantity)`), STRING_TOTAL]
+            ],
+            where: {
+                date: {
+                    [Op.gte]: start,
+                    [Op.lte]: end
+                },
+
+            },
+            group: group_by,
+            subQuery: false
+        });
+        if (!objects) {
+            throw new Error("getTotalSalesList object not found");
+        }
+        return objects
+    } catch (error: any) {
+        throw new Error(error)
+    }
+
+}
+
+export function formatDateTime(object: any) {
+    if (!object || !object.created_on) return;
+    const timestamp = getToday("timestamp", object.created_on);
+    console.log(timestamp)
+    Object.assign(object, {...object, created_on: timestamp});
+
+}
+
 export function flattenNestedProperties(object:any) {
     if (!object) return;
-
     const flattenedObject = {
         ...object,
         customer_id: object['Customer.customer_id'],
         customer_name: object['Customer.customer_name'],
         display_name: object['User.display_name'],
         total: object['sales_details.total'],
+        total_cost: object['sales_details.total_cost'],
         num_of_items: object['sales_details.num_of_items'],
+        created_on: getToday("timestamp", object.created_on)
     };
 
     delete flattenedObject['Customer.customer_id'];

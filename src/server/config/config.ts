@@ -1,5 +1,11 @@
 import { logger } from './logger';
 import { constants } from '../../utils/constants'
+import dayjs from 'dayjs';
+const timeZoneOffset = dayjs().utcOffset()
+console.log(timeZoneOffset)
+
+const timeZoneOffsetMinutes = new Date().getTimezoneOffset();
+const timeZoneOffsetHours = -timeZoneOffsetMinutes / 60;
 
 export const sqliteConfig: {[key:string]: any}= {
     "development": {
@@ -37,7 +43,11 @@ export const config: { [key: string]: any } = {
         password: "r00t",
         database: "test",
         "logging": false,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        dialectOptions: { // for reading
+            useUTC: false,
+            timezone: "Etc/GMT+1",
+        },
 
         // logging: (msg: any) => logger.debug(msg),
     },

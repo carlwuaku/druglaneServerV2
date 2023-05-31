@@ -20,7 +20,7 @@ export class ProductBatches extends Model{
   batch_number!: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   expiry!: string;
   @Column

@@ -24,7 +24,7 @@ import { Vendors } from '../models/Vendors';
 import { Activities } from '../models/Activities';
 import { IncomingPayments } from '../models/IncomingPayments';
 import { logger } from './logger';
-import { flattenNestedProperties } from '../helpers/salesHelper';
+import { flattenNestedProperties, formatDateTime } from '../helpers/salesHelper';
 // const databaseNames: { [key:string]:string} = {test:'test', development: 'dev'}
 /**
  * SequelizeConnectionError: This error is thrown if Sequelize is unable to establish a connection to the database. This could be due to various reasons such as an incorrect database name, hostname, port, or authentication credentials.
@@ -361,7 +361,21 @@ Sales.addHook('afterFind', (results) => {
     } else {
         flattenNestedProperties(results);
     }
-})
+});
+SalesDetails.addHook('afterFind', (results) => {
+    if (Array.isArray(results)) {
+        results.forEach((result) => {
+            formatDateTime(result);
+        });
+    } else {
+        formatDateTime(results);
+    }
+    console.log(results)
+});
+
+
+
+
 
 
 

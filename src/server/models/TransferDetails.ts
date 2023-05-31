@@ -63,7 +63,7 @@ export class TransferDetails extends Model{
 
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   date!: string;
 
@@ -74,7 +74,7 @@ export class TransferDetails extends Model{
   price!: number;
   
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
   expiry!: string;
 }

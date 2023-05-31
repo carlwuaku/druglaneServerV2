@@ -18,7 +18,7 @@ import { Users } from "./Users";
   
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     validate: {
       isDate: true
     }
@@ -91,7 +91,7 @@ import { Users } from "./Users";
   size!: string;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     validate: {
       isDate: true,
     }
