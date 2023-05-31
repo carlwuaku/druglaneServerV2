@@ -11,25 +11,9 @@ import { Users } from "../models/Users";
 import { refreshCurrentStock, updateStockValue } from "../helpers/productsHelper";
 import { Products } from "../models/Products";
 import { OutgoingPayments } from "../models/OutgoingPayments";
+import * as crypto from 'crypto'
+const module_name = "purchases";
 
-const module_name = "products";
-const attributes:Includeable[] = [{
-    model: Vendors,
-    attributes: ['name', 'id']
-},
-{
-    model: Users,
-    attributes: ['display_name']
-},
-{
-    model: PurchaseDetails,
-    attributes: [
-        [sequelize.literal('sum(quantity * price)'), 'total_amount'],
-        [sequelize.literal('count(id)'), 'num_items']
-
-    ],
-}
-]
 
 //TODO: make sure deleted details do not affect stock values
 /**
@@ -37,31 +21,64 @@ const attributes:Includeable[] = [{
  * @param _data an object where param is a json string
  * @returns list of matching purchases
  */
-export async function _getList(_data: { [key: string]: any }): Promise<Purchases[]> {
+export async function getList(_data: { [key: string]: any }): Promise<Purchases[]> {
     try {
 
         let limit = _data.limit ? parseInt(_data.limit) : 100;
         let offset = _data.offset ? parseInt(_data.offset) : 0;
-
+        //
         //if user specifies a search query
         let where: WhereOptions = {};
+        let purchaseDetailsWhere: WhereOptions = {};
         if (_data.param) {
             let searchQuery = JSON.parse(_data.param)
             where = parseSearchQuery(searchQuery)
         }
+        //if the user specifies a product, search the products table
+        if (_data.product) {
+            let poductSearchQuery = [{ field: 'name', operator: 'includes', param: _data.product }];// JSON.parse(_data.product)
+            let Products_where = parseSearchQuery(poductSearchQuery)
+            let products = await Products.findAll({
+                where: Products_where
+            });
+            let product_ids: number[] = products.reduce(function (accumulator: number[], curr: Products) {
+                return accumulator.concat(curr.id);
+            }, []);
+            purchaseDetailsWhere['product'] = {[Op.in] : product_ids}
+        }
         let objects = await Purchases.findAll({
-
+            attributes: {
+                include: [
+                    [sequelize.literal(`(select count(id) from purchase_details where code = purchases.code)`), 'num_items'],
+                    [sequelize.literal(`(select sum(price * quantity) from purchase_details where code = purchases.code)`), 'total_amount'],
+                ]
+            },
             limit,
             offset,
-            order: [["name", "asc"]],
             where,
-            include: attributes
+            include: [{
+                model: Vendors,
+                attributes: ['name', 'id']
+            },
+            {
+                model: Users,
+                attributes: ['display_name']
+                },
+                {
+                    model: PurchaseDetails,
+                    attributes: [],
+                    where: purchaseDetailsWhere
+            }
+            ],
+            logging(sql, timing?) {
+                console.log(sql, timing)
+            },
         });
 
 
 
         return objects;
-    } catch (error) {
+    } catch (error: any) {
 
         logger.error({ message: error })
         throw new Error(error);
@@ -107,13 +124,13 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
                     }
                 });
 
-                
+
                 activity = `updated purchase item with code ${code}`
             }
             else {
                 //generate code
-               let last_id: number = await Purchases.max('id');
-                code =  `${(last_id + 1).toString().padStart(5, '0')}`;
+                // let last_id: number = await Purchases.max('id');
+                code = crypto.randomUUID();// `${(last_id + 1).toString().padStart(5, '0')}`;
                 activity = `created purchase item with code ${code}`
 
             }
@@ -127,12 +144,12 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
                 item.date = _data.date;
                 item.created_by = _data.user_id;
             })
-            
+
             await PurchaseDetails.bulkCreate(items,
                 {
                     transaction: t
                 });
-            
+
 
 
             t.afterCommit(async () => {
@@ -140,8 +157,9 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
                 //TODO for the old products that might have been removed or changed
                 //, revert the price, unit and all that.
                 //to avoid repeating ops for duplicate producgts
-                let done:any[] = [];
-                await Promise.all(items.concat(old_details).map(async (item) => {
+                let done: any[] = [];
+                let combined: any[] = items.concat(old_details)
+                await Promise.all(combined.map(async (item) => {
                     if (!done.includes(item.product)) {
                         await Products.update(
                             {
@@ -161,9 +179,9 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
                         done.push(item.product);
                     }
                 }))
-                console.log(done)
-                 updateStockValue();
-                 Activities.create({
+
+                updateStockValue();
+                Activities.create({
                     activity: activity,
                     user_id: `${_data.user_id}`,
                     module: module_name
@@ -174,7 +192,7 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
 
         return result
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -185,29 +203,38 @@ export async function save(_data: { [key: string]: any }): Promise<string> {
  * @param _data must contain some search params
  * @returns a list of purchase details
  */
-export async function getDetails(_data: { [key: string]: any }): Promise<PurchaseDetails[]> {
+export async function getDetails(_data: { param?: any; vendor?:any }): Promise<PurchaseDetails[]> {
     try {
 
         let where: WhereOptions = {};
+        let purchaseWhere: WhereOptions = {};
         if (_data.param) {
             let searchQuery = JSON.parse(_data.param)
             where = parseSearchQuery(searchQuery)
         }
+        if (_data.vendor) {
+            purchaseWhere['vendor'] = _data.vendor
+        }
         let objects = await PurchaseDetails.findAll({
             attributes: {
                 include: [
-                    [sequelize.literal('price * quantity'), 'total']
+                    [sequelize.literal(`'price' * 'quantity'`), 'total']
                 ]
             },
             where: where,
             include: [{
                 model: Products,
                 attributes: [['name', 'product_name'], ['id', 'product_id']]
-            }
-            ]
+            },
+                {
+                    model: Purchases,
+                    attributes: [],
+                    where: purchaseWhere
+                }
+            ],
         });
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -244,10 +271,10 @@ export async function deletePurchases(_data: { [key: string]: any }): Promise<bo
             });
             t.afterCommit(async () => {
                 //update stock value
-                for (let i = 0; i < items.length; i++) {
-                    const item = items[i];
-                    await refreshCurrentStock(item.product);
-                }
+                await Promise.all(items.map(async (item) => {
+                        await refreshCurrentStock(item.product);
+                }));
+
                 updateStockValue();
                 Activities.create({
                     activity: `temporarily deleted purchase invoices with codes ${_data.codes}`,
@@ -258,7 +285,7 @@ export async function deletePurchases(_data: { [key: string]: any }): Promise<bo
             return true;
         });
         return result;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -270,19 +297,36 @@ export async function deletePurchases(_data: { [key: string]: any }): Promise<bo
  * @param _data must contain the id or code of the purchase
  * @returns a purchase item
  */
-export async function find(_data: { [key: string]: any }): Promise<Purchases>{
+export async function find(_data: { [key: string]: any }): Promise<Purchases> {
     try {
-        let object = Purchases.findOne({
+        let object = await Purchases.findOne({
+            attributes: {
+                include: [
+                    [sequelize.literal(`(select count(id) from purchase_details where code = '${_data.id}')`), 'num_items'],
+                    [sequelize.literal(`(select sum(price * quantity) from purchase_details where code = '${_data.id}')`), 'total_amount'],
+                ]
+            },
             where: {
                 [Op.or]: [
                     { id: _data.id },
                     { code: _data.id }
                 ]
             },
-            include: attributes
+            include: [{
+                model: Vendors,
+                attributes: ['name', 'id']
+            },
+            {
+                model: Users,
+                attributes: ['display_name']
+            }]
         });
+        if (!object) {
+            throw new Error(`Purchase not found: ${_data.id}`);
+            
+        }
         return object;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error);
     }
@@ -295,7 +339,7 @@ export async function find(_data: { [key: string]: any }): Promise<Purchases>{
  * @returns an object
  */
 export async function getPurchaseTotals(_data: { [key: string]: any }): Promise<IPurchaseTotals> {
-    
+
     let start = _data.start_date || setDates("this_month").startDate;
     let end = _data.end_date || setDates("this_month").endDate;
     let vendor = _data.vendor;
@@ -321,7 +365,7 @@ export async function getPurchaseTotals(_data: { [key: string]: any }): Promise<
         where: total_purchase_where
     });
 
-    
+
     const total_paid = await OutgoingPayments.sum("amount", {
         where: payment_where
     })
@@ -334,9 +378,9 @@ export async function getPurchaseTotals(_data: { [key: string]: any }): Promise<
         balance: balance.toLocaleString()
 
     }
- }
+}
 
-interface IPurchaseTotals{
+interface IPurchaseTotals {
     total_purchase: string;
     total_credit: string;
     total_paid: string;

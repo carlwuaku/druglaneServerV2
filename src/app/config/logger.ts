@@ -7,7 +7,7 @@ import * as winston from 'winston';
 const defaultFormat = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.align(),
-    winston.format.printf(info => `${info.level}: ${[info.timestamp]}: ${info}`)
+    winston.format.printf(info => `${info.level}: ${[info.timestamp]}: ${info.message}`)
 )
 
 const logger = winston.createLogger({
@@ -20,6 +20,11 @@ const logger = winston.createLogger({
         new winston.transports.File({
             filename: path.resolve(constants.settings_location, 'logs','ui', `${getToday()} debug.log`),
             level: 'debug',
+            format: defaultFormat,
+        }),
+        new winston.transports.File({
+            filename: path.resolve(constants.settings_location, 'logs','ui', `${getToday()} info.log`),
+            level: 'info',
             format: defaultFormat,
         }),
         new winston.transports.File({

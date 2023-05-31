@@ -13,58 +13,57 @@ export class Purchases extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
 
   
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  vendor: number;
+  vendor!: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
-  date: string;
+  date!: string;
 
   @Column
-  site: string;
+  site!: string;
 
   @Index
   @Column
-  code: string;
+  code!: string;
 
   @Column
-  status: string;
+  status!: string;
 
   @CreatedAt
-  created_on: string;
+  created_on!: string;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  
-  created_by: number;
+  created_by!: number;
 
   @Index
   @Column
-  invoice: string;
+  invoice!: string;
 
   @Index
   @Column
-  payment_method: string;
+  payment_method!: string;
 
   @Column({
     type: DataType.DOUBLE
   })
-  amount_paid: number;
+  amount_paid!: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
   })
-  last_payment_date: string
+  last_payment_date!: string;
 
   
 }

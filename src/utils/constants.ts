@@ -9,7 +9,7 @@ const appLongName = "Druglane Pharmacy Management System";
 const databaseName = "druglanev1.db";
 
 const appDirectory = "druglaneServerV1";
-const settings_location:string =  path.join(process.env.APPDATA, appDirectory);
+const settings_location:string =  path.join(process.env.APPDATA!, appDirectory);
 
 export const constants = {
   appLongName : appLongName,

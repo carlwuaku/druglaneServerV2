@@ -9,19 +9,18 @@ import { Table, Model, Column, Index } from "sequelize-typescript";
 export class Settings extends Model{
   @Index
   @Column({
-    allowNull : false,
+    allowNull: false,
     unique: true
   })
-  name:string;
+  name!: string;
 
   @Column
-  value:string;
+  value!: string;
 
   @Column({
     allowNull: false
-    
   })
-  module:string
+  module!: string;
 
 
 }

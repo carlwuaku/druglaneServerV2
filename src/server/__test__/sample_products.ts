@@ -21,7 +21,7 @@ export const sampleProducts =
             "markup": 1.33,
             "max_stock": 20,
             "min_stock": 1,
-            "name": "APDLY H COUGH SYRUP",
+            "name": "APDYL H COUGH SYRUP",
             "notes": "",
             "price": 26.6,
             "shelf": "",
@@ -756,4 +756,518 @@ export const sampleProducts =
             "status": "",
             "unit": "bottle",
             id: 23
-        }]
+        }];
+
+
+export const samplePurchases = [
+    {
+        date: '2023-03-19',
+        created_by: '1',
+        invoice: '123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-04-19',
+        created_by: '1',
+        invoice: '223',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 22,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 4,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20.3,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 2.7,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-04-30',
+        created_by: '1',
+        invoice: '4123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 22,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-05-19',
+        created_by: '1',
+        invoice: '5123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-06-19',
+        created_by: '1',
+        invoice: '6123',
+        vendor: '2',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 5,
+                    "selling_price": 10,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5.5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 2,
+                    "quantity": 15,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-07-19',
+        created_by: '1',
+        invoice: '7123',
+        vendor: '2',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-08-19',
+        created_by: '1',
+        invoice: '8123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-09-19',
+        created_by: '1',
+        invoice: '9123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-10-19',
+        created_by: '1',
+        invoice: '10123',
+        vendor: '2',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-03-16',
+        created_by: '1',
+        invoice: '11123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-02-19',
+        created_by: '1',
+        invoice: '13123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-05-01',
+        created_by: '1',
+        invoice: '14123',
+        vendor: '2',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+    {
+        date: '2023-12-19',
+        created_by: '1',
+        invoice: '15123',
+        vendor: '1',
+        items: `[
+                {
+                    "product": 1,
+                    "created_by": 1,
+                    "price": 3,
+                    "quantity": 9,
+                    "selling_price": 4,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 2,
+                    "created_by": 1,
+                    "price": 5,
+                    "quantity": 20,
+                    "selling_price": 7,
+                    "unit": "tablet",
+                    "markup": 1.3,
+                    "expiry": "2024-01-02"
+                },
+                {
+                    "product": 5,
+                    "created_by": 1,
+                    "price": 20,
+                    "quantity": 50,
+                    "selling_price": 30,
+                    "unit": "strip",
+                    "markup": 1.5,
+                    "expiry": "2025-01-02"
+                }
+            ]`,
+        user_id: 1
+    },
+
+]
+
+

@@ -78,6 +78,9 @@ export function getOperatorParamArray(operator: string, param: string | Array<an
             case 'less_than_or_equal':
                 like_queries.push({ [Op.lte]: p })//a number is expected for the value
                 break;
+            case 'in':
+                like_queries.push({[Op.in]: p})//an array of values is expected [1,2,3]
+                break;
 
             default:
                 like_queries.push({ [Op.like]: `${p}` })

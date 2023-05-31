@@ -1,4 +1,6 @@
+import { sequelize } from "../config/sequelize-config";
 import { Table, Model, Column, DataType,  CreatedAt, Index, ForeignKey, PrimaryKey } from "sequelize-typescript";
+import { Op } from "sequelize";
 import { Users } from "./Users";
 
 @Table({
@@ -8,54 +10,57 @@ import { Users } from "./Users";
 })
 
 export class IncomingPayments extends Model{
+    
   @PrimaryKey
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
-  date: string;
+  date!: string;
 
   @Column({
     type: DataType.DOUBLE
   })
-    amount: number;
+  amount!: number;
 
     @Index
-    @Column
-    type: string;
+  @Column
+  type!: string;
 
     @Index
-    @Column
-    payer: string;
+  @Column
+  payer!: string;
 
     @Index
-    @Column
-    payment_method: string;
+  @Column
+  payment_method!: string;
 
     @Index
+  @Column
+  transaction_id!: string;
     @Column
-    transaction_id: string;
-    @Column
-    item_code: string;
+  item_code!: string;
 
 
     @Column
-    notes: string;
+  notes!: string;
     
     @ForeignKey(() => Users)
-    @Column({
-      type: DataType.INTEGER,
-      allowNull: false
-    })
-    created_by: number;
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false
+  })
+  created_by!: number;
 
-    @Index
-    @CreatedAt
-    created_on: string
+  @Index
+  @CreatedAt
+  created_on!: string;
+
+  total?: number;
 }

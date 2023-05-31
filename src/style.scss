@@ -1,3 +1,8 @@
+body{
+ font-family: Calibri, 'Trebuchet MS','Gill Sans',
+    'Gill Sans MT', sans-serif;   
+}
+
 $primaryColor: indigo;
 .whiteText{
     color: white;
@@ -12,4 +17,11 @@ $primaryColor: indigo;
     color: white ;
 }
 
+.p-card{
+    margin-bottom: 8px;
+}
+
+.wide-input{
+    min-width: 75%;
+}
 

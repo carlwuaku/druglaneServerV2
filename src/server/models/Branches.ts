@@ -12,40 +12,40 @@ export class Branches extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id:number
+  id!: number;
 
   @Index
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  name: string;
+  name!: string;
   
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  location: string;
+  location!: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  phone: string;
+  phone!: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  address: string;
+  address!: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false
   })
-  email: string;
+  email!: string;
 
   @CreatedAt
-  created_on: string
+  created_on!: string;
 
 }

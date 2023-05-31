@@ -14,25 +14,25 @@ export class ProductBatches extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Column
-  batch_number: string;
+  batch_number!: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
-  expiry: string;
+  expiry!: string;
   @Column
-  barcode: string;
+  barcode!: string;
 
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER
   })
-  product: number
+  product!: number;
 
   @Column
-  purchase_code: string
+  purchase_code!: string;
 
 }

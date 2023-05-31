@@ -6,6 +6,7 @@ import { Users } from "./Users";
   tableName: "sales",
   modelName: 'Sales',
   paranoid: true,
+  createdAt: false
 })
 
 export class Sales extends Model{
@@ -14,75 +15,91 @@ export class Sales extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
-  @ForeignKey(()=> Customers)
+  @ForeignKey(() => Customers)
   @Column({
     type: DataType.INTEGER,
     allowNull: true,
     defaultValue: null
   })
-  customer: number;
+  customer!: number;
 
   @Index
   @Column({
     allowNull: false,
     unique: true
   })
-  code: string;
+  code!: string;
 
   @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number
+  created_by!: number;
 
-  @CreatedAt
-  created_on: string;
+  @Column({
+    type: DataType.DATE
+  })
+  created_on!: string;
 
   @Column({
     type: DataType.DOUBLE,
     defaultValue: 0
   })
-  amount_paid: number;
+  amount_paid!: number;
 
   @Index
   @Column
-  payment_method: string;
+  payment_method!: string;
 
   @Index
   @Column
-  momo_reference: string;
+  momo_reference!: string;
 
   @Index
   @Column
-  insurance_provider: string;
+  date!: string;
 
   @Index
   @Column
-  insurance_member_name: string;
+  insurance_provider!: string;
 
   @Index
   @Column
-  insurance_member_id: string;
+  insurance_member_name!: string;
 
   @Index
   @Column
-  creditor_name: string;
+  insurance_member_id!: string;
+
+  @Index
+  @Column
+  creditor_name!: string;
 
   
   @Column({
     type: DataType.DOUBLE
   })
-  credit_paid: number;
+  credit_paid!: number;
 
   @Column({
     type: DataType.DOUBLE
   })
-  discount:  number;
+  discount!: number;
+  
+  @Column({
+    type: DataType.DOUBLE
+  })
+  tax!: number;
 
   @Index
   @Column
-  shift: string;
+  shift!: string;
+
+  total?: number;
+  display_name?: string;
+  num_of_items?: number;
+  total_cost?: number;
 }

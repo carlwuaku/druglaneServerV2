@@ -15,22 +15,22 @@ export class Customers extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
 
   
   @Index
   @Column({
     allowNull: false
   })
-  name:string;
+  name!: string;
 
   
   @Column
-  sex:string;
+  sex!: string;
 
   @Index
   @Column
-  phone:string;
+  phone!: string;
 
   @Index
   @Column({
@@ -38,21 +38,21 @@ export class Customers extends Model{
       isEmail: true
     }
   })
-  email:string;
+  email!: string;
 
   @Column({
     validate: {
       isDate: true
     }
   })
-  date_of_birth:string;
+  date_of_birth!: string;
 
   @CreatedAt
-  created_on:string;
+  created_on!: string;
 
   @Column
-  location:string;
+  location!: string;
 
-  @HasMany(()=> CustomerDiagnostics)
-  customerDiagnostics: CustomerDiagnostics[]
+  @HasMany(() => CustomerDiagnostics)
+  customerDiagnostics!: CustomerDiagnostics[];
 }

@@ -5,6 +5,8 @@
         "allowJs": true,
         "target": "es6",
         "noImplicitReturns": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
         "noFallthroughCasesInSwitch": true,
         "noEmitOnError": true,
         "noImplicitAny": true,
@@ -26,5 +28,5 @@
     "include": [
         "./src/**/*",
         "./spec/**/*"
-    ],
+, "Header.tsx"    ],
 }

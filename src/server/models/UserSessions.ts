@@ -13,25 +13,25 @@ export class UserSessions extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
-  @ForeignKey(()=> Users)
+  @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  user_id: number;
+  user_id!: number;
 
-  @Index 
+  @Index
   @Column
-  token:string;
+  token!: string;
 
   @CreatedAt
-  created_on:string;
+  created_on!: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATEONLY
   })
-  expires:string
+  expires!: string;
 }
 

@@ -17,17 +17,17 @@ export class Roles extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  role_id: number;
+  role_id!: number;
 
   @Column
-  role_name: string;
+  role_name!: string;
   @Column
-  description: string
+  description!: string;
 
   @CreatedAt
-  created_on: string
+  created_on!: string;
 
-  updatedAt: false
+  updatedAt!: false;
 
  
 }

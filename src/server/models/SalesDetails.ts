@@ -1,69 +1,81 @@
-import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, BelongsTo, PrimaryKey } from "sequelize-typescript";
+import { sequelize } from "../config/sequelize-config";
+import { Table, Model, Column, DataType, ForeignKey, Index, CreatedAt, PrimaryKey } from "sequelize-typescript";
 import { Products } from "./Products";
-import { Purchases } from "./Purchases";
 import { Sales } from "./Sales";
-import { Users } from "./Users";
+import { Op } from "sequelize";
 
 @Table({
   tableName: "sales_details",
   modelName: 'SalesDetails',
   paranoid: true,
+  createdAt: false
 })
  export class SalesDetails extends Model{
+  
   @PrimaryKey
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  product: number;
+  product!: number;
 
   @Index
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  quantity: number;
+  quantity!: number;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  price: number;
+  price!: number;
 
   @Column
-  unit: string;
+  unit!: string;
 
-  @CreatedAt
-  created_on: string;
+  @Column({
+    type: DataType.DATE,
+    allowNull: false
+  })
+  created_on!: string;
 
   @Column
-  label: string;
+  label!: string;
   
   @Index
-  @ForeignKey(()=> Sales)
+  @ForeignKey(() => Sales)
   @Column
-  code: string;
+  code!: string;
 
   @Index
   @Column
-  date: string;
+  date!: string;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  cost_price: number;
+  cost_price!: number;
 
   @Index
   @Column
-  expiry: string;
+  expiry!: string;
+
+  total?: number;
+  num_of_items?: number;
+  display_name?: string;
+  product_name?: string;
+  product_id?: string;
+  
  }
 
 

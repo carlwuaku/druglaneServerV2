@@ -17,7 +17,7 @@ export class ReceivedTransferDetails extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
 
   
   @ForeignKey(() => Products)
@@ -25,54 +25,54 @@ export class ReceivedTransferDetails extends Model{
     type: DataType.INTEGER,
     allowNull: false
   })
-  product: number;
+  product!: number;
 
   @Index
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  quantity: number;
+  quantity!: number;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  price: number;
+  price!: number;
 
   @Column
-  unit: string;
+  unit!: string;
 
   @CreatedAt
-  created_on: string;
+  created_on!: string;
 
   @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  markup: number;
+  markup!: number;
 
   @Index
-  @ForeignKey(()=> ReceivedTransfers)
+  @ForeignKey(() => ReceivedTransfers)
   @Column
-  code: string;
+  code!: string;
 
   @Index
   @Column
-  date: string;
+  date!: string;
 
   @Column({
     type: DataType.DOUBLE,
     allowNull: false
   })
-  selling_price: number;
+  selling_price!: number;
 
   // @BelongsTo(() => ReceivedTransfers, 'code')
 }

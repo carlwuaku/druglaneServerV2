@@ -11,49 +11,46 @@ export class Activities extends Model{
     @Column({
         type: DataType.STRING,
         allowNull: false,
-        
     })
-    activity:string;
+    activity!: string;
 
     @PrimaryKey
     @Column({
         type: DataType.BIGINT,
-        autoIncrement:true
+        autoIncrement: true
     })
-    activity_id:string;
+    activity_id!: string;
 
     @ForeignKey(() => Users)
     @Column({
         type: DataType.INTEGER,
         allowNull: false,
-        
     })
-    user_id:string;
+    user_id!: string;
 
     @Column({
         type: DataType.STRING,
         allowNull: true,
-        
     })
-    module:string;
+    module!: string;
 
 
 
     @CreatedAt
-    created_on:string;
+    created_on!: string;
 
     @Column({
         type: DataType.INTEGER,
         allowNull: true,
         defaultValue: 0
     })
-    deleted: string;
+    deleted!: string;
     
     @Column({
         type: DataType.INTEGER,
         allowNull: true,
         defaultValue: 0
     })
-    object_id: string;
+    object_id!: string;
     
 }

@@ -8,9 +8,9 @@ export class ResponseData{
     host:string = '';
     backup_time:string = '';
     logged_in:boolean = false;
-    success: boolean;
+    success: boolean = false;
     objects: any[] = [];
-    error: string;
+    error: string = '';
     constructor(){}
   }
   

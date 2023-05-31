@@ -1,15 +1,26 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { constants } from '../utils/constants'
-import { Store } from './Store';
 import fork from 'child_process';
 import ip from 'ip';
-import { ResponseData } from './models/responseData';
 import { logger } from './config/logger';
 import { runMigrations } from './config/migrations/migrations';
 import { Settings } from './models/Settings';
 import { ServerEvents } from "../utils/ServerEvents";
-import { SERVER_STATE_CHANGED, SERVER_URL_UPDATED } from '../utils/stringKeys'
+import { PORT, SERVER_MESSAGE_RECEIVED, SERVER_RUNNING, SERVER_STATE_CHANGED, SERVER_URL_UPDATED } from '../utils/stringKeys'
+import adminController from './controllers/admin.controller';
+import customerController from './controllers/customer.controller';
+import productController from './controllers/product.controller';
+import purchaseController from './controllers/purchase.controller';
+import saleController from './controllers/sale.controller';
+import transfersController from './controllers/transfers.controller';
+import usersController from './controllers/users.controller';
+import vendorController from './controllers/vendor.controller';
+import { Server } from 'http';
+import cors from 'cors';
+import Store from "electron-store";
+const store = new Store();
+
 const serverEventEmitter = new ServerEvents();
 
 dotenv.config();
@@ -57,15 +68,9 @@ export function isValidInt(value: any): boolean {
 
 }
 
-import adminController from './controllers/admin.controller';
-import customerController from './controllers/customer.controller';
-import productController from './controllers/product.controller';
-import purchaseController from './controllers/purchase.controller';
-import saleController from './controllers/sale.controller';
-import transfersController from './controllers/transfers.controller';
-import usersController from './controllers/users.controller';
-import vendorController from './controllers/vendor.controller';
+app.use(cors());
 
+app.use('/', adminController);
 app.use('/api_admin', adminController);
 app.use('/api_staff', usersController);
 app.use('/api_customer', customerController);
@@ -75,94 +80,119 @@ app.use('/api_purchase', purchaseController);
 app.use('/api_sale', saleController);
 app.use('/api_transfer', transfersController);
 
-//CORS STUFF     
-app.use(async (req, res, next): Promise<void> => {
-    //allow all clients in development mode
-    res.header('Access-Control-Allow-Origin', '*');
-    if (process.env.NODE_ENV != "production") {
-        console.log("in dev")
-       
-    }
+//CORS STUFF  
+  
+// app.use(async (req, res, next): Promise<void> => {
+
+//     //allow all clients in development mode
+//     res.header('Access-Control-Allow-Origin', '*');
+//     if (process.env.NODE_ENV != "production") {
+//         console.log("in dev")
+//     }
 
 
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Token, Usertype, Userid, Type');
+//     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Token, Usertype, Userid, Type');
 
-    if (req.method === 'OPTIONS') {
-        res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET')
-        //return empty object.
-        res.status(200).json({})
-    }
-    else {
-        next();
-        // var token = req.headers.token;
-        // var type = req.headers.type;
-        // if (type == 'staff') {
-        //     //if user is staff and not admin, do the necessary checks
+//     if (req.method === 'OPTIONS') {
+//         res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET')
+//         //return empty object.
+//         res.status(200).json({})
+//     }
+//     else {
+//         next();
+//         // var token = req.headers.token;
+//         // var type = req.headers.type;
+//         // if (type == 'staff') {
+//         //     //if user is staff and not admin, do the necessary checks
 
-        //     try {
-        //         //do checks here if user has logged in or not
-        //         let user = await userSession.getItem(` token = '${token}' `, userSession.sessions_table);
+//         //     try {
+//         //         //do checks here if user has logged in or not
+//         //         let user = await userSession.getItem(` token = '${token}' `, userSession.sessions_table);
 
-        //         if (user != undefined) {
-        //             req.query.userid = user.user_id;
-        //             req.body.userid = user.user_id;
-        //             //if not options, call next to allow the request to get to the routes
-        //             next();
-        //         }
-        //         else {
+//         //         if (user != undefined) {
+//         //             req.query.userid = user.user_id;
+//         //             req.body.userid = user.user_id;
+//         //             //if not options, call next to allow the request to get to the routes
+//         //             next();
+//         //         }
+//         //         else {
 
-        //             res.status(200).json({ status: 0, message: 'not logged in' })
+//         //             res.status(200).json({ status: 0, message: 'not logged in' })
 
-        //         }
+//         //         }
 
-        //     } catch (error) {
-        //         //not logged in.
-        //         res.status(200).json({ status: 0, message: 'not logged in' })
-        //     }
+//         //     } catch (error) {
+//         //         //not logged in.
+//         //         res.status(200).json({ status: 0, message: 'not logged in' })
+//         //     }
 
-        // }
-        // else {
-        //     next();
-        // }
-    }
-    //if type is set
+//         // }
+//         // else {
+//         //     next();
+//         // }
+//     }
+//     //if type is set
 
-    // console.log(req.headers)
-
-
+//     // console.log(req.headers)
 
 
 
-});
 
 
+// });
+let server: Server;
+const SERVER_PORT = store.get(PORT, constants.port);
 const startServer = async () => {
     //make sure the app has been activated
     try {
-        app.listen(constants.port, () => {
-            logger.info("server started successfully on " + constants.port);
+        server = app.listen(SERVER_PORT, () => {
+            logger.info("server started successfully on " + SERVER_PORT);
             const ipAddress = ip.address();
-            const serverUrl = `http://${ipAddress}:${constants.port}`;
+            const serverUrl = `http://${ipAddress}:${SERVER_PORT}`;
+            if (process.send)
             process.send({ message: serverUrl, event: SERVER_URL_UPDATED });
             runMigrations()
             try {
                 /**
                  * If Node.js was not spawned with an IPC channel, process.send will be undefined
                  */
-                process.send({message:`Server running on http://${ipAddress}:${constants.port}`, event: SERVER_STATE_CHANGED});
+                if(process.send)
+                process.send({message:SERVER_RUNNING, event: SERVER_STATE_CHANGED});
                 
 
                 logger.info("process.send defined")
             } catch (error) {
                 // console.log("process.send not defined")
-                logger.error("process.send not defined.");
-                process.send(`Error: ${error}`)
+                logger.error({message: "process.send not defined."});
             }
         })
     } catch (error) {
-        console.log(error)
+        if (process.send)
+        process.send({ message: `Server encountered an error: ${error}`, event: SERVER_MESSAGE_RECEIVED });
+        logger.error({ message: error });
+        // console.log(error)
     }
    
+}
+
+const stopServer = async () => {
+    //make sure the app has been activated
+    try {
+        server?.close(() => {
+
+            logger.error({ message: "server stopped successfully" });
+            if (process.send)
+            process.send({ message: `Server was stopped successfully`, event: SERVER_MESSAGE_RECEIVED });
+
+        });
+      
+    } catch (error) {
+        if (process.send)
+        process.send({ message: `Server encountered an error: ${error}`, event: SERVER_MESSAGE_RECEIVED });
+        logger.error({ message: error });
+        // console.log(error)
+    }
+
 }
 startServer();
 
@@ -219,7 +249,7 @@ startServer();
 // // const filestore = new FileStore({
 // //     configName: 'system-settings',
 // //     defaults: {
-// //         port: constants.port,
+// //         port: SERVER_PORT,
 // //         host: "localhost",
 // //         dbversion: 0
 // //     }
@@ -1633,13 +1663,13 @@ startServer();
 
 // const FirebaseFunctions = require("./firebase")
 
-// let server = app.listen(constants.port, () => {
+// let server = app.listen(SERVER_PORT, () => {
 //     try {
 //         var host = ip.address();
 //         filestore.set('host', host)
 //         // var port = server.address().port;
-//         log.info('running at http://' + host + ':' + constants.port + server.address())
-//         log.info(`Listening on ${constants.port}`)
+//         log.info('running at http://' + host + ':' + SERVER_PORT + server.address())
+//         log.info(`Listening on ${SERVER_PORT}`)
 //     } catch (error) {
 //         console.error(error);
 //         process.exit(1);

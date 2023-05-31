@@ -17,61 +17,60 @@ export class Refills extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column
-  product: string;
+  product!: string;
 
   @ForeignKey(() => Products)
   @Column({
     type: DataType.INTEGER,
     allowNull: true
   })
-    product_id: number;
+  product_id!: number;
 
    @Column({
-     type: DataType.DOUBLE,
-     defaultValue: 1
-    
-   }) 
-    quantity: number;
+    type: DataType.DOUBLE,
+    defaultValue: 1
+  })
+  quantity!: number;
 
     @Index
-    @Column({
-      type: DataType.DATE,
-      allowNull: false
-    })
-    start_date: string;
+  @Column({
+    type: DataType.DATEONLY,
+    allowNull: false
+  })
+  start_date!: string;
 
     @Index
-    @Column({
-      type: DataType.DATE,
-    })
-    end_date: string;
+  @Column({
+    type: DataType.DATEONLY,
+  })
+  end_date!: string;
 
     @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 
     @Index
-    @Column
-    status: string;
+  @Column
+  status!: string;
 
     @ForeignKey(() => Customers)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-    customer_id: number;
+  customer_id!: number;
 
     @Column
-    customer_name: string;
+  customer_name!: string;
 
     @CreatedAt
-    created_on: string;
+  created_on!: string;
     
 }

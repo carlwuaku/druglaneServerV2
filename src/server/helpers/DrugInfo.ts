@@ -8,41 +8,41 @@ import { Table, Model, Column,   CreatedAt } from "sequelize-typescript";
 
 export class DrugInfo extends Model{
   @Column
-  name: string;
+  name!: string;
 
   @Column
-    pregnancy: string;
+  pregnancy!: string;
 
     @Column
-    pharmacodynamics: string;
+  pharmacodynamics!: string;
 
     @Column
-    indications_and_usage: string;
+  indications_and_usage!: string;
     @Column
-    contraindications: string;
+  contraindications!: string;
     @Column
-    drug_interactions_table: string;
+  drug_interactions_table!: string;
     @Column
-    warnings_and_cautions: string;
+  warnings_and_cautions!: string;
     @Column
-    dosage_and_administration: string;
+  dosage_and_administration!: string;
     @Column
-    adverse_reactions: string;
+  adverse_reactions!: string;
     @Column
-    information_for_patients: string;
+  information_for_patients!: string;
     @Column
-    clinical_pharmacology: string;
+  clinical_pharmacology!: string;
     @Column
-    drug_abuse_and_dependence: string;
+  drug_abuse_and_dependence!: string;
     @Column
-    teratogenic_effects: string;
+  teratogenic_effects!: string;
     @Column
-    geriatric_use: string;
+  geriatric_use!: string;
     @Column
-    overdosage: string;
+  overdosage!: string;
 
   @CreatedAt
-  created_on: string
+  created_on!: string;
 
-  updatedAt: false
+  updatedAt!: false;
 }

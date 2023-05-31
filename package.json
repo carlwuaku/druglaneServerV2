@@ -6,7 +6,7 @@
   "scripts": {
     "pack": "electron-builder --dir",
     "dist": "webpack && electron-builder",
-    "test": "cross-env NODE_ENV=test jest --testTimeout=10000",
+    "test": "cross-env NODE_ENV=test jest --testTimeout=100000 --detectOpenHandles",
     "db:create:test": "cross-env NODE_ENV=test npx sequelize-cli db:create",
     "db:reset": "node npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
     "build": "npm run clean && tsc && npm run copy-files",
@@ -33,36 +33,37 @@
   },
   "homepage": "https://github.com/carlwuaku/druglaneposserver#readme",
   "dependencies": {
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
-    "@mui/icons-material": "^5.11.0",
-    "@mui/material": "^5.11.6",
-    "@types/bootstrap": "^5.2.6",
     "@types/jquery": "^3.5.14",
-    "@types/react-bootstrap": "^0.32.32",
+    "axios": "^1.3.4",
     "bcryptjs": "^2.0.1",
     "body-parser": "^1.18.2",
-    "bootstrap": "^5.2.3",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.7",
     "decompress-zip": "^0.2.2",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.3",
+    "electron-context-menu": "^3.6.1",
+    "electron-store": "^8.1.0",
     "express": "^4.16.3",
     "express-fileupload": "^0.4.0",
     "express-session": "^1.17.1",
     "express-winston": "^4.0.4",
     "firebase-admin": "^9.7.0",
+    "formik": "^2.2.9",
     "image-to-base64": "^2.2.0",
     "ip": "^1.1.5",
     "jquery": "^3.6.1",
-    "mariadb": "^3.1.0",
+    "mariadb": "^3.1.1",
     "md5": "^2.2.1",
     "mongoose": "^6.8.0",
     "node-fetch": "^2.6.1",
     "node-os-utils": "^1.2.2",
     "node-schedule": "^1.3.2",
+    "primeflex": "^3.3.0",
     "primeicons": "^6.0.1",
     "primereact": "^9.0.0-beta.1",
-    "react-bootstrap": "^2.6.0",
+    "react-qr-code": "^2.0.11",
+    "react-router-dom": "^6.10.0",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
     "sequelize": "^6.3.4",
@@ -76,6 +77,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
+    "@types/cors": "^2.8.13",
     "@types/express": "^4.17.13",
     "@types/express-session": "^1.17.4",
     "@types/ip": "^1.1.0",
@@ -139,6 +141,9 @@
     ]
   },
   "bundledDependencies": [
+    "express"
+  ],
+  "bundleDependencies": [
     "express"
   ]
 }

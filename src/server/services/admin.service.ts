@@ -47,7 +47,7 @@ export async function login_function(data: { username: any; password: any; }): P
             include: [Roles]
         });
         let password_valid: boolean = false;
-        if (user) {
+        if (user && user.password_hash) {
             //username was found. compare the password
             password_valid = bcrypt.compareSync(password, user.password_hash);
         }
@@ -78,7 +78,7 @@ export async function login_function(data: { username: any; password: any; }): P
         })
 
         return user;
-    } catch (error) {
+    } catch (error: any) {
         //if the error is "user not found", rethrow it. else if it's some other error, log it
         if (error instanceof Error) {
             logger.error({message:error})
@@ -103,7 +103,7 @@ export async function get_branches_function(): Promise<Branches[]> {
         let query = await Branches.findAll();
         return query;
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error(errorMessages.ERROR_GETTING_BRANCHES)
     }
@@ -122,19 +122,19 @@ export async function get_logo_function(): Promise<string> {
                 'name': "logo"
             }
         });//null or string (filenam.jpg for instance)
-        let extension = "jpg";
+        
         let image = "";
-        if (logo != null) {
+        if (logo) {
             //get the extension. it will be the last item in the array if split by a dot (.)
             let split = logo.value.split(".");
-            extension = split.pop();
+            let extension =  split.pop()
             image = `data:image/${extension};base64,` + fs.readFileSync(path.join(constants.settings_location, logo.value), 'base64');
 
         }
 
         return image
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error(errorMessages.ERROR_GETTING_LOGO)
     }
@@ -148,7 +148,7 @@ export async function getSettings(_data?: { settings: string[] }): Promise<Setti
             }
         );
         return data;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error})
         throw new Error(errorMessages.ERROR_GETTING_SETTINGS)
     }
@@ -174,7 +174,7 @@ export async function save_branch_function(_data: { [key: string]: any}): Promis
             module: moduleNames.SYSTEM
         })
         return branch;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error(errorMessages.ERROR_CREATING_BRANCH)
     }
@@ -188,7 +188,7 @@ export async function get_insurers_function(): Promise<InsuranceProviders[]> {
     try {
         let insurers = await InsuranceProviders.findAll();
         return insurers
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error(errorMessages.ERROR_GETTING_INSURERS)
 
@@ -211,7 +211,7 @@ export async function add_insurer_function(_data: { [key: string]: any}): Promis
             module: 'System'
         })
         return insuranceProvider
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error("Error creating insurer")
     }
@@ -240,7 +240,7 @@ export async function delete_insurer_function(_data: { [key: string]: any}): Pro
             }
         })
         return true
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error("Error deleting insurer")
     }
@@ -294,7 +294,7 @@ export async function get_all_activities_function(_data: {
         // }
         //console.log(objects)
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error("Error getting activities")
     }
@@ -310,7 +310,7 @@ export async function get_all_activities_function(_data: {
 export async function get_activities_function(_data: { [key: string]: any}): Promise<Activities[]> {
     let reg = _data.r;//this would be the id or unique identifier of an object
     let offset = _data.offset == undefined ? 0 : parseInt(_data.offset);
-    let limit = _data.limit == undefined ? null : parseInt(_data.limit);
+    let limit = _data.limit|| parseInt(_data.limit);
     try {
         let objects = await Activities.findAll({
             where: {
@@ -326,7 +326,7 @@ export async function get_activities_function(_data: { [key: string]: any}): Pro
 
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error("Error getting Activities")
     }
@@ -372,7 +372,7 @@ export async function get_user_activities_function(_data: { [key: string]: any})
         // }
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error("Error getting Activities")
     }
@@ -398,7 +398,7 @@ export async function get_users_function(_data: { [key: string]: any}): Promise<
         });
 
         return objects
-    } catch (error) {
+    } catch (error: any) {
         // console.log(error)
 
         logger.error({ message: error })
@@ -441,7 +441,7 @@ export async function save_user_function(_data: { [key: string]: any }): Promise
 
 
         return user
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error("Error adding a user")
     }
@@ -469,15 +469,15 @@ export async function delete_user_function(_data: { [key: string]: any}): Promis
                 id: id
             }
         })
-        await user.destroy();
+        await user?.destroy();
         Activities.create({
             activity: `deleted user ${JSON.stringify(user)}`,
             user_id: `${_data.user_id}`,
-            object_id: user.id,
+            object_id: user?.id,
             module: 'users'
         })
         return true
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error)
     }
@@ -498,9 +498,9 @@ export async function get_user_function(_data: { [key: string]: any}): Promise<U
         }
         );
 
-
+        if (!user) throw new Error(`user ${_data.id} not found`);
         return user
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(error)
     }
@@ -530,7 +530,7 @@ export async function activate_user_function(_data: { [key: string]: any}): Prom
 
 
         return true
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(`Error activating user: error: ${error}`)
     }
@@ -544,6 +544,7 @@ export async function update_user_function(_data: {[key:string]:any}): Promise<b
     //console.log(id)
     try {
         let user = await Users.findByPk(_data.id);
+        if (!user) throw new Error(`user ${_data.id} not found`);
         user.set(_data)
         await user.save();
 
@@ -556,7 +557,7 @@ export async function update_user_function(_data: {[key:string]:any}): Promise<b
 
 
         return true
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(`Error updating user: error: ${error}`)
     }
@@ -577,7 +578,7 @@ export async function add_role_function (_data: { [key: string]: any }):Promise<
             module: 'System'
         })
         return role;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(`Error getting user: ${error}`)
 
@@ -603,7 +604,7 @@ export async function get_roles_function(_data: { [key: string]: any}):Promise<R
         })
         
         return data;
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(`Error getting roles: ${error}`)
     }
@@ -630,7 +631,7 @@ export async function get_role_permissions_function(_data: { [key: string]: any}
        
 
         return data
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error });
         throw new Error(`Error getting role permissions for role_id: ${_data.id}: ${error}`)
     }
@@ -656,7 +657,7 @@ export async function get_role_excluded_permissions_function(_data: { [key: stri
         })
        
         return data
-    } catch (error) {
+    } catch (error: any) {
         logger.error({ message: error })
         throw new Error(`Unable to get excluded permissions for role id: ${_data.id}: ${error}`)
     }
@@ -678,7 +679,7 @@ export async function add_role_permission_function (_data: {[key:string]:any}): 
             module: 'System'
         })
         return role_permission
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message:error})
         throw new Error(`Unable to add a permission ${_data.permission_name} 
         to role: ${_data.role_name}: : ${error}`)
@@ -708,7 +709,7 @@ export async function delete_role_permission_function(_data: { [key: string]: an
         })
         
         return true
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message: error})
         throw new Error(`Error removing permission from role: error: ${error}`)
     }
@@ -733,7 +734,7 @@ export async function delete_role_function(_data: { [key: string]: any}): Promis
 
         return true
 
-    } catch (error) {
+    } catch (error: any) {
        logger.error({message:error})
         throw new Error("Error deleting a role. Error: "+error)
 
@@ -746,8 +747,11 @@ export async function get_role_function(_data: { [key: string]: any}): Promise<R
         let object = await Roles.findByPk(_data.id, {
             include: [RolePermissions]
         })
+
+        if (!object) throw new Error(`role ${_data.id} not found`);
+
         return object
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message: error})
         throw new Error("Error getting a role. Error: " + error)
     }
@@ -767,7 +771,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
             }
         });
         let password_valid: boolean = false;
-        if (user != null) {
+        if (user && user.password_hash) {
             //username was found. compare the password
             password_valid = bcrypt.compareSync(_data.old_password, user.password_hash);
         }
@@ -793,7 +797,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 
         
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error({message: error})
 
         throw new Error(error)
@@ -828,7 +832,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //             }
 //             // sales_data.customer = `"${_data.customer_name} - ${_data.customer_phone}"`;
 
-//         } catch (error) {
+//         } catch (error: any) {
 //             log.error(error)
 //         }
 
@@ -837,7 +841,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //         await h.insert(data, h.table_name);
 
 //         return { status: '1', data: null }
-//     } catch (error) {
+//     } catch (error: any) {
 //         await helper.closeConnection();
 //         if (process.env.NODE_ENV != "production") console.log(error)
 
@@ -878,7 +882,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //                 let customer = await customerHelper.getItem(`id = '${objects[i].payer}'`, customerHelper.table_name);
 //                 objects[i].customer_name = customer.name;
 //                 objects[i].phone = customer.phone;
-//             } catch (error) {
+//             } catch (error: any) {
 //                 log.error(error)
 //                 objects[i].customer_name = "N/A";
 //                 objects[i].phone = "N/A";
@@ -893,7 +897,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //             status: '1',
 //             data: objects
 //         }
-//     } catch (error) {
+//     } catch (error: any) {
 //         await helper.closeConnection();
 //         // if(process.env.NODE_ENV != "production") console.log(error)
 
@@ -922,7 +926,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //         return {
 //             status: '1'
 //         }
-//     } catch (error) {
+//     } catch (error: any) {
 //         await helper.closeConnection();
 //         log.error(error)
 //         throw new Error(error)
@@ -944,7 +948,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //         //     obj.stock = obj.current_stock
 //         // })
 //         return { status: '1', data: objects }
-//     } catch (error) {
+//     } catch (error: any) {
 //         await helper.closeConnection();
 //         log.error(error)
 //         throw new Error(error)
@@ -1026,7 +1030,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 //             return data;
 //         }
 
-//     } catch (error) {
+//     } catch (error: any) {
 //         // console.log(error);
 //         let data = {
 //             error: true, retry: false, message: `Server error. Please try again`
@@ -1073,7 +1077,7 @@ export async function change_staff_password_function(_data: { [key: string]: any
 
 //         }
 
-//     } catch (error) {
+//     } catch (error: any) {
 //         log.error(error)
 //         // console.log(error)
 //         throw new Error(error)

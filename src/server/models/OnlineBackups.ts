@@ -11,18 +11,18 @@ export class OnlineBackups extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
-  date:string;
+  date!: string;
 
   @Column
-  url:string;
+  url!: string;
 
 
   @CreatedAt
-  created_on:string;
+  created_on!: string;
 }

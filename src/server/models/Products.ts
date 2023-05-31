@@ -12,14 +12,14 @@ export class Products extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column({
     allowNull: false,
     unique: true,
   })
-  name: string;
+  name!: string;
 
   @Index
   @Column({
@@ -30,24 +30,24 @@ export class Products extends Model{
       isNumeric: true
     }
   })
-  price: number;
+  price!: number;
 
   @Index
   @Column
-  category: string;
+  category!: string;
 
   @Column
-  notes: string;
+  notes!: string;
 
   @Column
-  unit: string;
+  unit!: string;
 
   @Column
-  picture: string;
+  picture!: string;
 
   @Index
   @CreatedAt
-  created_on: string;
+  created_on!: string;
 
   @Index
   @Column({
@@ -58,7 +58,7 @@ export class Products extends Model{
       isNumeric: true
     }
   })
-  max_stock: number;
+  max_stock!: number;
 
   @Index
   @Column({
@@ -69,20 +69,20 @@ export class Products extends Model{
       isNumeric: true
     }
   })
-  min_stock: number;
+  min_stock!: number;
 
   @Index
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false,
     validate: {
       isDate: true
     }
   })
-  expiry: string;
+  expiry!: string;
 
   @Column
-  barcode: string;
+  barcode!: string;
 
   @Index
   @Column({
@@ -93,13 +93,13 @@ export class Products extends Model{
       isNumeric: true
     }
   })
-  current_stock: number;
+  current_stock!: number;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: true
   })
-  last_modified: string;
+  last_modified!: string;
 
   @Index
   @Column({
@@ -110,50 +110,50 @@ export class Products extends Model{
       isNumeric: true
     }
   })
-  cost_price: number;
+  cost_price!: number;
 
   @Column
-  size: string;
+  size!: string;
 
   @Index
   @Column
-  description: string;
+  description!: string;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
     defaultValue: 1
   })
-  status: number;
+  status!: number;
 
   @Column
-  shelf: string
+  shelf!: string;
 
   @Column({
     type: DataType.STRING
   })
-  preferred_vendor:number;
+  preferred_vendor!: number;
 
   @Column
-  is_drug:string;
+  is_drug!: string;
 
   @Column
-  generic_name:string;
+  generic_name!: string;
 
   @Column
-  contraindications:string;
+  contraindications!: string;
 
   @Column
-  pregnancy:string;
+  pregnancy!: string;
 
   @Column
-  side_effects:string;
+  side_effects!: string;
 
   @Column
-  caution:string;
+  caution!: string;
 
   @Column
-  indications:string;
+  indications!: string;
 
   @Column({
     type: DataType.DOUBLE,
@@ -164,50 +164,50 @@ export class Products extends Model{
       isFloat: true
     }
   })
-  markup:number;
+  markup!: number;
 
   @Column
-  active_ingredients:string;
+  active_ingredients!: string;
 
   @Column
-  drug_info: string;
+  drug_info!: string;
 
   @Column
-  last_stock_modification: string;
+  last_stock_modification!: string;
 
   @Column({
     type: DataType.VIRTUAL,
     get() {
-      return Date.parse(this.getDataValue('expiry')) < Date.now()
+      return Date.parse(this.getDataValue('expiry')) < Date.now();
     },
   })
-  expired: boolean;
+  expired!: boolean;
 
   @Column({
     type: DataType.VIRTUAL,
     get() {
-      return this.getDataValue('current_stock') < 1
+      return this.getDataValue('current_stock') < 1;
     },
   })
-  out_of_stock: boolean;
-
-  @Column({
-    type: DataType.VIRTUAL,
-    get() {
-      return this.getDataValue('current_stock') > 0 && 
-        this.getDataValue('current_stock') <= this.getDataValue('min_stock')
-    },
-  })
-  near_min: boolean;
+  out_of_stock!: boolean;
 
   @Column({
     type: DataType.VIRTUAL,
     get() {
       return this.getDataValue('current_stock') > 0 &&
-        this.getDataValue('current_stock') >= this.getDataValue('max_stock')
+        this.getDataValue('current_stock') <= this.getDataValue('min_stock');
     },
   })
-  near_max: boolean;
+  near_min!: boolean;
+
+  @Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('current_stock') > 0 &&
+        this.getDataValue('current_stock') >= this.getDataValue('max_stock');
+    },
+  })
+  near_max!: boolean;
 
   
 

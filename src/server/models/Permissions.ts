@@ -19,20 +19,20 @@ export class Permissions extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  permission_id:number;
+  permission_id!: number;
 
   @Index
   @Column({
     unique: true,
   })
-  name:string;
+  name!: string;
 
   @Index
   @Column
-  description: string;
+  description!: string;
   
-  updatedAt: false
-  deletedAt: false;
+  updatedAt!: false;
+  deletedAt!: false;
   
 
   // @HasMany(() => Roles)

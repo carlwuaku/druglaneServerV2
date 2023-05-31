@@ -12,18 +12,18 @@ export class DiagnosticTests extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column
-  test_name: string;
+  test_name!: string;
 
   @Column
-    parameters: string;
+  parameters!: string;
 
     @Column
-    comments: string;
+  comments!: string;
 
     @CreatedAt
-    created_on: string
+  created_on!: string;
 }

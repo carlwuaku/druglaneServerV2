@@ -190,8 +190,8 @@ describe('Admin Service', () => {
         await carl.update({ display_name: 'Aminatu', username: 'amina' });
         let new_carl = await Users.findOne({ where: { id: carl.id } });
         // console.log(new_carl)
-        expect(new_carl.display_name).toBe("Aminatu");
-        expect(new_carl.username).toBe("amina")
+        expect(new_carl!.display_name).toBe("Aminatu");
+        expect(new_carl!.username).toBe("amina")
     })
 
 

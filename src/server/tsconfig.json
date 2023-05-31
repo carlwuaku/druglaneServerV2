@@ -3,6 +3,8 @@
         "outDir": "../../dist/server",
         "allowJs": true,
         "target": "es6",
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noEmitOnError": true,

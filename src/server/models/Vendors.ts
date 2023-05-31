@@ -13,35 +13,35 @@ export class Vendors extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Index
   @Column
-  name: string;
+  name!: string;
 
   @Column
-  location: string;
-
-  @Index
-  @Column
-  phone: string;
+  location!: string;
 
   @Index
   @Column
-  code: string;
+  phone!: string;
 
   @Index
   @Column
-  email: string;
+  code!: string;
+
+  @Index
+  @Column
+  email!: string;
 
  
   @Column
-  notes: string;
+  notes!: string;
 
   @CreatedAt
-  created_on: string;
+  created_on!: string;
   @Column
-  legacy_id: string
+  legacy_id!: string;
 }
 
 

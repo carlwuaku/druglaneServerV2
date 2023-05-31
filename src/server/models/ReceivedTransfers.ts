@@ -16,41 +16,41 @@ export class ReceivedTransfers extends Model{
     type: DataType.INTEGER,
     autoIncrement: true
   })
-  id: number
+  id!: number;
   
   @Column({
-    type: DataType.DATE,
+    type: DataType.DATEONLY,
     allowNull: false
   })
-  date: string;
+  date!: string;
 
   @Index
   @Column({
     allowNull: false
   })
-  code: string;
+  code!: string;
   
   @Index
   @Column({
     allowNull: false
   })
-  invoice: string;
+  invoice!: string;
 
   @CreatedAt
-  created_on: string;
+  created_on!: string;
 
   @ForeignKey(() => Users)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  created_by: number;
+  created_by!: number;
 
   @ForeignKey(() => Branches)
   @Column({
     type: DataType.INTEGER,
     allowNull: false
   })
-  sender: number
+  sender!: number;
 }
 
