@@ -1,4 +1,4 @@
-import { ACTIVATION_RESULT, CALL_ACTIVATION } from '@/utils/stringKeys';
+import { ACTIVATION_RESULT, CALL_ACTIVATION, SET_ADMIN_PASSWORD } from '@/utils/stringKeys';
 import { ipcRenderer } from 'electron';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
@@ -72,8 +72,7 @@ const Activate = () => {
     setActiveIndex(2)
   }
 
-  const adminPasswordSet = () => {
-    console.log("passwords et")
+  const adminPasswordSet = (password:string) => {
   }
 
   // function sendValidation() {

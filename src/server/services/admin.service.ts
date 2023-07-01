@@ -17,6 +17,7 @@ import bcrypt from 'bcryptjs'
 import { Permissions } from '../models/Permissions';
 import { RolePermissions } from '../models/RolePermissions';
 import {errorMessages, infoMessages, moduleNames} from '../helpers/stringHelpers'
+import { SettingsTransfer } from '../interfaces/settingsTransferInterface';
 // const path = require('path')
 
 // const ActivitiesHelper = require('../helpers/activitiesHelper');
@@ -140,19 +141,57 @@ export async function get_logo_function(): Promise<string> {
     }
 }
 
-export async function getSettings(_data?: { settings: string[] }): Promise<Settings[]> {
+export async function getSettings(_data?: { settings: string[] }): Promise<SettingsTransfer> {
     try {
         let data = await Settings.findAll(
             {
                 where: _data && _data.settings ? { name: { [Op.in]: _data.settings } } : {} 
             }
         );
-        return data;
+        let returnData:any = {};
+        data.forEach(setting => {
+            returnData[setting.name] = setting.value;
+        });
+        return returnData;
     } catch (error: any) {
         logger.error({ message: error})
         throw new Error(errorMessages.ERROR_GETTING_SETTINGS)
     }
    
+}
+
+/**
+ * update settings
+ * @param _data the setting names and their new values
+ */
+export async function saveSettings(_data: {[key:string]: any}): Promise<string[]>{
+    try {
+        const results: string[] = [];
+        for (const key in _data) {
+            let value = _data[key];
+            //each key should be in the settings as a name
+            //for the admin password, encrypt it
+            if (key === "admin_password") {
+                let hash = bcrypt.hashSync(_data.admin_password, 10);
+                // console.log(hash)
+                value = `${hash}`;
+            }
+            try {
+
+                await Settings.upsert(
+                    { value: value, name: key, module: "System" }
+                )
+            } catch (error) {
+                results.push(`settings key ${key} not updated . ${error}`)
+            }
+        }
+        // let data = await Settings.update(
+        // );
+        return results
+    } catch (error: any) {
+        logger.error({ message: error })
+        throw new Error(errorMessages.ERROR_SAVING_SETTINGS)
+    }
 }
 
 
@@ -269,7 +308,8 @@ export async function get_all_activities_function(_data: {
             objects = await Activities.findAll(
                 {
                     limit: limit,
-                    offset: offset
+                    offset: offset,
+                    raw: true
                 }
             );
         }
@@ -282,7 +322,8 @@ export async function get_all_activities_function(_data: {
                             [Op.lte]: `${end} 23:59:59`
                         }
                     },
-                }
+                },
+                raw: true
             })
 
         }
@@ -359,7 +400,8 @@ export async function get_user_activities_function(_data: { [key: string]: any})
         let objects = await Activities.findAll({
             where: where,
             limit: limit,
-            offset: offset
+            offset: offset,
+            raw: true
         });
 
         // let total = await Activities.count({
@@ -394,7 +436,8 @@ export async function get_users_function(_data: { [key: string]: any}): Promise<
             offset: offset,
             include: {
                 model: Roles
-            }
+            }, 
+            raw: true
         });
 
         return objects
@@ -416,25 +459,37 @@ export async function get_users_function(_data: { [key: string]: any}): Promise<
 export async function save_user_function(_data: { [key: string]: any }): Promise<Users> {
     try {
 
-        // let id = _data.id;
-        let user = Users.build(_data)
-
-
+        const id = _data.id;
+        const updatePassword = _data.updatePassword;//in an edit we want the user to choose
+        //whether to update the password or not
+        let user = null;
+        if (id) {
+           user = await Users.findByPk(_data.id)
+        }
         //update. else insert
         let password = _data.password;
         //console.log(password)
-        if (password !== undefined && password !== null && password != "undefined") {
-            let hash = bcrypt.hashSync(password, 10);
-            // console.log(hash)
-            user.password_hash = `${hash}`;
+        if (!id || updatePassword === "yes") {
+            if (password !== undefined && password !== null && password != "undefined") {
+                let hash = bcrypt.hashSync(password, 10);
+                // console.log(hash)
+                _data.password_hash = `${hash}`;
+            } 
+        }
+        
+        else {
+            delete _data.password_hash;
+        }
+        if (!user) {
+          user  = await Users.create(_data)
         }
         else {
-            delete user.password_hash;
+           await user.update(_data)
         }
-        await user.save();
+        
         Activities.create({
-            activity: `modified a new user: ${user.display_name}`,
-            user_id: _data.user_id,
+            activity: `modified a  user: ${user.display_name}`,
+            user_id: _data.user_id || '0',
             module: 'System'
         })
 
@@ -443,7 +498,7 @@ export async function save_user_function(_data: { [key: string]: any }): Promise
         return user
     } catch (error: any) {
         logger.error({ message: error })
-        throw new Error("Error adding a user")
+        throw new Error(`Error: ${error}`)
     }
 
 
@@ -494,6 +549,10 @@ export async function get_user_function(_data: { [key: string]: any}): Promise<U
         let user = await Users.findOne({
             where: {
                 id: _data.id
+            },
+            raw: true,
+            include: {
+                model: Roles
             }
         }
         );
@@ -566,21 +625,56 @@ export async function update_user_function(_data: {[key:string]:any}): Promise<b
 
 
 
-export async function add_role_function (_data: { [key: string]: any }):Promise<Roles> {
+export async function addRole(_data: {
+    role_name: string, description: string,
+    selectedPermissions: string[], user_id: string,
+    role_id?:string
+}): Promise<Roles> {
     
     
     try {
-        let role = await Roles.create(_data);
+        let id = _data.role_id;
+        let role;
+        //do the permissions
+        const permissions: { role_id: string, permission_id: string }[] = [];
+        
+        if (id) {
+            role = await Roles.findByPk(id);
+            if (!role) {
+                throw new Error(`error updating a role id ${id}. Not found `);
+            }
+            Roles.update({ role_name: _data.role_name, description: _data.description }, {
+                where: {
+                    role_id: id
+                }
+            });
+            RolePermissions.destroy({
+                where: {
+                    role_id: id
+                },
+                force: true
+            })
+        }
+        else {
+            role = await Roles.create(_data);
+            id = role.role_id.toString();
+        }
+        
+        _data.selectedPermissions.forEach(permission => {
+            permissions.push({ role_id: id!, permission_id: permission })
+        })
+       
+        await RolePermissions.bulkCreate(permissions)
         
         Activities.create({
             activity: `created a new role ${_data.role_name}`,
-            user_id: _data.user_id,
+            user_id: 'admin',
             module: 'System'
         })
-        return role;
+        return role!;
     } catch (error: any) {
         logger.error({ message: error })
-        throw new Error(`Error getting user: ${error}`)
+        throw new Error(`Error adding/updating a role: ${error}`)
 
     }
 
@@ -594,13 +688,14 @@ export async function add_role_function (_data: { [key: string]: any }):Promise<
  * @param _data the limit and offset
  * @returns a list of roles 
  */
-export async function get_roles_function(_data: { [key: string]: any}):Promise<Roles[]>  {
+export async function get_roles_function(_data: { offset?: string, limit?:string}):Promise<Roles[]>  {
     try {
         let offset = _data.offset == undefined ? 0 : parseInt(_data.offset);
         let limit = _data.limit == undefined ? 100 : parseInt(_data.limit);
         let data = await Roles.findAll({
             limit: limit,
-            offset: offset
+            offset: offset,
+            raw: true
         })
         
         return data;
@@ -626,7 +721,8 @@ export async function get_role_permissions_function(_data: { [key: string]: any}
                     [Op.in]: Sequelize.literal(`(select permission_id from ${RolePermissions.tableName} 
                     where role_id = ${_data.id})`)
                 }
-            }
+            },
+            raw:true
         })
        
 
@@ -653,6 +749,7 @@ export async function get_role_excluded_permissions_function(_data: { [key: stri
                     where role_id = ${_data.id})`)
                 }
             },
+            raw: true,
             logging: console.log
         })
        
@@ -683,6 +780,21 @@ export async function add_role_permission_function (_data: {[key:string]:any}): 
         logger.error({message:error})
         throw new Error(`Unable to add a permission ${_data.permission_name} 
         to role: ${_data.role_name}: : ${error}`)
+    }
+
+};
+
+export async function get_permissions_function(): Promise<Permissions[]> {
+    try {
+        let data = await Permissions.findAll({
+            raw: true
+        })
+
+
+        return data
+    } catch (error: any) {
+        logger.error({ message: error });
+        throw new Error(`Error getting all permissions for role_id: ${error}`)
     }
 
 };
@@ -719,15 +831,17 @@ export async function delete_role_permission_function(_data: { [key: string]: an
 
 
 
-export async function delete_role_function(_data: { [key: string]: any}): Promise<boolean>  {
+export async function delete_role_function(_data: { id: string; user_id: string; }): Promise<boolean>  {
    
     try {
-        
+        const object = await Roles.findByPk(_data.id, {
+            raw: true
+        });
         await Roles.destroy({
             where: { role_id: _data.id }
         });
         Activities.create({
-            activity: `deleted a role ${_data.role_name} `,
+            activity: `deleted a role ${object?.role_name} `,
             user_id: `${_data.user_id}`,
             module: 'users'
         })
@@ -745,7 +859,7 @@ export async function get_role_function(_data: { [key: string]: any}): Promise<R
    
     try {
         let object = await Roles.findByPk(_data.id, {
-            include: [RolePermissions]
+            include: [Permissions]
         })
 
         if (!object) throw new Error(`role ${_data.id} not found`);

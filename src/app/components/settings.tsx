@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useFormik, FormikProps, FormikErrors, Form, } from 'formik';
 import { InputText } from "primereact/inputtext";
 import { SelectButton } from 'primereact/selectbutton';
@@ -7,19 +7,67 @@ import { Toast } from 'primereact/toast';
 import { classNames } from 'primereact/utils';
 import { FileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
 import { Image } from 'primereact/image';
+import { getData, postData } from "@/utils/network";
+import { ipcRenderer } from "electron";
+import { GET_SERVER_URL, SERVER_URL_RECEIVED } from "@/utils/stringKeys";
+import Snackbar from "@mui/material/Snackbar";
+import Notification from "./Notification";
+import { NotificationSeverity } from "../models/notificationSeverityInterface";
+import { saveSettingsResponse } from "../models/axiosResponse";
 
 const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
     const yesNoOptions = ['yes', 'no'];
-    const [currentLogo, setCurrentLogo] = useState(data.logo)
-    const toast = useRef(null);
-    const show = () => {
-        // if(toast && toast.current)
-        // toast.current.show({
-        //     severity: 'success', summary: 'form submitted',
-        //     detail: formik.values.number_of_shifts
-        // });
+    const [currentLogo, setCurrentLogo] = useState(data.logo);
+    const [serverUrl, setServerUrl] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [openNotification, setOpenNotification] = useState(false);
+    const [resultMessage, setResultMessage] = useState("");
+    const [notificationSeverity, setNotificationSeverity] = useState(NotificationSeverity.SUCCESS);
+
+
+    const [settingsData, setSettingsData] = useState({
+        number_of_shifts: '',
+        restrict_zero_stock_sales: '',
+        tax: '',
+        logo: '',
+        receipt_logo: '',
+        tax_title: '',
+        show_tax_on_receipt: '',
+        receipt_show_credits: '',
+        receipt_extra_info: '',
+        receipt_footer: '',
+        receipt_show_customer: '',
+        receipt_product_data: '',
+        receipt_font_size: '',
+        receipt_show_borders: '',
+        duplicate_record_timeout: '',
+        company_name: '',
+        phone: '',
+        email: '',
+        address: '',
+        digital_address: '',
+        admin_password: '',
+        company_id: ''
+    })
+
+    const toast = useRef<Toast>(null);
+    const showSuccess = (message: string) => {
+        toast.current?.show({ severity: 'success', summary: 'Success', detail: message, life: 3000 });
     }
-    
+    const showError = (message: string) => {
+        toast.current?.show({ severity: 'error', summary: 'Error', detail: message, life: 3000 });
+    }
+    useEffect(() => {
+        const handleServerUrlReceived = async (event: any, data: any) => {
+            setServerUrl(data.data);
+        }
+        ipcRenderer.send(GET_SERVER_URL);
+        ipcRenderer.on(SERVER_URL_RECEIVED, handleServerUrlReceived);
+        return () => {
+            ipcRenderer.removeListener(SERVER_URL_RECEIVED, handleServerUrlReceived)
+        }
+
+    }, [])
     const formik = useFormik({
         initialValues: {
             number_of_shifts: data.number_of_shifts,
@@ -51,13 +99,35 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
             }
             return errors;
         },
-        onSubmit: (data) => {
+        onSubmit: async (data) => {
             console.log(data);
+           
+            try {
+                setLoading(true);
+                data.logo = currentLogo;
+                let response = await postData<saveSettingsResponse>(`${serverUrl}/api_admin/savesettings`, data); 
+                setLoading(false);
+                if (!response.data.data) {
+                    showSuccess('Password saved successfully')
+                }
+                else {
+                    response.data.data.map(item => {
+                        showError(item)
+                    })
+                }
+                console.log(response)
+                setLoading(false);
+                onSubmit();
+            } catch (error) {
+                showError(`An error occurred: ${error}`);
+            }
 
-            //validate and emit data to parent
-            onSubmit()
+            
+            
         }
     });
+
+    
 
     const customBase64Uploader = async (event: FileUploadHandlerEvent) => {
         // convert file to base64 encoded
@@ -77,7 +147,9 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
     };
     // const isFormFieldInvalid = (name:string) => !!(formik.touched[name] && formik.errors[name]);
 
-  return (
+    return (
+      <>
+      
       <div className="flex flex-column justify-content-center align-items-center">
           
           <form onSubmit={formik.handleSubmit} className="flex flex-column gap-3">
@@ -153,7 +225,15 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
               <div className="flex flex-column gap-2">
                   <label htmlFor="location">Logo</label>
                   <div className="flex gap-2">
-                      <FileUpload mode="basic" name="demo[]" url="/api/upload" accept="image/*" maxFileSize={1000000} customUpload uploadHandler={customBase64Uploader} auto chooseLabel="Select Image" />
+                      <FileUpload
+                          name="demo[]"
+                          accept="image/*"
+                          maxFileSize={100000}
+                          auto
+                          customUpload 
+                          emptyTemplate={<p className="m-0">Drag and drop files to here to upload.</p>}
+                          uploadHandler={customBase64Uploader}
+                          chooseLabel="Select Image" />
                       <Image src={currentLogo} zoomSrc={currentLogo} alt="Image" width="80" height="60" preview />
                       {
                           currentLogo ? <Button icon="pi pi-times"   onClick={() => setCurrentLogo('')} aria-label="Clear" /> : null
@@ -220,6 +300,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
                   <label htmlFor="receipt_font_size">Restrict the sale of items with zero stock</label>
                   
                   <SelectButton
+                      required
                       id="restrict_zero_stock_sales"
                       name="restrict_zero_stock_sales"
                       value={formik.values.restrict_zero_stock_sales}
@@ -238,6 +319,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
               <div className="flex flex-column gap-2">
                   <label htmlFor="receipt_logo">Show Logo On Receipt</label>
                   <SelectButton
+                      required
                       id="receipt_logo"
                       name="receipt_logo"
                       value={formik.values.receipt_logo}
@@ -256,6 +338,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
               <div className="flex flex-column gap-2">
                   <label htmlFor="receipt_show_credits">Show Tax On Receipt</label>
                   <SelectButton
+                      required
                       id="show_tax_on_receipt"
                       name="show_tax_on_receipt"
                       value={formik.values.show_tax_on_receipt}
@@ -273,6 +356,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
               <div className="flex flex-column gap-2">
                   <label htmlFor="receipt_show_borders">Show Receipt Border Lines</label>
                   <SelectButton
+                      required
                       id="receipt_show_borders"
                       name="receipt_show_borders"
                       value={formik.values.receipt_show_borders}
@@ -291,6 +375,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
               <div className="flex flex-column gap-2">
                   <label htmlFor="receipt_show_customer">Show Customer Details On Receipt</label>
                   <SelectButton
+                      required
                       id="receipt_show_customer"
                       name="receipt_show_customer"
                       value={formik.values.receipt_show_customer}
@@ -310,6 +395,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
                   <SelectButton
                       id="receipt_show_credits"
                       name="receipt_show_credits"
+                      required
                       value={formik.values.receipt_show_credits}
                       options={yesNoOptions}
                       onChange={(e) => {
@@ -350,9 +436,19 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
                   </small>
               </div>
               
-              <Button type="submit" label="Submit" />
+              <Button type="submit" label="Submit" loading={ loading } />
           </form>
-    </div>
+
+          <Notification
+              message={resultMessage}
+              open={openNotification}
+              severity={notificationSeverity}
+          ></Notification>
+
+                      
+      </div>
+            <Toast ref={toast} />
+        </>
   )
 }
 

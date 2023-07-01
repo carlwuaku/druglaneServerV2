@@ -21,5 +21,10 @@ module.exports = {
     output: {
         filename: 'server.js',
         path: path.resolve(__dirname,'dist/server')
+    },
+    node: {
+        // Add these lines to prevent the node externals from being bundled
+        __dirname: false,
+        __filename: false,
     }
 }

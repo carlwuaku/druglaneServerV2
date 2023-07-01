@@ -6,7 +6,7 @@ export const errorMessages = {
     ERROR_GETTING_SETTINGS: "Error getting settings",
     ERROR_CREATING_BRANCH: "Error creating branch",
     ERROR_GETTING_INSURERS: "Error getting insurers",
-
+    ERROR_SAVING_SETTINGS: "Error saving settings"
 }
 
 export const infoMessages = {
