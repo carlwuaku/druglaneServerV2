@@ -2,8 +2,29 @@ import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react'
 import { Menubar } from 'primereact/menubar';
 import { InputText } from 'primereact/inputtext';
+import { Link as RouterLink } from 'react-router-dom';
 
-const Header = () => {
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Menu from '@mui/material/Menu';
+import MenuIcon from '@mui/icons-material/Menu';
+import Container from '@mui/material/Container';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import MenuItem from '@mui/material/MenuItem';
+import AdbIcon from '@mui/icons-material/Adb';
+import Link from '@mui/material/Link';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+const pages = ['Products', 'Pricing', 'Blog'];
+const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+
+const Header = (props: { showBackArrow?: boolean }) => {
   const [title, setTitle] = useState("...");
   useEffect(() => {
     ipcRenderer.send("getAppDetails");
@@ -12,11 +33,12 @@ const Header = () => {
     })
   },
     []);
-  
+
   const items = [
     {
       label: 'Home',
-      icon: 'pi pi-fw pi-home'
+      icon: 'pi pi-fw pi-home',
+      link: '/'
     },
     {
       label: 'System',
@@ -24,7 +46,7 @@ const Header = () => {
       items: [
         {
           label: 'Restart System',
-          icon: 'pi pi-fw pi-refresh'
+          icon: 'pi pi-fw pi-refresh',
         },
         {
           label: 'Quit',
@@ -38,11 +60,13 @@ const Header = () => {
       items: [
         {
           label: 'Create Backup Now',
-          icon: 'pi pi-fw pi-cloud-download'
+          icon: 'pi pi-fw pi-cloud-download',
+          link: '/create_backup'
         },
         {
           label: 'View/Restore Backups',
-          icon: 'pi pi-fw pi-cloud-upload'
+          icon: 'pi pi-fw pi-cloud-upload',
+          link: '/restore_backups'
         }
 
       ]
@@ -50,52 +74,113 @@ const Header = () => {
     {
       label: 'Users & Permissions',
       icon: 'pi pi-fw pi-user',
+      link: '/users',
       items: [
         {
           label: 'New User',
           icon: 'pi pi-fw pi-user-plus',
+          link: '/new_user'
 
         },
         {
           label: 'Manage Users',
           icon: 'pi pi-fw pi-users',
-
+          link: '/users'
         },
         {
           label: 'New Role',
           icon: 'pi pi-fw pi-users',
+          link: '/roles'
         },
         {
           label: 'Manage User Permissions',
           icon: 'pi pi-fw pi-users',
+          link: '/permissions'
         }
       ]
     },
     {
       label: 'Settings',
-      icon: 'pi pi-fw pi-cog'
+      icon: 'pi pi-fw pi-cog',
+      link: '/settings'
     },
     {
       label: 'Help',
-      icon: 'pi pi-fw pi-power-off'
+      icon: 'pi pi-fw pi-power-off',
+
     }
   ];
 
   const logo = <label htmlFor=""> {title}</label>
   const search = <InputText placeholder="Search" type="text" className="w-full" />;
+  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
+  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
 
+  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElNav(event.currentTarget);
+  };
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseNavMenu = () => {
+    setAnchorElNav(null);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
   return (
-    // <Navbar className='navbar'>
-    //   <Container>
-    //     <NavbarBrand className='whiteText'>
-    //       {title}
-    //     </NavbarBrand>
-    //   </Container>
-    // </Navbar>
+    <AppBar position="static">
+      <Container maxWidth="xl">
+        <Toolbar disableGutters>
+          {props.showBackArrow ?
+            <IconButton onClick={() => { window.history.back(); }} aria-label="delete">
+              <ArrowBackIcon />
+            </IconButton> : ''}
 
-    <div className="card">
-      <Menubar start={logo} model={items} end={search} />
-    </div>
+          <AdbIcon sx={{ display: 'flex', mr: 1 }} />
+          <Typography
+            variant="h6"
+            noWrap
+            component="a"
+            href="/"
+            sx={{
+              mr: 2,
+              display: { xs: 'flex', md: 'flex' },
+              fontWeight: 700,
+              letterSpacing: '.3rem',
+              color: 'inherit',
+              textDecoration: 'none',
+            }}
+          >
+            Druglane
+          </Typography>
+
+
+
+          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'flex' } }}>
+            {items.map((page) => (
+
+              <Button component={RouterLink}
+                to={`${page.link}`}
+                key={page.label}
+                onClick={handleCloseNavMenu}
+                sx={{ my: 2, color: 'white', display: 'block' }}
+              >
+                {page.label}
+              </Button>
+
+
+
+
+            ))}
+          </Box>
+
+
+        </Toolbar>
+      </Container>
+    </AppBar>
   )
 }
 

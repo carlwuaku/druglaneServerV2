@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu } from "electron";
+import electron, { app, BrowserWindow, HandlerDetails, ipcMain, Menu } from "electron";
 import * as path from "path";
 import { ChildProcess, fork, SendHandle } from 'child_process'
 import { isAppActivated, verifyLicenseKey } from "./appValidation";
@@ -7,7 +7,7 @@ import { logger } from "./app/config/logger";
 
 import { constants, defaultOptions } from "./electronConstants";
 import { ServerEvents } from "./utils/ServerEvents";
-import { ACTIVATION_RESULT, CALL_ACTIVATION, GET_APP_DETAILS, GET_PREFERENCE, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, PREFERENCE_SET, RESTART_APPLICATION, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED, SET_PREFERENCE } from "./utils/stringKeys";
+import { ACTIVATION_RESULT, CALL_ACTIVATION, GET_APP_DETAILS, GET_PREFERENCE, GET_PREFERENCES, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, PREFERENCE_SET, RESTART_APPLICATION, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED, SET_ADMIN_PASSWORD, SET_PREFERENCE } from "./utils/stringKeys";
 import { runFolderCreation } from "./utils/directorySetup";
 import Store from "electron-store";
 import contextMenu from 'electron-context-menu'
@@ -45,7 +45,6 @@ let logs: string[] = [];
 contextMenu({
     showSaveImageAs: true
 });
-// global.shared = {ipcMain}
 //create backup folders
 runFolderCreation();
 
@@ -77,34 +76,41 @@ ipcMain.on(RESTART_APPLICATION, async (event, data) => {
 ipcMain.on(GET_SERVER_URL, sendServerUrl)
 
 ipcMain.on(GET_PREFERENCE, (event, data: { key: string }) => {
-    
+
     let value = store.get(data.key, defaultOptions[data.key])
-    console.log(data.key, value)
-    event.reply(PREFERENCE_RECEIVED, value)
+    event.reply(PREFERENCE_RECEIVED, {name: data.key, value: value})
 }
 )
 
+ipcMain.on(GET_PREFERENCES, (event) => {
+    store.openInEditor()
+}) 
+
 ipcMain.on(SET_PREFERENCE, (event, data: { key: string, value: any }) => {
     try {
-        savePreference(data.key, data.value); 
-        event.reply(PREFERENCE_SET, {success: true, message:"Setting saved successfully"})
+        savePreference(data.key, data.value);
+        event.reply(PREFERENCE_SET, { success: true, message: "Setting saved successfully" })
     } catch (error) {
         event.reply(PREFERENCE_SET, { success: false, message: error })
 
     }
-    
-   
 })
+
+ipcMain.on(SET_ADMIN_PASSWORD, (event, data: { password: string }) => {
+    
+})
+
+
 
 function savePreference(key: string, value: any) {
     try {
         console.log(key, value)
         store.set(key, value);
-    } catch (error:any) {
+    } catch (error: any) {
         throw new Error(error);
-        
-    }
-    
+ 
+    } 
+
 }
 
 function getAppDetails() {
@@ -118,19 +124,18 @@ function restartApp() {
 }
 
 function sendServerState(state: string) {
+    console.log('server state', state)
     mainWindow?.webContents?.send(SERVER_STATE_CHANGED, { data: state, time: new Date().toLocaleString() })
 
 }
 
 serverEventEmitter.on(SERVER_STATE_CHANGED, (data) => {
-    console.log("event emitter ", data);
     logs.unshift(data);
     serverState = data;
     sendServerState(data);
 })
 
 serverEventEmitter.on(SERVER_MESSAGE_RECEIVED, (data) => {
-    console.log("event emitter message ", data);
     logs.unshift(data);
     mainWindow?.webContents?.send(SERVER_MESSAGE_RECEIVED, { data, time: new Date().toLocaleString() })
 
@@ -144,7 +149,7 @@ serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
 
 function sendServerUrl() {
     console.log("server url changed ", serverUrl);
-
+    // globalVariables.serverUrl = serverUrl
     mainWindow?.webContents?.send(SERVER_URL_RECEIVED, { data: serverUrl, time: new Date().toLocaleString() }, serverUrl)
 }
 
@@ -168,7 +173,14 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
     mainWindow?.loadURL(isDev ? 'http://localhost:9000' : `file://${app.getAppPath()}/index.html`)
     // Open the DevTools.
     mainWindow?.webContents?.openDevTools();
-    Menu.setApplicationMenu(null);
+    if(!isDev)
+        Menu.setApplicationMenu(null);
+    mainWindow.webContents.setWindowOpenHandler((details: HandlerDetails) => {
+        
+        
+        electron.shell.openExternal(details.url);
+        return { action: 'deny' };
+    });
 }
 
 // This method will be called when Electron has finished
@@ -194,16 +206,22 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         //kill the server process
-        if (serverProcess != null) {
+        if (serverProcess) {
             try {
                 serverProcess.kill();
+                logger.info({ message: "app terminated" });
+                app.quit();
             } catch (error) {
                 logger.error({ message: error });
             }
 
         }
-        logger.info({ message: "app terminated" });
-        app.quit();
+        else {
+            logger.info({ message: "no server was running. app terminated" });
+            app.quit();
+        }
+        
+        
     }
 });
 
@@ -243,6 +261,7 @@ export async function spawnServer() {
             serverProcess.on('disconnect', () => {
                 serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Disconnected")
                 console.log('serverProcess disconnected')
+                spawnServer()
             });
 
             serverProcess.on('message', (message: any, handle: SendHandle) => {

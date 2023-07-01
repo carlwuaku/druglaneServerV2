@@ -1,6 +1,5 @@
 import { logger } from "@/app/config/logger";
-import { ClientRequest, net } from "electron";
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 /**
  * make a get call to a url with some optional params
  * @param url the url to call
@@ -9,7 +8,7 @@ import axios from 'axios'
  */
 // export function getData(url:string, params?:Map<string, any>):ClientRequest {
 //     if(!net.isOnline) throw new Error("Offline");
-    
+
 //     try {
 //         if (params) {
 //             let urlParams: string[] = [];
@@ -23,28 +22,70 @@ import axios from 'axios'
 //             console.log(error)
 //             logger.error(error)
 //             throw new Error("Network Error");
-            
+
 //         })
-        
+
 //         return request;
 //     } catch (error) {
 //         console.log(error)
 //         logger.error({ message: error });
 //         throw new Error("Network Error");
-        
+
 //     }
-    
+
 // }
 
-export async function getData(url:string):Promise<any> {
+export async function getData<T>(url: string, params?: Map<string, any>): Promise<AxiosResponse<T>> {
     try {
-        logger.info({ message:`call made to ${url} ` })
+        if (params) {
+            let urlParams: string[] = [];
+            params.forEach((value, key) => {
+                urlParams.push(`${key}=${value}`)
+            });
+            if (url.includes("?")) {
+                url += "&" + urlParams.join("&")
+            }
+            else {
+                url += "?" + urlParams.join("&")
+            }
+
+        }
+        logger.info({ message: `call made to ${url} ` })
         const response = await axios.get(url);
-        logger.info({message: `response received: ${JSON.stringify(response.data)}`})
+        logger.info({ message: `response received: ${JSON.stringify(response.data)}` })
         return response
     } catch (error) {
         logger.info({ message: `error in receiving : error` })
+        throw new Error(`error in calling url: ${url}`);
+    }
+}
 
-        console.error(error);
+export async function postData<T>(url: string, data: any): Promise<AxiosResponse<T>> {
+    try {
+        logger.info({ message: `call made to ${url}. data: ${JSON.stringify(data)}` });
+        const response = await axios.post(url, data, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        logger.info({ message: `response received: ${JSON.stringify(response.data)}` })
+
+        return response
+    } catch (error) {
+        logger.info({ message: `error in receiving : error` })
+        throw new Error(`error in calling url: ${url}`);
+    }
+}
+
+export async function deleteData<T>(url: string): Promise<AxiosResponse<T>> {
+    try {
+        logger.info({ message: `call made to ${url}` });
+        const response = await axios.delete(url);
+        logger.info({ message: `response received: ${JSON.stringify(response.data)}` })
+
+        return response
+    } catch (error) {
+        logger.info({ message: `error in receiving : error` })
+        throw new Error(`error in calling url: ${url}`);
     }
 }

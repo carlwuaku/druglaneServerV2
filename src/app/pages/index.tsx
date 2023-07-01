@@ -1,147 +1,171 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 
 import { ipcRenderer } from 'electron';
 import Header from '../components/Header';
-import { BACKUP_TIME, COMPANY_NAME_RECEIVED, GET_COMPANY_NAME, PORT } from '@/utils/stringKeys';
+import { BACKUP_TIME, GET_PREFERENCES, GET_SERVER_URL, SERVER_URL_RECEIVED } from '@/utils/stringKeys';
 import ServerState from '../components/ServerState';
-import { Button } from 'primereact/button';
-import { Link } from 'react-router-dom';
+import { Link, Link as RouterLink } from 'react-router-dom';
 import ServerLogs from '../components/ServerLogs';
+import { getData } from '@/utils/network';
+import { Button, Card, CardContent, CardHeader, Typography } from '@mui/material';
+import AppConfig from '../components/AppConfig';
+import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Unstable_Grid2';
+import { Backup, CloudDownload, CloudSync, DisplaySettings, LockPerson, NotificationsOutlined, Person2Outlined, Settings } from '@mui/icons-material';
+import DashboardTile from '../components/DashboardTile';
 import SettingItem from '../components/SettingItem';
-import axios from "axios";
+import GlobalContext from '../global/global';
+
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+}));
+
+const times = [
+  { label: "12 AM", value: "0" },
+  { label: "1 AM", value: "1" },
+  { label: "2 AM", value: "2" },
+  { label: "3 AM", value: "3" },
+  { label: "4 AM", value: "4" },
+  { label: "5 AM", value: "5" },
+  { label: "6 AM", value: "6" },
+  { label: "7 AM", value: "7" },
+  { label: "8 AM", value: "8" },
+  { label: "9 AM", value: "9" },
+  { label: "10 AM", value: "10" },
+  { label: "11AM", value: "11" },
+  { label: "12PM", value: "12" },
+  { label: "1 PM", value: "13" },
+  { label: "2 PM", value: "14" },
+  { label: "3 PM", value: "15" },
+  { label: "4 PM", value: "16" },
+  { label: "5 PM", value: "17" },
+  { label: "6 PM", value: "18" },
+  { label: "7 PM", value: "19" },
+  { label: "8 PM", value: "20" },
+  { label: "9 PM", value: "21" },
+  { label: "10 PM", value: "22" },
+  { label: "11 PM", value: "23" }
+]
 
 const Index = () => {
 
 
-    const [companyName, setCompanyName] = useState("Company Name")
-
-   
-
-    useEffect(() => {
-
-        ipcRenderer.send(GET_COMPANY_NAME);
+  const [companyName, setCompanyName] = useState("Company Name");
+  const openPreferences = () => {
+    ipcRenderer.send(GET_PREFERENCES)
+  }
+  const appData = useContext(GlobalContext)
 
 
+  useEffect(() => {
+    const handleServerUrlReceived = async (event: any, data: any) => {
+      let serverUrl = data.data;
+      console.log('index server url ', serverUrl)
+      //get the settings
+      const getSettings = await getData<any>(`${serverUrl}/api_admin/settings`);
+      setCompanyName(getSettings.data.company_name);
+      ipcRenderer.removeListener(SERVER_URL_RECEIVED, handleServerUrlReceived);
+    }
+
+    ipcRenderer.send(GET_SERVER_URL);
+
+    ipcRenderer.on(SERVER_URL_RECEIVED, handleServerUrlReceived);
 
 
-        ipcRenderer.on(COMPANY_NAME_RECEIVED, (event: any, data: any) => {
-            setCompanyName(data)
-        });
+    
+
+  }, [])
 
 
 
-        const getCompanyDetails = async () => {
-          //   const res = await fetch('http://127.0.0.1:5100/api_admin/settings');
-          // const data = res.json();
-          const response = await axios.get('http://localhost:5100/api_admin');
-          // logger.info({ message: `response received: ${JSON.stringify(response.data)}` })
-
-          console.log(response)
-      };
-      setTimeout(() => {
-        getCompanyDetails().catch(error => { console.log(error) })
-
-      }, 5000);
-
-    }, [])
-
-
-    return (
-        <>
-            <Header></Header>
-            <Button><Link to="/activate">Activation</Link></Button>
-
-            <div><h2 className='shadowText'>{companyName}</h2></div>
-            <div className="grid">
-                <div className="col-8">
-                    <ServerState></ServerState>
-
-
-                </div>
-          <div className="col-4">
-            <SettingItem name={PORT} key="setting_port"  type={'input'}></SettingItem>
-            <SettingItem name={BACKUP_TIME}  key="setting_backup" type={'select'} options={['1','19','20']}></SettingItem>
-
-                <ServerLogs></ServerLogs>
-                </div>
-            </div>
-            {/* <Container>
-        <Row>
+  return (
+    <>
+      <Header></Header>
+      
+      {/* <Button><Link to="/activate">Activation</Link></Button>
+      <Button><Link to="/settings">settngs</Link></Button> */}
+      <Box className="container">
+        <h3>Druglane Management System</h3>
+        <h4>Licensed to {companyName}</h4>
+        <Grid container spacing={2}>
           
-        </Row>
-        <Row>
-          <Col xs={12} md={4} lg={4}>
-            
+          <Grid xs={12} md={8} >
+            <ServerState></ServerState>
 
-            
-            <Card>
-              <ListGroup>
-                {
-                  serverLogs.map((log, index) => (
-                    <ListGroupItem key={index}>
-                      {log}
-                    </ListGroupItem>
-                  ))
-                }
-              </ListGroup>
-            </Card>
+          </Grid>
+          <Grid xs={6} md={4} lg={4}>
+            <SettingItem key={BACKUP_TIME} description='Backup time' name={BACKUP_TIME} type={'select'} options={times}></SettingItem>
 
-          </Col>
-          <Col xs={12} md={4} lg={8}>
-            <Card >
-              <CardHeader>
-                <Typography variant='h4'>
-                Connecting other computers
-                </Typography>
-              </CardHeader>
-              <CardContent>
+          </Grid>
+          
+        </Grid>
+        <Grid container spacing={2}>
+          <Grid lg={3} md={3} sm={6}>
+            <Link  to={''} className="unsetAll link ">
+              <DashboardTile
+                title={'Backup your database now'}
+                subtitle={'Create a backup file of your database'}
+                icon={<Backup sx={{ fontSize: 30 }}></Backup>} ></DashboardTile>
+           </Link>
+          </Grid>
+          <Grid lg={3} md={3} sm={6}>
+            <Link to={'backups'} className="unsetAll link">
+              <DashboardTile
+                title={'Restore data from a backup'}
+                subtitle={'Revert your database to a previous state if there\'s been an error '}
+                icon={<CloudSync sx={{ fontSize: 30 }}></CloudSync>} ></DashboardTile>
+            </Link>
+          </Grid>
+          <Grid lg={3} md={3} sm={6}>
+            <Link to={'settings'} className="unsetAll link">
+              <DashboardTile
+                title={'Edit system settings'}
+                subtitle={'Edit the phone, email, address, etc'}
+                icon={<DisplaySettings sx={{ fontSize: 30 }}></DisplaySettings>} ></DashboardTile>
+            </Link>
+          </Grid>
+          <Grid lg={3} md={3} sm={6}>
+            <Link to={'users'} className="unsetAll link">
+              <DashboardTile
+                title={'Manage system users'}
+                subtitle={'Add, edit or view users of the system'}
+                icon={<Person2Outlined sx={{ fontSize: 30 }}></Person2Outlined>} ></DashboardTile>
+            </Link>
+          </Grid>
+          
+        </Grid>
 
-                <Typography variant="h5" component="div">
-                  <DvrIcon fontSize='medium'></DvrIcon>  Server State
-                </Typography>
+        <Grid container spacing={2}>
+          <Grid lg={3}>
+            <Link to={'roles'} className="unsetAll link ">
+              <DashboardTile
+                title={'User Permissions'}
+                subtitle={'Set/disable permissions for user groups'}
+                icon={<LockPerson sx={{ fontSize: 30 }}></LockPerson>} ></DashboardTile>
+            </Link>
+          </Grid>
+          <Grid lg={3}>
+            <Link to={''} className="unsetAll link">
+              <DashboardTile
+                title={'Manage Automatic Reminders'}
+                subtitle={'Revert your database to a previous state if there\'s been an error '}
+                icon={<NotificationsOutlined sx={{ fontSize: 30 }}></NotificationsOutlined>} ></DashboardTile>
+            </Link>
+          </Grid>
+          
 
-                <Typography variant="body2">
-                  To run the client on other computers or phones, open a browser (preferably
-                  Google Chrome) on the device, and enter the following url in the address bar: 
-
-                </Typography>
-                <Alert key={"primary"} variant={"primary"}>
-                  <h4>{ serverUrl }/client</h4>
-                </Alert>
-              </CardContent>
-              
-            </Card>
-          </Col>
-          <Col xs={12} md={8} lg={4}>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs={12} md={6} lg={4}>
-            <Card>
-              <CardHeader>Backups</CardHeader>
-              <CardContent></CardContent>
-            </Card>
-          </Col>
-          <Col xs={12} md={6} lg={4}>
-            <Card>
-              <CardHeader>Remote Access</CardHeader>
-              <CardContent></CardContent>
-            </Card>
-          </Col>
-          <Col xs={12} md={6} lg={4}>
-            <Card>
-              <CardContent>
-                <CardHeader>
-                  <Typography>header</Typography>
-                  Scan to Connect a Phone</CardHeader>
-              </CardContent>
-              
-            </Card>
-          </Col>
-        </Row>
-      </Container> */}
-        </>
-    );
+        </Grid>
+       
+      </Box>
+      
+    </>
+  );
 }
 
 export default Index;

@@ -19,6 +19,8 @@ import vendorController from './controllers/vendor.controller';
 import { Server } from 'http';
 import cors from 'cors';
 import Store from "electron-store";
+import bodyParser from 'body-parser';
+import path from 'path';
 const store = new Store();
 
 const serverEventEmitter = new ServerEvents();
@@ -38,7 +40,7 @@ export async function isCompanySet(): Promise<boolean>{
             'name': 'company_id'
         }
     });
-    if (setting == null) {
+    if (!setting) {
         return false;
     }
     //check if the actual value exists and is a valid number
@@ -69,6 +71,12 @@ export function isValidInt(value: any): boolean {
 }
 
 app.use(cors());
+app.use(bodyParser.json())
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ limit: '500mb' }));
+
+app.use('/client', express.static(path.join(__dirname, 'public/client')));
+app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
 app.use('/', adminController);
 app.use('/api_admin', adminController);

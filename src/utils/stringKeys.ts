@@ -8,6 +8,8 @@ export const SERVER_URL_UPDATED = "server_url_updated";
 export const GET_SERVER_URL = "get_server_url";
 export const SERVER_URL_RECEIVED = "server_url_received"
 export const GET_PREFERENCE = "getPreference";
+export const GET_PREFERENCES = "getPreferences";
+
 export const PREFERENCE_RECEIVED = "preferenceReceived";
 export const SET_PREFERENCE = "setPreference";
 export const PREFERENCE_SET = "referenceSet";
@@ -21,4 +23,6 @@ export const ACTIVATION_RESULT = "activation_result";
 export const CALL_ACTIVATION = "call_validation";
 export const RESTART_APPLICATION = "restart_application";
 export const PORT = "Port";
-export const BACKUP_TIME = "Backup Time"
+export const BACKUP_TIME = "Backup Time";
+export const SET_ADMIN_PASSWORD = "set_admin_password";
+export const ADMIN_PASSWORD_SET = "admin_password_set"

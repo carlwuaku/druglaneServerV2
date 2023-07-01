@@ -1,4 +1,4 @@
-import { activate_user_function, add_insurer_function, add_role_function, add_role_permission_function, delete_insurer_function, delete_role_function, delete_role_permission_function, delete_user_function, get_insurers_function, get_role_excluded_permissions_function, get_role_function, get_role_permissions_function, get_users_function, get_user_function, login_function, save_user_function } from "../services/admin.service";
+import { activate_user_function, add_insurer_function, addRole, add_role_permission_function, delete_insurer_function, delete_role_function, delete_role_permission_function, delete_user_function, get_insurers_function, get_role_excluded_permissions_function, get_role_function, get_role_permissions_function, get_users_function, get_user_function, login_function, save_user_function } from "../services/admin.service";
 import { runMigrations } from "../config/migrations/migrations";
 const request = require('supertest');
 import { app } from '../server';
@@ -222,7 +222,7 @@ describe('Admin Service', () => {
     it('adds a role', async () => {
         //there are 2 roles by default
         let initial = await Roles.count();
-        let newObject = await add_role_function({ role_name: "role 1", description: "a description", user_id: "1" });
+        let newObject = await addRole({ role_name: "role 1", description: "a description", user_id: "1", selectedPermissions: [] });
         expect(newObject).toBeInstanceOf(Roles);
         //get the number of items in the table
         let count = await Roles.count();
@@ -247,9 +247,10 @@ describe('Admin Service', () => {
 
    
     it('gets all permissions for an added role', async () => {
-        let newObject = await add_role_function({
+        let newObject = await addRole({
             role_name: "role 2",
-            description: "a description", user_id: "1"
+            description: "a description", user_id: "1",
+            selectedPermissions: []
         });
          await add_role_permission_function({
              permission_id: 85, role_id: newObject.role_id,
@@ -340,12 +341,14 @@ describe('Admin Service', () => {
 
     it('deletes a role', async () => {
         //crate a role and give it a permission
-        let newObject = await add_role_function({ role_name: "role 2", description: "a description", user_id: "1" });
+        let newObject = await addRole({
+            role_name: "role 2",
+            description: "a description", user_id: "1", selectedPermissions: []
+        });
         
          
         let deleted = await delete_role_function({
             id: newObject.role_id.toString(),
-            role_name: 'role 2',
             user_id: "1"
         });
         expect(deleted).toBe(true);
@@ -355,7 +358,10 @@ describe('Admin Service', () => {
     });
 
     it('gets a role', async () => {
-        let newObject = await add_role_function({ role_name: "role 3", description: "a description", user_id: "1" });
+        let newObject = await addRole({
+            role_name: "role 3",
+            description: "a description", user_id: "1", selectedPermissions: []
+        });
 
         let objects = await get_role_function({ id: newObject.role_id.toString() });
         expect(objects).toBeInstanceOf(Roles);
