@@ -32,8 +32,9 @@ import { Transfers } from '../models/Transfers';
 import { Users } from '../models/Users';
 import { UserSessions } from '../models/UserSessions';
 import { Vendors } from '../models/Vendors';
+import { Tokens } from './Tokens';
 export default [Activities, Branches, CustomerDiagnostics, Customers, DailyRecords, DbBackups, DbSync,
     DiagnosticTests, IncomingPayments, InsuranceProviders, OnlineBackups, OutgoingPayments,
     Permissions, ProductBatches, Products, PurchaseDetails, Purchases, ReceivedTransferDetails, ReceivedTransfers, Refills,
     RolePermissions, Roles, Sales, SalesDetails, Settings, StockAdjustment, StockAdjustmentPending, StockAdjustmentSessions,
-    StockValues, TransferDetails, Transfers, Users, UserSessions, Vendors];
+    StockValues, TransferDetails, Transfers, Users, UserSessions, Vendors, Tokens];

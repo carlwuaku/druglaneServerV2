@@ -20,7 +20,7 @@ import AdbIcon from '@mui/icons-material/Adb';
 import Link from '@mui/material/Link';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
-
+import  LocalImage  from "@/app/components/Image";
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
@@ -139,7 +139,7 @@ const Header = (props: { showBackArrow?: boolean }) => {
               <ArrowBackIcon />
             </IconButton> : ''}
 
-          <AdbIcon sx={{ display: 'flex', mr: 1 }} />
+          <LocalImage height='35px' image='logo.png'  />
           <Typography
             variant="h6"
             noWrap

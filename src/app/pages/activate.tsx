@@ -1,4 +1,4 @@
-import { ACTIVATION_RESULT, CALL_ACTIVATION, SET_ADMIN_PASSWORD } from '@/utils/stringKeys';
+import { ACTIVATION_RESULT, CALL_ACTIVATION } from '@/utils/stringKeys';
 import { ipcRenderer } from 'electron';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
@@ -7,11 +7,9 @@ import { Link } from 'react-router-dom';
 import ActivationFailed from '../components/ActivationFailed';
 import ActivationSuccess from '../components/ActivationSuccess';
 import { TabPanel, TabView } from 'primereact/tabview';
-import { Toast } from 'primereact/toast';
-import { MenuItem } from 'primereact/menuitem';
 import Settings from '../components/settings';
 import { Dialog } from 'primereact/dialog';
-import { useFormik, FormikProps, FormikErrors, Form, } from 'formik';
+import { useFormik, FormikErrors, } from 'formik';
 import SetAdminPassword from '../components/SetAdminPassword';
 
 const Activate = () => {

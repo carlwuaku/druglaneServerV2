@@ -88,6 +88,8 @@ app.use('/api_purchase', purchaseController);
 app.use('/api_sale', saleController);
 app.use('/api_transfer', transfersController);
 
+
+
 //CORS STUFF  
   
 // app.use(async (req, res, next): Promise<void> => {

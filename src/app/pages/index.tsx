@@ -17,6 +17,7 @@ import { Backup, CloudDownload, CloudSync, DisplaySettings, LockPerson, Notifica
 import DashboardTile from '../components/DashboardTile';
 import SettingItem from '../components/SettingItem';
 import GlobalContext from '../global/global';
+// import logo from '@/app/assets/logo.png';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -142,7 +143,7 @@ const Index = () => {
         </Grid>
 
         <Grid container spacing={2}>
-          <Grid lg={3}>
+          <Grid lg={3} md={3} sm={6}>
             <Link to={'roles'} className="unsetAll link ">
               <DashboardTile
                 title={'User Permissions'}
@@ -150,7 +151,7 @@ const Index = () => {
                 icon={<LockPerson sx={{ fontSize: 30 }}></LockPerson>} ></DashboardTile>
             </Link>
           </Grid>
-          <Grid lg={3}>
+          <Grid lg={3} md={3} sm={6}>
             <Link to={''} className="unsetAll link">
               <DashboardTile
                 title={'Manage Automatic Reminders'}

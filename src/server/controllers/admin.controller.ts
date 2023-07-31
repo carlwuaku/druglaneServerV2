@@ -1,7 +1,7 @@
 import { logger } from '../config/logger';
 import express, { Router, Response, Request } from 'express';
 const router: Router = express.Router();
-import {addRole, delete_role_function, delete_user_function, getSettings, get_branches_function, get_insurers_function, get_logo_function, get_permissions_function, get_roles_function, get_role_function, get_role_permissions_function, get_users_function, get_user_function, login_function, saveSettings, save_branch_function, save_user_function} from '../services/admin.service'
+import {addRole, delete_role_function, delete_role_permission_function, delete_user_function, doResetAdminPassword, getSettings, get_branches_function, get_insurers_function, get_logo_function, get_permissions_function, get_roles_function, get_role_function, get_role_permissions_function, get_users_function, get_user_function, login_function, resetAdminPassword, saveSettings, save_branch_function, save_user_function, server_admin_login_function} from '../services/admin.service'
 
 
 router.get("/", async (req: Request, res: Response) => {
@@ -12,8 +12,8 @@ router.post('/login', async (req: Request, res: Response) => {
 
     try {
 
-        let login = await login_function(req.body);// helper.login(username, password);
-        res.status(201).json(login);
+        const user = await login_function(req.body);
+        res.status(201).json(user);
 
     } catch (error) {
         // await helper.closeConnection();
@@ -23,6 +23,50 @@ router.post('/login', async (req: Request, res: Response) => {
 
 });
 
+router.post('/admin_login', async (req: Request, res: Response) => {
+
+    try {
+
+        const token = await server_admin_login_function(req.body);
+        res.status(201).json(token);
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ status: '-1', data: null, message: error })
+
+    }
+
+});
+
+router.post('/resetAdminLogin', async (req: Request, res: Response) => {
+
+    try {
+
+        const token = await resetAdminPassword();
+        res.status(201).json(token);
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ status: '-1', data: null, message: error })
+
+    }
+
+});
+
+router.post('/resetAdminPassword', async (req: Request, res: Response) => {
+
+    try {
+
+        const token = await doResetAdminPassword(req.body);
+        res.status(201).json(token);
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ status: '-1', data: null, message: error })
+
+    }
+
+});
 
 router.get('/getBranches', async (req: Request, res: Response) => {
     try {
@@ -166,6 +210,20 @@ router.get('/role/:id', async (req: Request, res: Response) => {
 router.get('/rolePermissions/:id', async (req: Request, res: Response) => {
     try {
         let data = await get_role_permissions_function({ id: req.params.id });
+        res.status(200).json(data);
+    } catch (error) {
+        logger.error({ message: error })
+        res.status(500).json({ status: '-1', data: null, message: error })
+
+    }
+});
+
+router.delete('/rolePermissions/:role_id/:permission_id', async (req: Request, res: Response) => {
+    try {
+        let data = await delete_role_permission_function({
+            role_id: req.params.role_id, permission_id: req.params.permission_id,
+            user_id: req.user_id
+        });
         res.status(200).json(data);
     } catch (error) {
         logger.error({ message: error })
