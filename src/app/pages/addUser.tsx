@@ -17,9 +17,10 @@ import { Dropdown } from 'primereact/dropdown';
 import { IUser } from '../models/user';
 import Switch from '@mui/material/Switch';
 import { Permissions } from '../models/permissions';
+import { useAuthUser } from 'react-auth-kit';
 
 const AddUser = () => {
-
+    const auth = useAuthUser();
     const history = useNavigate();
     const [loading, setLoading] = useState(false)
     const serverUrl = useRef("");
@@ -90,8 +91,8 @@ const AddUser = () => {
             //validate and emit data to parent
             try {
                 setLoading(true);
-                let response = await postData<genericAxiosPostResponse>(`${serverUrl.current}/api_admin/saveUser`,
-                    data);
+                let response = await postData<genericAxiosPostResponse>({url: `${serverUrl.current}/api_admin/saveUser`,
+                    formData: data, token: auth()?.token});
                 showSuccess('User modified successfully');
                 setLoading(false);
                 history('/users');
@@ -151,7 +152,7 @@ const AddUser = () => {
     const loadRolePermissions = async () => {
         try {
             setLoadingRoles(true);
-            let response = await getData<Permissions[]>(`${serverUrl.current}/api_admin/rolePermissions/${formik.values.role_id}`);
+            let response = await getData<Permissions[]>({url:`${serverUrl.current}/api_admin/rolePermissions/${formik.values.role_id}`, token: auth()?.token});
             setRolePermissions(response.data)
             setLoadingRoles(false);
         } catch (error) {
@@ -163,7 +164,7 @@ const AddUser = () => {
     const loadRoles = async () => {
         try {
             setLoadingRoles(true);
-            let response = await getData<IRoles[]>(`${serverUrl.current}/api_admin/getRoles`);
+            let response = await getData<IRoles[]>({ url: `${serverUrl.current}/api_admin/getRoles`, token: auth()?.token });
             setRoles(response.data)
             setLoadingRoles(false);
         } catch (error) {
@@ -175,7 +176,7 @@ const AddUser = () => {
     const loadPermissions = async () => {
         try {
             setLoadingRoles(true);
-            let response = await getData<Permissions[]>(`${serverUrl.current}/api_admin/allPermissions`);
+            let response = await getData<Permissions[]>({ url: `${serverUrl.current}/api_admin/allPermissions`, token: auth()?.token });
             setAllPermissions(response.data);
         } catch (error) {
             showError(`error occurred getting permissions: ${error}`);
@@ -186,7 +187,7 @@ const AddUser = () => {
     const loadExistingUser = async () => {
         try {
             setLoadingRoles(true);
-            let response = await getData<IUser>(`${serverUrl.current}/api_admin/user/${id}`);
+            let response = await getData<IUser>({ url: `${serverUrl.current}/api_admin/user/${id}`, token: auth()?.token });
             formik.setValues(response.data)
             setLoadingRoles(false);
         } catch (error) {

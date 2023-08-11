@@ -14,8 +14,10 @@ import Loading from '../components/Loading';
 import { classNames } from 'primereact/utils';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IRoles } from '../models/roles';
+import { useAuthUser } from 'react-auth-kit';
 
 const AddRole = () => {
+    const auth = useAuthUser();
     const history = useNavigate();
     const [loading, setLoading] = useState(false)
     const serverUrl = useRef("");
@@ -73,8 +75,8 @@ const AddRole = () => {
             //validate and emit data to parent
             try {
                 setLoading(true);
-                let response = await postData<saveRoleResponse>(`${serverUrl.current}/api_admin/saveRole`,
-                    data);
+                let response = await postData<saveRoleResponse>({url: `${serverUrl.current}/api_admin/saveRole`,
+                    formData: data, token: auth()?.token});
                 showSuccess('Role added successfully');
                 setLoading(false);
                 history('/roles');
@@ -93,7 +95,7 @@ const AddRole = () => {
             serverUrl.current = data.data;
             try {
                 setLoadingPermissions(true);
-                let response = await getData<Permissions[]>(`${data.data}/api_admin/allPermissions`);
+                let response = await getData<Permissions[]>({url: `${data.data}/api_admin/allPermissions`, token: auth()?.token});
                 setPermissions(response.data)
                 setLoadingPermissions(false);
             } catch (error) {
@@ -131,7 +133,7 @@ const AddRole = () => {
     const loadExistingRole = async () => {
         try {
             setLoadedExistingRole(false)
-            let response = await getData<IRoles>(`${serverUrl.current}/api_admin/role/${id}`);
+            let response = await getData<IRoles>({url: `${serverUrl.current}/api_admin/role/${id}`, token: auth()?.token});
             formik.setValues(response.data);
             setRolePermissions(response.data.Permissions)
             let _selectedPermissions:string[] = [];

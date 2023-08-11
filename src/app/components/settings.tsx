@@ -14,8 +14,10 @@ import Snackbar from "@mui/material/Snackbar";
 import Notification from "./Notification";
 import { NotificationSeverity } from "../models/notificationSeverityInterface";
 import { saveSettingsResponse } from "../models/axiosResponse";
+import { useAuthUser } from "react-auth-kit";
 
-const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
+const Settings = ({ data, onSubmit }: { data: ISettings, onSubmit: Function }) => {
+    const auth = useAuthUser();
     const yesNoOptions = ['yes', 'no'];
     const [currentLogo, setCurrentLogo] = useState(data.logo);
     const [serverUrl, setServerUrl] = useState(null);
@@ -105,7 +107,7 @@ const Settings = ({data, onSubmit}: {data:ISettings, onSubmit: Function}) => {
             try {
                 setLoading(true);
                 data.logo = currentLogo;
-                let response = await postData<saveSettingsResponse>(`${serverUrl}/api_admin/savesettings`, data); 
+                let response = await postData<saveSettingsResponse>({ url: `${serverUrl}/api_admin/savesettings`, formData: data, token: auth()?.token }); 
                 setLoading(false);
                 if (!response.data.data) {
                     showSuccess('Password saved successfully')

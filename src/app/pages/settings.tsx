@@ -5,8 +5,9 @@ import React, { useEffect, useState } from 'react'
 import Header from '../components/Header'
 import Loading from '../components/Loading';
 import Settings from '../components/settings'
-
+import { useAuthUser } from 'react-auth-kit'
 const SettingsPage = () => {
+    const auth = useAuthUser();
     const [isLoaded, setIsLoaded] = useState(false);
 
     const [settingsData, setSettingsData] = useState({
@@ -43,7 +44,7 @@ const SettingsPage = () => {
         const handleServerUrlReceived = async (event: any, data: any) => {
             let serverUrl = data.data;
             //get the settings
-            const getSettings = await getData<any>(`${serverUrl}/api_admin/settings`)
+            const getSettings = await getData<any>({ url: `${serverUrl}/api_admin/settings`, token: auth()?.token })
             console.log("settings get settings", getSettings)
             setSettingsData(getSettings.data);
             setIsLoaded(true)

@@ -13,7 +13,9 @@ import Store from "electron-store";
 import contextMenu from 'electron-context-menu'
 //A78D5-B93FB-CD281-3500A
 // import { startServer } from "./server/server";
-const gotTheLock = app.requestSingleInstanceLock()
+const gotTheLock = app.requestSingleInstanceLock();
+/**keep track of the server url and make sure it only updates the ui if there's an actual change */
+let lastServerUrl: string = "";
 
 let mainWindow: BrowserWindow;
 let serverProcess: ChildProcess;
@@ -143,14 +145,18 @@ serverEventEmitter.on(SERVER_MESSAGE_RECEIVED, (data) => {
 serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
     serverUrl = data;
     logs.unshift(data);
-    console.log("event emitter server url updated ", data);
-    sendServerUrl();
+    if (lastServerUrl !== serverUrl) {
+        sendServerUrl();
+        lastServerUrl = serverUrl;
+    }
+    
 })
 
 function sendServerUrl() {
-    console.log("server url changed ", serverUrl);
-    // globalVariables.serverUrl = serverUrl
-    mainWindow?.webContents?.send(SERVER_URL_RECEIVED, { data: serverUrl, time: new Date().toLocaleString() }, serverUrl)
+    
+        mainWindow?.webContents?.send(SERVER_URL_RECEIVED, { data: serverUrl, time: new Date().toLocaleString() }, serverUrl);
+    
+    
 }
 
 

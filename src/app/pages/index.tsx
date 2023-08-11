@@ -17,6 +17,7 @@ import { Backup, CloudDownload, CloudSync, DisplaySettings, LockPerson, Notifica
 import DashboardTile from '../components/DashboardTile';
 import SettingItem from '../components/SettingItem';
 import GlobalContext from '../global/global';
+import {useAuthUser} from 'react-auth-kit'
 // import logo from '@/app/assets/logo.png';
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -56,7 +57,7 @@ const times = [
 
 const Index = () => {
 
-
+  const auth = useAuthUser();
   const [companyName, setCompanyName] = useState("Company Name");
   const openPreferences = () => {
     ipcRenderer.send(GET_PREFERENCES)
@@ -69,7 +70,7 @@ const Index = () => {
       let serverUrl = data.data;
       console.log('index server url ', serverUrl)
       //get the settings
-      const getSettings = await getData<any>(`${serverUrl}/api_admin/settings`);
+      const getSettings = await getData<any>({ url: `${serverUrl}/api_admin/settings`, token: auth()?.token });
       setCompanyName(getSettings.data.company_name);
       ipcRenderer.removeListener(SERVER_URL_RECEIVED, handleServerUrlReceived);
     }

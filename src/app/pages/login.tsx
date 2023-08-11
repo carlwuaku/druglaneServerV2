@@ -10,8 +10,10 @@ import { Toast } from 'primereact/toast';
 import { useNavigate } from 'react-router-dom';
 import { classNames } from 'primereact/utils';
 import { useSignIn } from 'react-auth-kit'
-
+import LocalImage from '../components/Image';
+import { useAuthUser } from 'react-auth-kit'
 export default function Login() {
+    const auth = useAuthUser();
     const [loading, setLoading] = useState(false)
     const serverUrl = useRef("");
     const toast = useRef<Toast>(null);
@@ -38,13 +40,16 @@ export default function Login() {
 
             try {
                 setLoading(true);
-                const res = await postData<string>(`${serverUrl.current}/api_admin/admin_login`,
-                    data);
+                const res = await postData<string>({url:`${serverUrl.current}/api_admin/admin_login`,
+                    formData: data, token: auth()?.token
+                });
                 if (signIn(
                     {
                         token: res.data,
                         expiresIn: 3600,
-                        tokenType: "Bearer"}
+                        tokenType: "Bearer",
+                        authState: {'token': res.data}
+                    }
                 )) {
                     showSuccess('Logged in successfully');
                     setLoading(false);
@@ -81,8 +86,8 @@ export default function Login() {
     const resetPassword = async() => {
         try {
             setLoading(true);
-            let response = await postData<{error:boolean, message:any}>(`${serverUrl.current}/api_admin/resetAdminLogin`,
-                {});
+            let response = await postData<{error:boolean, message:any}>({url:`${serverUrl.current}/api_admin/resetAdminLogin`,
+                formData: {}, token: auth()?.token});
             if (response.data.error) {
                 alert("There was an error sending your token. Please check your connection and click on the 'Forgot Password' to try again")
             }
@@ -104,9 +109,9 @@ export default function Login() {
             <div className="container">
                 <form onSubmit={formik.handleSubmit} >
                     <div className="flex-column align-items-center justify-content-center">
-                    <div className="surface-card p-4 shadow-2 border-round w-full lg:w-6">
+                    <div className=" w-full lg:w-6">
                         <div className="text-center mb-5">
-                            <img src="/demo/images/blocks/logos/hyper.svg" alt="hyper" height={50} className="mb-3" />
+                            <LocalImage image='logo.png'  height={"75px"} className="mb-3" />
                             <div className="text-900 text-3xl font-medium mb-3">Log in as the administrator</div>
                         </div>
 
@@ -119,7 +124,8 @@ export default function Login() {
                                     }}
                                     className={classNames({
                                         'p-invalid': (formik.touched.password && formik.errors.password),
-                                        'w-full mb-3': true
+                                        'w-full mb-3': true,
+                                        'center-input-text': true
                                     })}
 
                                 />

@@ -20,7 +20,9 @@
     "build-webpack": "webpack",
     "react:dev": "webpack serve --mode=development",
     "electron:dev": "nodemon",
-    "webpack-dev": "concurrently --kill-others \"npm run react:dev\" \"npm run electron:dev\" "
+    "webpack-dev": "concurrently --kill-others \"npm run react:dev\" \"npm run electron:dev\" ",
+    "start-server-only":"tsc  ./src/server/server.ts",
+    "build-server": "npx tsc"
   },
   "repository": {
     "type": "git",

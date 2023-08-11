@@ -24,6 +24,10 @@ $primaryColor: indigo;
     margin-bottom: 8px;
 }
 
+.margin-bottom-10{
+    margin-bottom: 10px;
+}
+
 .wide-input{
     min-width: 75%;
 }
@@ -143,4 +147,8 @@ $primaryColor: indigo;
 .flex-column{
     display: flex;
     flex-direction: column;
+}
+
+.center-input-text{
+    text-align: center;
 }

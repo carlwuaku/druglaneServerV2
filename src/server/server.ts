@@ -21,6 +21,7 @@ import cors from 'cors';
 import Store from "electron-store";
 import bodyParser from 'body-parser';
 import path from 'path';
+import { hasPermission } from './utils/auth';
 const store = new Store();
 
 const serverEventEmitter = new ServerEvents();

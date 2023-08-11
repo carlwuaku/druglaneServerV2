@@ -3,12 +3,10 @@
 
 require('ts-node/register')
 
-import { Store } from '../../Store';
 import { Umzug, SequelizeStorage } from 'umzug';
 import { manualMigrations } from './manualMigrations';
 import { constants } from '../../../utils/constants';
 import { migrationsList } from './migrationsList';
-const store = new Store()
 import { sequelize } from '../sequelize-config'
 import { logger } from '../logger';
 // const sequelize = require('../models/sequelize-config')

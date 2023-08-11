@@ -1,4 +1,5 @@
 import { Table, Model, Column, DataType,  CreatedAt, ForeignKey, Index, BelongsTo, PrimaryKey } from "sequelize-typescript";
+import { Permissions } from "./Permissions";
 import { Roles } from "./Roles";
 
 @Table({
@@ -86,4 +87,6 @@ export class Users extends Model{
 
     @BelongsTo(() => Roles)
   userRole!: Roles;
+
+  permissions?:Permissions[]
 }

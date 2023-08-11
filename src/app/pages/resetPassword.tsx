@@ -10,8 +10,9 @@ import { Toast } from 'primereact/toast';
 import { useNavigate } from 'react-router-dom';
 import { classNames } from 'primereact/utils';
 import { Message } from 'primereact/message';
-
+import { useAuthUser } from 'react-auth-kit'
 export default function ResetPassword() {
+    const auth = useAuthUser();
     const [loading, setLoading] = useState(false)
     const serverUrl = useRef("");
     const toast = useRef<Toast>(null);
@@ -46,8 +47,8 @@ export default function ResetPassword() {
 
             try {
                 setLoading(true);
-                let response = await postData<string>(`${serverUrl.current}/api_admin/resetAdminPassword`,
-                    data);
+                let response = await postData<string>({url: `${serverUrl.current}/api_admin/resetAdminPassword`,
+                    formData: data, token: auth()?.token});
                 showSuccess('Password reset successfully');
                 setLoading(false);
                 history('/login');
