@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 
 import { ipcRenderer } from 'electron';
 import Header from '../components/Header';
-import { BACKUP_TIME, GET_PREFERENCES, GET_SERVER_URL, SERVER_URL_RECEIVED } from '@/utils/stringKeys';
+import { BACKUP_TIME, CREATE_BACKUP, GET_PREFERENCES, GET_SERVER_URL, SERVER_URL_RECEIVED } from '@/utils/stringKeys';
 import ServerState from '../components/ServerState';
 import { Link, Link as RouterLink } from 'react-router-dom';
 import ServerLogs from '../components/ServerLogs';
@@ -63,7 +63,10 @@ const Index = () => {
     ipcRenderer.send(GET_PREFERENCES)
   }
   const appData = useContext(GlobalContext)
-
+  const backupClicked = () => {
+    console.log('backup clicked');
+    ipcRenderer.send(CREATE_BACKUP);
+  }
 
   useEffect(() => {
     const handleServerUrlReceived = async (event: any, data: any) => {
@@ -82,7 +85,9 @@ const Index = () => {
 
     
 
-  }, [])
+  }, []);
+
+
 
 
 
@@ -113,7 +118,9 @@ const Index = () => {
               <DashboardTile
                 title={'Backup your database now'}
                 subtitle={'Create a backup file of your database'}
-                icon={<Backup sx={{ fontSize: 30 }}></Backup>} ></DashboardTile>
+                icon={<Backup sx={{ fontSize: 30 }}></Backup>}
+                onClick={backupClicked}
+              ></DashboardTile>
            </Link>
           </Grid>
           <Grid lg={3} md={3} sm={6}>

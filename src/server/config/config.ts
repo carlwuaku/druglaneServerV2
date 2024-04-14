@@ -2,7 +2,7 @@ import { logger } from './logger';
 import { constants } from '../../utils/constants'
 import dayjs from 'dayjs';
 const timeZoneOffset = dayjs().utcOffset()
-console.log(timeZoneOffset)
+// console.log(timeZoneOffset)
 
 const timeZoneOffsetMinutes = new Date().getTimezoneOffset();
 const timeZoneOffsetHours = -timeZoneOffsetMinutes / 60;
@@ -17,7 +17,6 @@ export const sqliteConfig: {[key:string]: any}= {
         "dialect": "sqlite",
         "storage": "test_db.db",
         "logging": false
-        // logging: (msg: any) => logger.debug(msg),
     },
     "production": {
         "dialect": "sqlite",

@@ -38,6 +38,7 @@ export const constants = {
      settings_filename : 'system-settings.json',
      db_filename : databaseName,
      internal_backups_path :path.join( settings_location,'backups'),
+     logs_path :path.join( settings_location,'logs'),
      company_id : '',
     
   STRING_DB_VERSION:"dbversion",

@@ -26,6 +26,7 @@ const DashboardTile = (props: {
     subtitle: string,
     icon: ReactNode,
     expandContent?: ReactNode,
+    onClick?: () => void
 }) => {
     const [expanded, setExpanded] = React.useState(false);
 
@@ -34,7 +35,7 @@ const DashboardTile = (props: {
     };
 
   return (
-      <Card className='expandOnHover'>
+      <Card className='expandOnHover' onClick={() => props.onClick ? props.onClick() : ''}>
           
           
           <CardContent>
