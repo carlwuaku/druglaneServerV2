@@ -6,7 +6,7 @@ import ip from 'ip';
 import { logger } from './config/logger';
 import { runMigrations } from './config/migrations/migrations';
 import { Settings } from './models/Settings';
-import { ServerEvents } from "../utils/ServerEvents";
+import serverEventEmitter from "../utils/ServerEvents";
 import { PORT, SERVER_MESSAGE_RECEIVED, SERVER_RUNNING, SERVER_STATE_CHANGED, SERVER_URL_UPDATED } from '../utils/stringKeys'
 import adminController from './controllers/admin.controller';
 import customerController from './controllers/customer.controller';
@@ -21,9 +21,9 @@ import cors from 'cors';
 import Store from "electron-store";
 import bodyParser from 'body-parser';
 import path from 'path';
+import { hasPermission } from './utils/auth';
 const store = new Store();
 
-const serverEventEmitter = new ServerEvents();
 
 dotenv.config();
 // console.log('erver')
@@ -88,6 +88,8 @@ app.use('/api_purchase', purchaseController);
 app.use('/api_sale', saleController);
 app.use('/api_transfer', transfersController);
 
+
+
 //CORS STUFF  
   
 // app.use(async (req, res, next): Promise<void> => {
@@ -150,6 +152,7 @@ app.use('/api_transfer', transfersController);
 // });
 let server: Server;
 const SERVER_PORT = store.get(PORT, constants.port);
+
 const startServer = async () => {
     //make sure the app has been activated
     try {
@@ -157,28 +160,15 @@ const startServer = async () => {
             logger.info("server started successfully on " + SERVER_PORT);
             const ipAddress = ip.address();
             const serverUrl = `http://${ipAddress}:${SERVER_PORT}`;
-            if (process.send)
-            process.send({ message: serverUrl, event: SERVER_URL_UPDATED });
+            serverEventEmitter.emit(SERVER_URL_UPDATED, serverUrl);
+            serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Running")
+            
             runMigrations()
-            try {
-                /**
-                 * If Node.js was not spawned with an IPC channel, process.send will be undefined
-                 */
-                if(process.send)
-                process.send({message:SERVER_RUNNING, event: SERVER_STATE_CHANGED});
-                
-
-                logger.info("process.send defined")
-            } catch (error) {
-                // console.log("process.send not defined")
-                logger.error({message: "process.send not defined."});
-            }
+            
         })
     } catch (error) {
-        if (process.send)
-        process.send({ message: `Server encountered an error: ${error}`, event: SERVER_MESSAGE_RECEIVED });
+        serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Stopped")
         logger.error({ message: error });
-        // console.log(error)
     }
    
 }
@@ -202,7 +192,8 @@ const stopServer = async () => {
     }
 
 }
-startServer();
+export { startServer, stopServer };
+// startServer();
 
 // /**
 //  * check if the app has been activated.

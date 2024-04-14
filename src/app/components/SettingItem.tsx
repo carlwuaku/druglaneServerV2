@@ -15,7 +15,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 
 
-const SettingItem = (props: { name: string, type: string, options?: {label:string, value:any}[], description: string }) => {
+const SettingItem = (props: { name: string, type: string, options?: { label: string, value: any }[], description: string }) => {
     const [editing, setEditing] = useState(false);
     const [new_value, setValue] = useState('');
     const [currentValue, setCurrentValue] = useState<any>('')
@@ -34,7 +34,7 @@ const SettingItem = (props: { name: string, type: string, options?: {label:strin
 
     useEffect(() => {
         //get the value of the setting
-        const handlePreferenceReceived = (event:any, data: { name: string, value: string }) => {
+        const handlePreferenceReceived = (event: any, data: { name: string, value: string }) => {
             console.log(props.name, data)
             if (data.name === props.name) {
                 setCurrentValue(data.value)
@@ -67,8 +67,8 @@ const SettingItem = (props: { name: string, type: string, options?: {label:strin
 
 
                             {
-                                props.options?.map(option =>
-                                    <MenuItem value={option.value}>
+                                props.options?.map((option, i) =>
+                                    <MenuItem key={i} value={option.value}>
                                         {option.label}
                                     </MenuItem>
                                 )
@@ -79,7 +79,7 @@ const SettingItem = (props: { name: string, type: string, options?: {label:strin
 
             default:
                 return <TextField
-                    
+
 
                     value={new_value}
                     onChange={(e) => setValue(e.target.value)}
@@ -125,19 +125,19 @@ const SettingItem = (props: { name: string, type: string, options?: {label:strin
     }
     return (
         <>
-        <Card key={props.name}>
-            <CardHeader 
-                title={props.name}
-                action={
-                    <IconButton onClick={handleClickOpen} color='secondary' edge="end" aria-label="edit">
-                        <Edit />
-                    </IconButton>
-                }
-                subheader={currentValue}
-            >
+            <Card key={props.name}>
+                <CardHeader
+                    title={props.name}
+                    action={
+                        <IconButton onClick={handleClickOpen} color='secondary' edge="end" aria-label="edit">
+                            <Edit />
+                        </IconButton>
+                    }
+                    subheader={currentValue}
+                >
 
-                
-            </CardHeader>
+
+                </CardHeader>
             </Card>
             <Toast ref={toast} />
 

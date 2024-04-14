@@ -1,22 +1,25 @@
-import electron, { app, BrowserWindow, HandlerDetails, ipcMain, Menu } from "electron";
+import electron, { app, BrowserWindow, dialog, HandlerDetails, ipcMain, Menu, shell } from "electron";
 import * as path from "path";
-import { ChildProcess, fork, SendHandle } from 'child_process'
 import { isAppActivated, verifyLicenseKey } from "./appValidation";
 import { logger } from "./app/config/logger";
 // import isDev from 'electron-is-dev';
 
 import { constants, defaultOptions } from "./electronConstants";
-import { ServerEvents } from "./utils/ServerEvents";
-import { ACTIVATION_RESULT, CALL_ACTIVATION, GET_APP_DETAILS, GET_PREFERENCE, GET_PREFERENCES, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, PREFERENCE_SET, RESTART_APPLICATION, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED, SET_ADMIN_PASSWORD, SET_PREFERENCE } from "./utils/stringKeys";
+import serverEventEmitter from "./utils/ServerEvents";
+import { ACTIVATION_RESULT, APP_NOT_ACTIVATED, CALL_ACTIVATION, CREATE_BACKUP, GET_APP_DETAILS, GET_PREFERENCE, GET_PREFERENCES, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, PREFERENCE_SET, RESTART_APPLICATION, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED, SET_ADMIN_PASSWORD, SET_PREFERENCE } from "./utils/stringKeys";
 import { runFolderCreation } from "./utils/directorySetup";
 import Store from "electron-store";
-import contextMenu from 'electron-context-menu'
+import contextMenu from 'electron-context-menu';
+import * as url from 'url';
+import { startServer } from "./server/server";
 //A78D5-B93FB-CD281-3500A
 // import { startServer } from "./server/server";
-const gotTheLock = app.requestSingleInstanceLock()
+const gotTheLock = app.requestSingleInstanceLock();
+/**keep track of the server url and make sure it only updates the ui if there's an actual change */
+let lastServerUrl: string = "";
 
 let mainWindow: BrowserWindow;
-let serverProcess: ChildProcess;
+// let serverProcess: ChildProcess;
 let serverState: "Application Activated" |
     "Application Not Activated" | "Server Started" | "Checking Activation"
     | "Server Starting" | "Server Stopping" = "Checking Activation";
@@ -36,15 +39,52 @@ if (!gotTheLock) {
         }
     })
 }
-const serverEventEmitter = new ServerEvents();
 let serverUrl = "";
 const store = new Store();
 //save all 
-let logs: string[] = [];
 
 contextMenu({
     showSaveImageAs: true
 });
+
+const appmenu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = [
+    
+    {
+        label: 'System',
+        submenu: [
+            {
+                label: 'Quit',
+                click: () => app.quit(),
+                accelerator: 'CmdOrCtrl+w'
+            },
+            {
+                label: 'Restart Sever',
+                click: () => {
+                    app.relaunch()
+                    app.exit()
+                },
+                accelerator: 'CmdOrCtrl+r'
+            }
+        ]
+    },
+   
+    {
+        label: 'Goto Locations',
+        submenu: [
+            {
+                label: 'Logs',
+                click: () => openFolder(constants.logs_path),
+                accelerator: 'CmdOrCtrl+w'
+            },
+            {
+                label: 'Backups',
+                click: () => openFolder(constants.internal_backups_path),
+                accelerator: 'CmdOrCtrl+r'
+            }
+        ] 
+    }
+]
+
 //create backup folders
 runFolderCreation();
 
@@ -78,13 +118,13 @@ ipcMain.on(GET_SERVER_URL, sendServerUrl)
 ipcMain.on(GET_PREFERENCE, (event, data: { key: string }) => {
 
     let value = store.get(data.key, defaultOptions[data.key])
-    event.reply(PREFERENCE_RECEIVED, {name: data.key, value: value})
+    event.reply(PREFERENCE_RECEIVED, { name: data.key, value: value })
 }
 )
 
 ipcMain.on(GET_PREFERENCES, (event) => {
     store.openInEditor()
-}) 
+})
 
 ipcMain.on(SET_PREFERENCE, (event, data: { key: string, value: any }) => {
     try {
@@ -97,7 +137,13 @@ ipcMain.on(SET_PREFERENCE, (event, data: { key: string, value: any }) => {
 })
 
 ipcMain.on(SET_ADMIN_PASSWORD, (event, data: { password: string }) => {
-    
+
+});
+
+ipcMain.on(CREATE_BACKUP, (event) => {
+    //do a mysql dump
+
+    console.log('create backup')
 })
 
 
@@ -108,8 +154,8 @@ function savePreference(key: string, value: any) {
         store.set(key, value);
     } catch (error: any) {
         throw new Error(error);
- 
-    } 
+
+    }
 
 }
 
@@ -124,33 +170,42 @@ function restartApp() {
 }
 
 function sendServerState(state: string) {
-    console.log('server state', state)
-    mainWindow?.webContents?.send(SERVER_STATE_CHANGED, { data: state, time: new Date().toLocaleString() })
+    try { 
+        mainWindow?.webContents?.send(SERVER_STATE_CHANGED, { data: state, time: new Date().toLocaleString() })
+
+    }
+    catch(error) {
+        logger.error({ message: error });
+        dialog.showErrorBox("Internal error", "Failed to send server state")
+    }
 
 }
 
 serverEventEmitter.on(SERVER_STATE_CHANGED, (data) => {
-    logs.unshift(data);
     serverState = data;
     sendServerState(data);
 })
 
 serverEventEmitter.on(SERVER_MESSAGE_RECEIVED, (data) => {
-    logs.unshift(data);
+    // logs.unshift(data);
     mainWindow?.webContents?.send(SERVER_MESSAGE_RECEIVED, { data, time: new Date().toLocaleString() })
 
 })
 serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
     serverUrl = data;
-    logs.unshift(data);
-    console.log("event emitter server url updated ", data);
-    sendServerUrl();
+    // logs.unshift(data);
+    if (lastServerUrl !== serverUrl) {
+        sendServerUrl();
+        lastServerUrl = serverUrl;
+    }
+
 })
 
 function sendServerUrl() {
-    console.log("server url changed ", serverUrl);
-    // globalVariables.serverUrl = serverUrl
-    mainWindow?.webContents?.send(SERVER_URL_RECEIVED, { data: serverUrl, time: new Date().toLocaleString() }, serverUrl)
+
+    mainWindow?.webContents?.send(SERVER_URL_RECEIVED, { data: serverUrl, time: new Date().toLocaleString() }, serverUrl);
+
+
 }
 
 
@@ -170,14 +225,20 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
 
     // and load the index.html of the app.
     // mainWindow.loadFile(path.join(__dirname, htmlLocation));
-    mainWindow?.loadURL(isDev ? 'http://localhost:9000' : `file://${app.getAppPath()}/index.html`)
+    const startUrl = process.env.ELECTRON_START_URL || url.format({
+        pathname: path.join(__dirname, '../index.html'),
+        protocol: 'file:',
+        slashes: true
+    })
+    mainWindow?.loadURL(isDev ? 'http://localhost:9000' : startUrl);
     // Open the DevTools.
     mainWindow?.webContents?.openDevTools();
-    if(!isDev)
-        Menu.setApplicationMenu(null);
+    const mainMenu = Menu.buildFromTemplate(appmenu);
+    Menu.setApplicationMenu(mainMenu)
+    
     mainWindow.webContents.setWindowOpenHandler((details: HandlerDetails) => {
-        
-        
+
+
         electron.shell.openExternal(details.url);
         return { action: 'deny' };
     });
@@ -205,23 +266,25 @@ app.whenReady().then(() => {
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
+        logger.info({ message: "app terminated" });
+        app.quit();
         //kill the server process
-        if (serverProcess) {
-            try {
-                serverProcess.kill();
-                logger.info({ message: "app terminated" });
-                app.quit();
-            } catch (error) {
-                logger.error({ message: error });
-            }
+        // if (serverProcess) {
+        //     try {
+        //         serverProcess.kill();
+        //         logger.info({ message: "app terminated" });
+        //         app.quit();
+        //     } catch (error) {
+        //         logger.error({ message: error });
+        //     }
 
-        }
-        else {
-            logger.info({ message: "no server was running. app terminated" });
-            app.quit();
-        }
-        
-        
+        // }
+        // else {
+        //     logger.info({ message: "no server was running. app terminated" });
+        //     app.quit();
+        // }
+
+
     }
 });
 
@@ -237,42 +300,43 @@ export async function spawnServer() {
             serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Starting")
 
             //spawn server->runmigrations
-            const serverPath = path.join(__dirname, 'server/server')
-            serverProcess = fork(serverPath)
+            // const serverPath = path.join(__dirname, 'server/server')
+            // serverProcess = fork(serverPath);
+            await startServer();
 
-            serverProcess.on('exit', (code: number, signal) => {
-                logger.error({
-                    message: 'serverProcess process exited with ' +
-                        `code ${code} and signal ${signal}`
-                });
-                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Stopped")
-            });
-            serverProcess.on('error', (error) => {
-                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Error")
-                console.log('serverProcess process error ', error)
-            });
+            // serverProcess.on('exit', (code: number, signal) => {
+            //     logger.error({
+            //         message: 'serverProcess process exited with ' +
+            //             `code ${code} and signal ${signal}`
+            //     });
+            //     serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Stopped")
+            // });
+            // serverProcess.on('error', (error) => {
+            //     serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Error")
+            //     console.log('serverProcess process error ', error)
+            // });
 
-            serverProcess.on('spawn', () => {
-                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Running")
-                console.log('serverProcess spawned')
-                //TODO: check if the company details has been set. then check if the admin password has been set
+            // serverProcess.on('spawn', () => {
+            //     serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Running")
+            //     console.log('serverProcess spawned')
+            //     //TODO: check if the company details has been set. then check if the admin password has been set
 
-            });
-            serverProcess.on('disconnect', () => {
-                serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Disconnected")
-                console.log('serverProcess disconnected')
-                spawnServer()
-            });
+            // });
+            // serverProcess.on('disconnect', () => {
+            //     serverEventEmitter.emit(SERVER_STATE_CHANGED, "Server Disconnected")
+            //     console.log('serverProcess disconnected')
+            //     spawnServer()
+            // });
 
-            serverProcess.on('message', (message: any, handle: SendHandle) => {
-                console.log("serverProcess sent a message", message)
+            // serverProcess.on('message', (message: any, handle: SendHandle) => {
+            //     console.log("serverProcess sent a message", message)
 
-                serverEventEmitter.emit(message.event, message.message)
-            });
+            //     serverEventEmitter.emit(message.event, message.message)
+            // });
 
         }
         else {
-            serverEventEmitter.emit(SERVER_STATE_CHANGED, "App not activated")
+            serverEventEmitter.emit(SERVER_STATE_CHANGED, APP_NOT_ACTIVATED)
             console.log("app not activated")
             loadActivationPage();
         }
@@ -287,6 +351,10 @@ export async function spawnServer() {
 export function loadActivationPage(): void {
     createWindow("/app/activate.html", "/app/activate.js")
 
+}
+
+function openFolder(location: string) {
+    shell.showItemInFolder(location)
 }
 
 

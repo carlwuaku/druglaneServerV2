@@ -6,7 +6,13 @@ export const errorMessages = {
     ERROR_GETTING_SETTINGS: "Error getting settings",
     ERROR_CREATING_BRANCH: "Error creating branch",
     ERROR_GETTING_INSURERS: "Error getting insurers",
-    ERROR_SAVING_SETTINGS: "Error saving settings"
+    ERROR_SAVING_SETTINGS: "Error saving settings",
+    NOT_LOGGED_IN: "You are not logged in.",
+    NO_PERMISSION: "Permission not granted for this operation",
+    INCORRECT_REQUEST_CONFIG: "Incorrect request config. Please log out and login again",
+    INCORRECT_SYSTEM_CONFIG: "Incorrect system config. Please contact support for help",
+    NOT_LOGGED_IN_AS_ADMIN: "You are not logged in as the admin. Please log out and login again",
+    PASSWORD_INCORRECT: "Incorrect Password"
 }
 
 export const infoMessages = {
@@ -17,4 +23,8 @@ export const infoMessages = {
 
 export const moduleNames = {
     SYSTEM: "System"
+}
+
+export const configKeys = {
+    ADMIN_PASSWORD_SALT: "NxDWcnBE34@#$#"
 }

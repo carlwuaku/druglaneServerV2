@@ -229,7 +229,7 @@ export async function _saveDiagnostics (_data: { [key: string]: any})  {
 
 // };
 
-exports._getCustomerDiagnosticsList = async (_data: { [key: string]: any}):Promise<CustomerDiagnostics[]> => {
+export async function _getCustomerDiagnosticsList  (_data: { [key: string]: any}):Promise<CustomerDiagnostics[]>{
    
     try {
         let limit = _data.limit ? parseInt(_data.limit) : 100;
@@ -366,7 +366,7 @@ export async function _deleteRefill (_data: { [key: string]: any}):Promise<boole
  * @param _data Object of key:value
  * @returns list of refills 
  */
-export async function _getRefillList(_data: { [key: string]: string }):Promise<Refills[]> {
+export async function _getRefillList(_data: { [key: string]: any }):Promise<Refills[]> {
     
     
     try {
@@ -410,7 +410,7 @@ export async function _getRefillList(_data: { [key: string]: string }):Promise<R
 
 
 
-export async function _countRefills(_data: { [key: string]: string }):Promise<number>{
+export async function _countRefills(_data: { [key: string]: any }):Promise<number>{
     try {
         let start = _data.start_date;
         let end = _data.end_date;

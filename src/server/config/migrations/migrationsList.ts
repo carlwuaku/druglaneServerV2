@@ -56,7 +56,7 @@ async function getIndexes(tableName:string, queryInterface:QueryInterface): Prom
 export const migrationsList: InputMigrations<QueryInterface> = [
     {
         name: "2019-001-initialMigrations-addActvities",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             
             await queryInterface.createTable(Activities.tableName, {
                 activity_id: {
@@ -86,13 +86,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Activities.tableName);
         }
     },
     {
         name: "2019-002-initialMigrations-addCustomers",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Customers.tableName, {
                 id: {
@@ -123,13 +123,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Customers.tableName);
         }
     },
     {
         name: "2019-003-initialMigrations-createPermissions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Permissions.tableName, {
                 permission_id: {
@@ -147,27 +147,27 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Permissions.tableName);
         }
     }
     ,
     {
         name: "2019-004-initialMigrations-insertPermissions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.bulkInsert(Permissions.tableName,
                 [...allPermissions.values()],
                 {
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             //no going back
         }
     },
     {
         name: "2019-005-initialMigrations-createRoles",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Roles.tableName, {
                 role_id: {
@@ -185,13 +185,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             })
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Permissions.tableName);
         }
     },
     {
         name: "2019-006-initialMigrations-createRolePermissions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(RolePermissions.tableName, {
                 id: {
@@ -236,14 +236,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     onUpdate: 'cascade'
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(RolePermissions.tableName);
         }
     },
 
     {
         name: "2019-007-initialMigrations-insertRoles",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.bulkInsert(Roles.tableName,
                 [
@@ -261,13 +261,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 {
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             //no going back
         }
     },
     {
         name: "2019-008-initialMigrations-insertDefaultPermissions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             let objects: object[] = [];
             //do it for the manager. all permissions by default
             allPermissions.forEach(permission => {
@@ -283,14 +283,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 {
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             //no going back
         }
     },
     //do users, user_sessions, products...
     {
         name: "2019-009-initialMigrations-createInsurers",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(InsuranceProviders.tableName, {
                 id: {
@@ -314,14 +314,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(InsuranceProviders.tableName);
         }
     },
 
     {
         name: "2019-010-initialMigrations-createVendors",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Vendors.tableName, {
                 id: {
@@ -375,13 +375,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Vendors.tableName);
         }
     },
     {
         name: "2019-011-initialMigrations-createBranches",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Branches.tableName, {
                 id: {
@@ -427,13 +427,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Branches.tableName);
         }
     },
     {
         name: "2019-012-initialMigrations-createSettings",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Settings.tableName, {
                 id: {
@@ -466,13 +466,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Settings.tableName);
         }
     },
     {
         name: "2019-013-initialMigrations-createUsers",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Users.tableName, {
                 id: {
@@ -543,13 +543,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 unique: true
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Users.tableName);
         }
     },
     {
         name: "2019-014-initialMigrations-createUserSessions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(UserSessions.tableName, {
                 id: {
@@ -582,13 +582,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 unique: true
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(UserSessions.tableName);
         }
     },
     {
         name: "2019-015-initialMigrations-createProducts",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Products.tableName, {
                 id: {
@@ -717,13 +717,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             await queryInterface.addIndex(Products.tableName,
                 ['description']);
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Products.tableName);
         }
     },
     {
         name: "2019-016-initialMigrations-createSales",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Sales.tableName, {
                 id: {
@@ -835,13 +835,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
             
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Sales.tableName);
         }
     },
     {
         name: "2019-017-initialMigrations-createSalesDetails",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(SalesDetails.tableName, {
                 id: {
@@ -921,13 +921,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(SalesDetails.tableName);
         }
     },
     {
         name: "2019-018-initialMigrations-createPurchases",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Purchases.tableName, {
                 id: {
@@ -1019,13 +1019,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Purchases.tableName);
         }
     },
     {
         name: "2019-019-initialMigrations-createPurchaseDetails",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(PurchaseDetails.tableName, {
                 id: {
@@ -1113,13 +1113,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(PurchaseDetails.tableName);
         }
     },
     {
         name: "2019-020-initialMigrations-createReceivedTransfers",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(ReceivedTransfers.tableName, {
                 id: {
@@ -1190,13 +1190,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(ReceivedTransfers.tableName);
         }
     },
     {
         name: "2019-021-initialMigrations-createReceivedTransferDetails",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(ReceivedTransferDetails.tableName, {
                 id: {
@@ -1281,13 +1281,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(PurchaseDetails.tableName);
         }
     },
     {
         name: "2019-022-initialMigrations-createTransfers",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Transfers.tableName, {
                 id: {
@@ -1354,13 +1354,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Transfers.tableName);
         }
     },
     {
         name: "2019-023-initialMigrations-createTransferDetails",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(TransferDetails.tableName, {
                 id: {
@@ -1445,14 +1445,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(TransferDetails.tableName);
         }
     },
     
     {
         name: "2019-024-initialMigrations-createStockAdjustment",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(StockAdjustment.tableName, {
                 id: {
@@ -1560,13 +1560,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(SalesDetails.tableName);
         }
     },
     {
         name: "2019-025-initialMigrations-createStockAdjustmentSessions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(StockAdjustmentSessions.tableName, {
                 id: {
@@ -1614,14 +1614,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(StockAdjustmentSessions.tableName);
         }
     },
 
     {
         name: "2019-026-initialMigrations-createCustomerDiagnostics",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(CustomerDiagnostics.tableName, {
                 id: {
@@ -1675,7 +1675,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(CustomerDiagnostics.tableName);
         }
     },
@@ -1683,7 +1683,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
     {
         name: "2019-027-initialMigrations-createDiagnosticTests",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(DiagnosticTests.tableName, {
                 id: {
@@ -1742,13 +1742,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(DiagnosticTests.tableName);
         }
     },
     {
         name: "2019-028-initialMigrations-createStockAdjustmentPending",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(StockAdjustmentPending.tableName, {
                 id: {
@@ -1864,14 +1864,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 });
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(StockAdjustmentPending.tableName);
         }
     },
 
     {
         name: "2019-029-initialMigrations-createdbBackups",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(DbBackups.tableName, {
                 id: {
@@ -1916,13 +1916,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(DbBackups.tableName);
         }
     },
     {
         name: "2019-030-initialMigrations-createRefills",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(Refills.tableName, {
                 id: {
@@ -2002,13 +2002,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(Refills.tableName);
         }
     },
     {
         name: "2019-031-initialMigrations-createStockValues",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(StockValues.tableName, {
                 id: {
@@ -2044,13 +2044,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(StockValues.tableName);
         }
     },
     {
         name: "2019-032-initialMigrations-createOutgoingPaymets",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(OutgoingPayments.tableName, {
                 id: {
@@ -2121,14 +2121,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(OutgoingPayments.tableName);
         }
     },
     
     {
         name: "2019-034-initialMigrations-createOnlineBackups",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(OnlineBackups.tableName, {
                 id: {
@@ -2159,13 +2159,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(OnlineBackups.tableName);
         }
     },
     {
         name: "2019-035-initialMigrations-createDBSync",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(DbSync.tableName, {
                 id: {
@@ -2201,13 +2201,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(DbSync.tableName);
         }
     },
     {
         name: "2019-036-initialMigrations-createIncomingPaymets",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.createTable(IncomingPayments.tableName, {
                 id: {
@@ -2279,7 +2279,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable(IncomingPayments.tableName);
         }
     },
@@ -2301,21 +2301,21 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
     {
         name: "20210314155622-addCustomerDob",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             
             await queryInterface.addColumn(Customers.tableName, 'date_of_birth',
                 {
                     type: DATEONLY
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn(Customers.tableName, 'date_of_birth');
  
         }
     },
     {
         name: "20210314180101-create-product-batches",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('ProductBatches', {
                 id: {
                     allowNull: false,
@@ -2349,40 +2349,40 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('ProductBatches');
         }
     },
     {
         name: "20210315154011-addQuantityToProductBatches",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('productbatches', 'quantity',
                 {
                     type: DOUBLE
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('productbatches', 'quantity');
 
         }
     },
     {
         name: "20210317181610-addQuantitySoldToproductBatches",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('productbatches', 'quantity_sold',
                 {
                     type: DOUBLE,
                     defaultValue: 0
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('productbatches', 'quantity_sold');
 
         }
     },
     {
         name: "20210324143037-create-daily-records",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('dailyRecords', {
                 id: {
                     allowNull: false,
@@ -2408,14 +2408,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('dailyRecords');
 
         }
     },
     {
         name: "20210324173726-addPaymentMethodsToDailyRecords",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('dailyRecords', 'cash',
                 {
                     type: DOUBLE,
@@ -2453,7 +2453,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: 0
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('dailyRecords', 'cash');
             await queryInterface.removeColumn('dailyRecords', 'momo');
             await queryInterface.removeColumn('dailyRecords', 'insurance');
@@ -2466,7 +2466,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20210409084451-createSalesBatches",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('sales_batches', {
                 id: {
                     allowNull: false,
@@ -2502,40 +2502,40 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('sales_batches');
 
         }
     },
     {
         name: "20210409085254-addExpiryToSalesBatches",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('sales_batches', 'expiry',
                 {
                     type: DATE
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('sales_batches', 'expiry');
 
         }
     },
     {
         name: "20210409095027-addPreferredVendorToProducts",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('products', 'preferred_vendor',
                 {
                     type: INTEGER
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('products', 'preferred_vendor');
 
         }
     },
     {
         name: "20210626115902-createTokensTable",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('tokens', {
                 id: {
                     allowNull: false,
@@ -2558,37 +2558,37 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('tokens`');
 
         }
     },
     {
         name: "20210824173831-addOnlineToUsers",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('users', 'allow_online',
                 {
                     type: STRING,
                     defaultValue: 'no'
                 })
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('users', 'allow_online');
 
         }
     },
     {
         name: "20210926105345-updateProductsTable",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
 
         }
     },
     {
         name: "20211023131213-insertTaxSetting",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkInsert('settings', [{
                 name: 'tax',
                 module: 'System',
@@ -2598,7 +2598,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     // ignoreDuplicates: true
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('settings', {
                 name: 'tax'
             })
@@ -2606,21 +2606,21 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20211023134920-addTaxToSales",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('sales', 'tax',
                 {
                     type: DOUBLE,
                     defaultValue: 0
                 })
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('sales', 'tax');
 
         }
     },
     {
         name: "20211024133528-insertBatchSetting",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             const queryOptions: QueryOptions = {
 
             }
@@ -2636,7 +2636,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             )
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('settings', {
                 name: 'activate_batch_mode'
             })
@@ -2644,7 +2644,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20211109143824-addLogoToSettings",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             // const logo_exists = await Settings.findAll({
             //     where: {
             //         name: { [Op.in]: ['logo','receipt_logo']}
@@ -2665,7 +2665,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('settings', {
                 name: {
                     [Op.in]: ['logo',
@@ -2676,7 +2676,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20211121152934-productsAddDrugInfo",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('products', 'is_drug',
                 {
                     type: STRING,
@@ -2719,7 +2719,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: null
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('products', 'is_drug');
             await queryInterface.removeColumn('products', 'generic_name');
             await queryInterface.removeColumn('products', 'contraindications');
@@ -2732,7 +2732,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20211121154018-addStoresTables",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('stores', {
                 id: {
                     allowNull: false,
@@ -2814,7 +2814,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     onUpdate: 'cascade'
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('stores');
             await queryInterface.dropTable('store_inventory');
 
@@ -2822,7 +2822,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20211121170321-addRequisitionTables",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('requisitions', {
                 id: {
                     allowNull: false,
@@ -2965,7 +2965,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     onUpdate: 'cascade'
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('requisitions');
             await queryInterface.dropTable('requisition_details');
 
@@ -2973,7 +2973,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20211125214835-addDescriptionToStores",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('stores', 'description',
                 {
                     type: STRING,
@@ -2981,13 +2981,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     defaultValue: ''
                 })
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('stores', 'description')
         }
     },
     {
         name: "20220105074517-addReceiptSettings",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkInsert('settings', [
                 {
                     name: 'tax_title',
@@ -3017,7 +3017,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             ]
                 );
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('settings',
                 {
                     name: {
@@ -3032,20 +3032,20 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20220223095800-addMarkupToProducts",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('products', 'markup',
                 {
                     type: DOUBLE,
                     defaultValue: 1.33
                 })
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('products', 'markup')
         }
     },
     {
         name: "20220311134330-addActiveIngredient",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('products', 'active_ingredients',
                 {
                     type: STRING,
@@ -3059,7 +3059,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: true
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.removeColumn('products', 'active_ingredients');
             await queryInterface.removeColumn('products', 'drug_info');
@@ -3067,7 +3067,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20220328084933-addExpiryToPurchaseDetails",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('purchase_details', 'expiry',
                 {
                     type: STRING,
@@ -3075,14 +3075,14 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: true
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('purchase_details', 'expiry');
 
         }
     },
     {
         name: "20220411095651-receiptSettings",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkInsert('settings', [
                 {
                     name: 'receipt_show_customer',
@@ -3106,7 +3106,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             ]);
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('settings',
                 {
                     name: {
@@ -3120,7 +3120,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20220503070044-updateSalesDetails",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn('sales_details', 'expiry',
                 {
                     type: STRING,
@@ -3140,7 +3140,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: true
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn('sales_details', 'expiry');
             await queryInterface.removeColumn('sales_details', 'unit');
             await queryInterface.removeColumn('sales_details', 'label');
@@ -3149,7 +3149,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20220506130046-addSalesPermissions",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkInsert('permissions', [{
                 permission_id: '88',
                 name: 'Edit Sales Prices',
@@ -3161,7 +3161,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 role_id: 1
             }]);
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('permissions',
                 {
                     permission_id: '88'
@@ -3174,7 +3174,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20220524121539-multiplePaymentMethods",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('sales_payment_methods', {
                 id: {
                     allowNull: false,
@@ -3248,13 +3248,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
 
             
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('sales_payment_methods')
         }
     },
     {
         name: "20220711162301-addDuplicateTimeoutSetting",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkInsert('settings', [
                 {
                     name: 'duplicate_record_timeout',
@@ -3263,7 +3263,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             ]);
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.bulkDelete('settings', {
                 name: 'duplicate_record_timeout',
                
@@ -3272,7 +3272,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20221007120257-addReminderTable",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.createTable('reminders', {
                 id: {
                     allowNull: false,
@@ -3316,13 +3316,13 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                 }
             ])
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.dropTable('reminders')
         }
     },
     {
         name: "20221220113200-addCreatedOnToVariousTables",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             const tables = ["insurance_providers",
                 "reminders", "role_permissions", "roles"];
             const transaction = await sequelize.transaction();
@@ -3353,7 +3353,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
             
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             const tables = ["insurance_providers", 
                 "reminders", "role_permissions", "roles"];
             tables.forEach(async (table) => {
@@ -3364,7 +3364,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20221220114600-addUpdatedAtToVariousTables",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             const transaction = await sequelize.transaction();
             try {
@@ -3398,7 +3398,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             
             models.forEach(async (model) => {
                 await queryInterface.removeColumn(model.tableName, 'updatedAt')
@@ -3408,7 +3408,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20221220151900-addObjectIdToActivities",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             const tableDescription = await queryInterface.describeTable("activities");
             if (!tableDescription.object_id) {
                 await queryInterface.addColumn("activities", 'object_id',
@@ -3420,7 +3420,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
 
             await queryInterface.removeColumn("activities", 'object_id')
 
@@ -3428,7 +3428,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20221221082200-addDeletedAtToAllTables",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
 
             const transaction = await sequelize.transaction();
             try {
@@ -3459,7 +3459,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             
 
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
 
             models.forEach(async (model) => {
                 await queryInterface.removeColumn(model.tableName, 'deletedAt')
@@ -3469,7 +3469,7 @@ export const migrationsList: InputMigrations<QueryInterface> = [
     },
     {
         name: "20230314000000-addLastProductStockModified",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addColumn(Products.tableName, 'last_stock_modification',
                 {
                     type: STRING,
@@ -3477,31 +3477,31 @@ export const migrationsList: InputMigrations<QueryInterface> = [
                     allowNull: true
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.removeColumn(Products.tableName, 'last_stock_modification');
         }
     },
     {
         name: "20230321000000-addIndexToStockValues",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addIndex(StockValues.tableName,
                 ['date'], {
                     unique: true
                 });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
         }
     },
     
     {
         name: "20230527000000-addUniqueIndexToDailyRecords",
-        async up({ context: queryInterface }) {
+        async up({ context: queryInterface }: { context: QueryInterface }) {
             await queryInterface.addIndex(DailyRecords.tableName,
                 ['date','shift'], {
                 unique: true
             });
         },
-        async down({ context: queryInterface }) {
+        async down({ context: queryInterface }: { context: QueryInterface }) {
         }
     }
 

@@ -1,4 +1,4 @@
-import { COMPANY_NAME_RECEIVED, GET_SERVER_STATE, GET_SERVER_URL, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_RUNNING, SERVER_STARTING, SERVER_STATE_CHANGED, SERVER_STOPPED, SERVER_URL_RECEIVED } from "@/utils/stringKeys";
+import { APP_NOT_ACTIVATED, COMPANY_NAME_RECEIVED, GET_SERVER_STATE, GET_SERVER_URL, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_RUNNING, SERVER_STARTING, SERVER_STATE_CHANGED, SERVER_STOPPED, SERVER_URL_RECEIVED } from "@/utils/stringKeys";
 import { Alert, AlertTitle, CardActionArea, CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import Card from "@mui/material/Card";
 import { ipcRenderer } from "electron";
@@ -7,7 +7,7 @@ import { Button as MatButton } from "@mui/material"
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import Hub from '@mui/icons-material/Hub';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const ServerState = () => {
     const [serverState, setServerState] = useState("...");
@@ -16,7 +16,7 @@ const ServerState = () => {
     const title = "Server State";
     const subtitle = "Shows the state of the main application server";
     const restartButton = <Button loading={loading} onClick={restartServer} label="Restart" icon="pi pi-refresh" />
-
+    const navigate = useNavigate();
     function restartServer() {
         setLoading(true);
         ipcRenderer.send(RESTART_SERVER);
@@ -27,6 +27,11 @@ const ServerState = () => {
         const handleServerStateReceived = (event: any, data: any) => {
             setLoading(false)
             setServerState(data.data)
+            console.log(SERVER_STATE_CHANGED, data)
+            if (data == APP_NOT_ACTIVATED){
+                //navigate to the activation page
+                navigate('/activate');
+            }
         }
         ipcRenderer.send(GET_SERVER_STATE);
 
@@ -101,7 +106,21 @@ const ServerState = () => {
                         </b>
                     </Alert>
                 </CardContent>
-
+            </Card>
+        case APP_NOT_ACTIVATED:
+            return <Card >
+                <CardContent>
+                    <Alert severity="warning">
+                        <AlertTitle>{serverState}</AlertTitle>
+                        <b>
+                            This app has not been activated. Please go to the activation page and 
+                            enter your activation key.
+                        </b>
+                    </Alert>
+                </CardContent>
+                <CardActions>
+                    <Button><Link to="/activate">Activate</Link></Button>
+                </CardActions>
 
             </Card>
 

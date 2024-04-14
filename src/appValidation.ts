@@ -12,7 +12,7 @@ export async function verifyLicenseKey(key: string):Promise<any> {
     try {
         console.log("calling verify license")
         
-        return getData(`${constants.server_url}/api_admin/findBranchByKey?k=${key}`)
+        return getData({url: `${constants.server_url}/api_admin/findBranchByKey?k=${key}`, token: ""})
        
     } catch (error: any) {
         console.log("verify key", error)

@@ -9,8 +9,10 @@ import { GET_SERVER_URL, SERVER_URL_RECEIVED } from '@/utils/stringKeys';
 import { ipcRenderer } from 'electron';
 import { Toast } from 'primereact/toast';
 import { saveSettingsResponse } from '../models/axiosResponse';
+import { useAuthUser } from 'react-auth-kit';
 
 const SetAdminPassword = ({ onSubmit }: { onSubmit: Function }) => {
+    const auth = useAuthUser();
     const [loading, setLoading] = useState(false)
     const [serverUrl, setServerUrl] = useState(null);
 
@@ -37,7 +39,7 @@ const SetAdminPassword = ({ onSubmit }: { onSubmit: Function }) => {
             //validate and emit data to parent
             try {
                 setLoading(true);
-                let response = await postData<saveSettingsResponse>(`${serverUrl}/api_admin/saveSettings`, { admin_password: data.password });
+                let response = await postData<saveSettingsResponse>({ url: `${serverUrl}/api_admin/saveSettings`, formData: { admin_password: data.password }, token: auth()?.token });
                 if(!response.data.data){
                     showSuccess('Password saved successfully')
                 }

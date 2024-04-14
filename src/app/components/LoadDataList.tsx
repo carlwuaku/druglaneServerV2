@@ -16,6 +16,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { Link } from 'react-router-dom';
 import GlobalContext from '../global/global';
+import { useAuthUser } from 'react-auth-kit';
+import { useAuthHeader } from 'react-auth-kit'
 
 
 const LoadDataList = (props: {
@@ -35,7 +37,7 @@ const LoadDataList = (props: {
     editUrl: string,
     deleteUrl: string
 }) => {
-
+    const auth = useAuthUser();
     const objects = useRef<any[]>([]);
     const serverUrl = useRef<string>("");
     const [loading, setLoading] = useState<boolean>(false);
@@ -47,7 +49,6 @@ const LoadDataList = (props: {
     const showOverlayLoading = useRef<boolean>(false)
     const deleteId = useRef<string>("")
     const appData = useContext(GlobalContext)
-
     const handleClose = () => {
         setOpenDialog(false);
         deleteId.current = "";
@@ -104,7 +105,7 @@ const LoadDataList = (props: {
     const loadData = async () => {
         try {
             setLoading(true);
-            let response = await getData<any[]>(`${serverUrl.current}/${props.url}`);
+            let response = await getData<any[]>({url:`${serverUrl.current}/${props.url}`, token: auth()?.token});
 
             objects.current = response.data;
             setLoading(false);
@@ -149,7 +150,10 @@ const LoadDataList = (props: {
         try {
             
             showOverlayLoading.current = true;
-            await deleteData<any[]>(`${serverUrl.current}/${props.deleteUrl}/${deleteId.current}`);
+            await deleteData<any[]>({
+                url: `${serverUrl.current}/${props.deleteUrl}/${deleteId.current}`,
+                token: auth()?.token
+});
             showOverlayLoading.current = false;
             showSuccess(`Deleted successfully!`);
             handleClose();
@@ -173,12 +177,11 @@ const LoadDataList = (props: {
                             initialState={{
                                 pagination: {
                                     paginationModel: {
-                                        pageSize: 5,
+                                        pageSize: 50,
                                     },
                                 },
                             }}
                             pageSizeOptions={[5]}
-                            checkboxSelection
                             rowSelectionModel={selectedData}
                             onRowSelectionModelChange={handleSelectionModelChange}
                             disableRowSelectionOnClick

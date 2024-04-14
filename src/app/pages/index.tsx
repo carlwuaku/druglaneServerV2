@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 
 import { ipcRenderer } from 'electron';
 import Header from '../components/Header';
-import { BACKUP_TIME, GET_PREFERENCES, GET_SERVER_URL, SERVER_URL_RECEIVED } from '@/utils/stringKeys';
+import { BACKUP_TIME, CREATE_BACKUP, GET_PREFERENCES, GET_SERVER_URL, SERVER_URL_RECEIVED } from '@/utils/stringKeys';
 import ServerState from '../components/ServerState';
 import { Link, Link as RouterLink } from 'react-router-dom';
 import ServerLogs from '../components/ServerLogs';
@@ -17,6 +17,8 @@ import { Backup, CloudDownload, CloudSync, DisplaySettings, LockPerson, Notifica
 import DashboardTile from '../components/DashboardTile';
 import SettingItem from '../components/SettingItem';
 import GlobalContext from '../global/global';
+import {useAuthUser} from 'react-auth-kit'
+// import logo from '@/app/assets/logo.png';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -55,20 +57,23 @@ const times = [
 
 const Index = () => {
 
-
+  const auth = useAuthUser();
   const [companyName, setCompanyName] = useState("Company Name");
   const openPreferences = () => {
     ipcRenderer.send(GET_PREFERENCES)
   }
   const appData = useContext(GlobalContext)
-
+  const backupClicked = () => {
+    console.log('backup clicked');
+    ipcRenderer.send(CREATE_BACKUP);
+  }
 
   useEffect(() => {
     const handleServerUrlReceived = async (event: any, data: any) => {
       let serverUrl = data.data;
       console.log('index server url ', serverUrl)
       //get the settings
-      const getSettings = await getData<any>(`${serverUrl}/api_admin/settings`);
+      const getSettings = await getData<any>({ url: `${serverUrl}/api_admin/settings`, token: auth()?.token });
       setCompanyName(getSettings.data.company_name);
       ipcRenderer.removeListener(SERVER_URL_RECEIVED, handleServerUrlReceived);
     }
@@ -80,7 +85,9 @@ const Index = () => {
 
     
 
-  }, [])
+  }, []);
+
+
 
 
 
@@ -111,7 +118,9 @@ const Index = () => {
               <DashboardTile
                 title={'Backup your database now'}
                 subtitle={'Create a backup file of your database'}
-                icon={<Backup sx={{ fontSize: 30 }}></Backup>} ></DashboardTile>
+                icon={<Backup sx={{ fontSize: 30 }}></Backup>}
+                onClick={backupClicked}
+              ></DashboardTile>
            </Link>
           </Grid>
           <Grid lg={3} md={3} sm={6}>
@@ -142,7 +151,7 @@ const Index = () => {
         </Grid>
 
         <Grid container spacing={2}>
-          <Grid lg={3}>
+          <Grid lg={3} md={3} sm={6}>
             <Link to={'roles'} className="unsetAll link ">
               <DashboardTile
                 title={'User Permissions'}
@@ -150,7 +159,7 @@ const Index = () => {
                 icon={<LockPerson sx={{ fontSize: 30 }}></LockPerson>} ></DashboardTile>
             </Link>
           </Grid>
-          <Grid lg={3}>
+          <Grid lg={3} md={3} sm={6}>
             <Link to={''} className="unsetAll link">
               <DashboardTile
                 title={'Manage Automatic Reminders'}

@@ -2,7 +2,7 @@ import { ipcRenderer } from 'electron';
 import React, { useEffect, useState } from 'react'
 import { Menubar } from 'primereact/menubar';
 import { InputText } from 'primereact/inputtext';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -20,12 +20,15 @@ import AdbIcon from '@mui/icons-material/Adb';
 import Link from '@mui/material/Link';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
-
+import  LocalImage  from "@/app/components/Image";
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+import { useSignOut } from 'react-auth-kit'
+import { Home, Logout } from '@mui/icons-material';
 
 const Header = (props: { showBackArrow?: boolean }) => {
   const [title, setTitle] = useState("...");
+  const history = useNavigate();
   useEffect(() => {
     ipcRenderer.send("getAppDetails");
     ipcRenderer.on("appDetailsSent", (event: any, data: any) => {
@@ -33,10 +36,12 @@ const Header = (props: { showBackArrow?: boolean }) => {
     })
   },
     []);
+  const signOut = useSignOut()
+
 
   const items = [
     {
-      label: 'Home',
+      label: 'Home/Menu',
       icon: 'pi pi-fw pi-home',
       link: '/'
     },
@@ -130,8 +135,12 @@ const Header = (props: { showBackArrow?: boolean }) => {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+  const logout = () => {
+    signOut();
+    history("/login")
+  }
   return (
-    <AppBar position="static">
+    <AppBar className='margin-bottom-10' position="static">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {props.showBackArrow ?
@@ -139,7 +148,7 @@ const Header = (props: { showBackArrow?: boolean }) => {
               <ArrowBackIcon />
             </IconButton> : ''}
 
-          <AdbIcon sx={{ display: 'flex', mr: 1 }} />
+          <LocalImage height='35px' image='logo.png'  />
           <Typography
             variant="h6"
             noWrap
@@ -157,9 +166,17 @@ const Header = (props: { showBackArrow?: boolean }) => {
             Druglane
           </Typography>
 
-
-
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'flex' } }}>
+          <Button
+            component={RouterLink} 
+            to={`/`}
+            sx={{ my: 2, color: 'white', display: 'block' }}
+            onClick={logout}
+            startIcon={<Home />}
+          >
+             Home/Menu
+          </Button>
+          <Box sx={{ flexGrow: 1, display: 'flex' }}></Box>
+          {/* <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'flex' } }}>
             {items.map((page) => (
 
               <Button component={RouterLink}
@@ -170,12 +187,15 @@ const Header = (props: { showBackArrow?: boolean }) => {
               >
                 {page.label}
               </Button>
-
-
-
-
-            ))}
-          </Box>
+))}
+          </Box> */}
+          <Button 
+            sx={{ my: 2, color: 'white', display: 'block' }}
+            onClick={logout}
+            endIcon={<Logout />}
+          >
+           Logout 
+          </Button>
 
 
         </Toolbar>

@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript'
 import allModels from '../models/index';
-import { config } from './config';
+import { config, sqliteConfig } from './config';
 import { Branches } from '../models/Branches';
 import { CustomerDiagnostics } from '../models/CustomerDiagnostics';
 import { Customers } from '../models/Customers';
@@ -46,7 +46,7 @@ code: 'ER_BAD_DB_ERROR'
 SequelizeDatabaseError: (conn=60, no: 1046, SQLState: 3D000) No database selected
 */
 
-const connection = new Sequelize(config[process.env.NODE_ENV!]);
+const connection = new Sequelize(sqliteConfig[process.env.NODE_ENV!]);
 
 export async function authenticate():Promise<boolean> {
     try {

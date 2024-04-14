@@ -1,9 +1,12 @@
-import { EventEmitter } from "stream";
+import { EventEmitter } from "events";
 
-export class ServerEvents extends EventEmitter {
+class ServerEvents extends EventEmitter {
     constructor() {
         super();
     }
 
 
 }
+
+const serverEventEmitter = new ServerEvents();
+export default serverEventEmitter;

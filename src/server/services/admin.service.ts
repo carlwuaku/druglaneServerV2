@@ -16,8 +16,12 @@ import { Op, Sequelize } from 'sequelize';
 import bcrypt from 'bcryptjs'
 import { Permissions } from '../models/Permissions';
 import { RolePermissions } from '../models/RolePermissions';
-import {errorMessages, infoMessages, moduleNames} from '../helpers/stringHelpers'
+import {configKeys, errorMessages, infoMessages, moduleNames} from '../helpers/stringHelpers'
 import { SettingsTransfer } from '../interfaces/settingsTransferInterface';
+import crypto from 'crypto'
+import { Tokens } from '../models/Tokens';
+import { sendEmail } from '../utils/network'
+
 // const path = require('path')
 
 // const ActivitiesHelper = require('../helpers/activitiesHelper');
@@ -84,6 +88,68 @@ export async function login_function(data: { username: any; password: any; }): P
         if (error instanceof Error) {
             logger.error({message:error})
             throw new Error(error.message)
+        }
+        else {
+            throw new Error(error);
+
+        }
+
+
+    }
+}
+
+export async function server_admin_login_function(data: {  password: string; }): Promise<string> {
+    let password = data.password;
+    try {
+
+        let settings = await Settings.findOne({
+            where: {
+                name: "admin_password",
+            }
+        });
+        let password_valid: boolean = false;
+        if (settings && settings.value) {
+            //username was found. compare the password
+            password_valid = bcrypt.compareSync(password, settings.value);
+        }
+
+        if (!password_valid) {
+            throw new Error(errorMessages.PASSWORD_INCORRECT)
+
+        }
+        //user is valid
+
+        const now = new Date();
+        const hash = bcrypt.hashSync(configKeys.ADMIN_PASSWORD_SALT + now, 10);
+        
+        await Settings.update({
+            value: hash
+        }, {
+            where: {
+                name: 'admin_password_token'
+            }
+        })
+
+       
+        Activities.create({
+            activity: ` server admin ${infoMessages.LOGGED_IN}`,
+            user_id: '',
+            module: 'System'
+        })
+
+        return hash;
+    } catch (error: any) {
+        //if the error is "user not found", rethrow it. else if it's some other error, log it
+        if (error instanceof Error) {
+            const serializedError = {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+            };
+
+            logger.error({ message: serializedError });
+            throw new Error(error.message);
+            
         }
         else {
             throw new Error(error);
@@ -713,7 +779,7 @@ export async function get_roles_function(_data: { offset?: string, limit?:string
  * @param _data {id: the id of the role}
  * @returns the list of permissions
  */
-export async function get_role_permissions_function(_data: { [key: string]: any}): Promise<Permissions[]> {
+export async function get_role_permissions_function(_data: { id:string}): Promise<Permissions[]> {
     try {
         let data = await Permissions.findAll({
             where: {
@@ -804,10 +870,19 @@ export async function get_permissions_function(): Promise<Permissions[]> {
  * @param _data 
  * @returns true if successful
  */
-export async function delete_role_permission_function(_data: { [key: string]: any}):Promise<boolean>  {
+export async function delete_role_permission_function(_data: { role_id: string; permission_id: string; user_id: string; }):Promise<boolean>  {
     
     try {
-        
+        const role = await Roles.findByPk(_data.role_id);
+        const permission = await Permissions.findByPk(_data.permission_id);
+        if (!role) {
+            throw new Error("Unable to find specified role");
+            
+        }
+        if (!permission) {
+            throw new Error("Unable to find specified permission");
+            
+        }
         await RolePermissions.destroy({
             where: {
                 role_id: _data.role_id,
@@ -815,7 +890,7 @@ export async function delete_role_permission_function(_data: { [key: string]: an
             }
         })
         Activities.create({
-            activity: `removed a permission ${_data.permission_name} from role ${_data.role_name}`,
+            activity: `removed a permission ${permission.name} from role ${role.role_name}`,
             user_id: `${_data.user_id}`,
             module: 'users'
         })
@@ -921,6 +996,81 @@ export async function change_staff_password_function(_data: { [key: string]: any
 
 };
 
+export async function resetAdminPassword():Promise<{ error: boolean; message:any }> {
+    try {
+
+        const token = crypto.randomBytes(5).toString("hex");
+        await Tokens.destroy({
+            where: {
+                name: "reset_admin_password"
+            }
+        });
+
+        await Tokens.create({
+            name: "reset_admin_password",
+            token: token
+        })
+
+        const emailSetting = await Settings.findOne({
+            where: {
+                name: 'email'
+            }
+        });
+
+        const nameSetting = await Settings.findOne({
+            where: {
+                name: 'company_name'
+            }
+        })
+
+        const subject = "Reset your admin password"
+        const message = `You have requested to reset your ${constants.appname} for ${nameSetting!.value} server admin password. 
+Please use this code as token in the reset page: ${token}.`;
+        
+            const response = await sendEmail(message, emailSetting!.value, subject);
+            const data = {
+                error: response.data.status === "1",
+                message: response.data.status === "1" ? `Email sent to your administrator email. Please 
+                    check your inbox to retrieve the token` : response.data.data
+        }
+        return data;
+    }
+    catch (error: any) {
+        logger.error({ message: error })
+
+        throw new Error(error)
+    }
+}
+
+
+export async function doResetAdminPassword(_data:{password:string, token:string}): Promise<boolean> {
+    try {
+
+        const hash = bcrypt.hashSync(_data.password, 10);
+
+        await Tokens.destroy({
+            where: {
+                name: "reset_admin_password"
+            }
+        });
+        
+        await Settings.update({
+            value: hash
+        }, {
+            where: {
+                name: 'admin_password'
+            }
+        })
+
+        
+        return true;
+    }
+    catch (error: any) {
+        logger.error({ message: error })
+
+        throw new Error(error)
+    }
+}
 
 
 // ////////////////INCOMING PAYMENTS//////////////////////
