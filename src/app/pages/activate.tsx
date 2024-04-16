@@ -84,13 +84,13 @@ const Activate = () => {
     ipcRenderer.on(ACTIVATION_RESULT, (event, data) => {
       setLoading(false)
       //incase of an incorect key the data returned is 
-//       "data": {
-//         "status": "-1"
-//       },
-//       "error": false,
-//         "message": ""
-//     }
-// }
+      //       "data": {
+      //         "status": "-1"
+      //       },
+      //       "error": false,
+      //         "message": ""
+      //     }
+      // }
       
       console.log(data.data)
       if (data.data.status === "1") {
@@ -129,7 +129,11 @@ const Activate = () => {
         setErrorVisible(true)
       }
 
-    })
+    });
+
+    return () => {
+      ipcRenderer.removeAllListeners(ACTIVATION_RESULT);
+    }
 
 
   }, [])

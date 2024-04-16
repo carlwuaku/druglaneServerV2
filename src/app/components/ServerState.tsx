@@ -26,11 +26,11 @@ const ServerState = () => {
     useEffect(() => {
         const handleServerStateReceived = (event: any, data: any) => {
             setLoading(false)
-            setServerState(data.data)
-            console.log(SERVER_STATE_CHANGED, data)
-            if (data == APP_NOT_ACTIVATED){
+            setServerState(data.data) 
+            console.log(SERVER_STATE_CHANGED, data == APP_NOT_ACTIVATED)
+            if (data.data === APP_NOT_ACTIVATED){
                 //navigate to the activation page
-                navigate('/activate');
+                // navigate('/activate');
             }
         }
         ipcRenderer.send(GET_SERVER_STATE);

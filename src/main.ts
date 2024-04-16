@@ -6,7 +6,7 @@ import { logger } from "./app/config/logger";
 
 import { constants, defaultOptions } from "./electronConstants";
 import serverEventEmitter from "./utils/ServerEvents";
-import { ACTIVATION_RESULT, APP_NOT_ACTIVATED, CALL_ACTIVATION, CREATE_BACKUP, GET_APP_DETAILS, GET_PREFERENCE, GET_PREFERENCES, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, PREFERENCE_SET, RESTART_APPLICATION, RESTART_SERVER, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED, SET_ADMIN_PASSWORD, SET_PREFERENCE } from "./utils/stringKeys";
+import { ACTIVATION_RESULT, APP_NOT_ACTIVATED, CALL_ACTIVATION, COMPLTED_DATABASE_UPDATE, CREATE_BACKUP, DATABASE_SETUP_EVENT, ERROR_UPDATING_DATABASE, GET_APP_DETAILS, GET_PREFERENCE, GET_PREFERENCES, GET_SERVER_STATE, GET_SERVER_URL, PREFERENCE_RECEIVED, PREFERENCE_SET, RESTART_APPLICATION, RESTART_SERVER, SERVER_DATABASE_UPDATE, SERVER_MESSAGE_RECEIVED, SERVER_STATE_CHANGED, SERVER_URL_RECEIVED, SERVER_URL_UPDATED, SET_ADMIN_PASSWORD, SET_PREFERENCE, UPDATING_DATABASE } from "./utils/stringKeys";
 import { runFolderCreation } from "./utils/directorySetup";
 import Store from "electron-store";
 import contextMenu from 'electron-context-menu';
@@ -19,6 +19,8 @@ const gotTheLock = app.requestSingleInstanceLock();
 let lastServerUrl: string = "";
 
 let mainWindow: BrowserWindow;
+let databaseUpdateWindow: BrowserWindow | undefined;
+let mainWindowUrl = "";
 // let serverProcess: ChildProcess;
 let serverState: "Application Activated" |
     "Application Not Activated" | "Server Started" | "Checking Activation"
@@ -91,6 +93,10 @@ runFolderCreation();
 ipcMain.on(CALL_ACTIVATION, async (event, key) => {
     try {
         let data = await verifyLicenseKey(key);
+        if (data.data.status === "1") {
+            console.log('activation successful')
+            await startServer(); 
+        }
         mainWindow?.webContents?.send(ACTIVATION_RESULT, { data: data.data, error: false, message: "" })
     } catch (error) {
         mainWindow?.webContents?.send(ACTIVATION_RESULT, { data: null, error: true, message: error })
@@ -146,6 +152,11 @@ ipcMain.on(CREATE_BACKUP, (event) => {
     console.log('create backup')
 })
 
+ipcMain.on(SERVER_DATABASE_UPDATE, (event, data: string) => {
+    console.log('server database update', data)
+    sendServerDatabaseUpdate(data);
+})
+
 
 
 function savePreference(key: string, value: any) {
@@ -181,6 +192,19 @@ function sendServerState(state: string) {
 
 }
 
+function sendServerDatabaseUpdate(state: string) {
+    try {
+        console.log(state, 'server database update');
+        mainWindow?.webContents?.send(DATABASE_SETUP_EVENT, { data: state, time: new Date().toLocaleString() })
+
+    }
+    catch (error) {
+        logger.error({ message: error });
+        dialog.showErrorBox("Internal error", "Failed to send server state")
+    }
+
+}
+
 serverEventEmitter.on(SERVER_STATE_CHANGED, (data) => {
     serverState = data;
     sendServerState(data);
@@ -198,8 +222,48 @@ serverEventEmitter.on(SERVER_URL_UPDATED, (data) => {
         sendServerUrl();
         lastServerUrl = serverUrl;
     }
+});
+
+serverEventEmitter.on(SERVER_DATABASE_UPDATE, (data) => {
+    sendServerDatabaseUpdate(data);
+    switch (data) {
+        case UPDATING_DATABASE:
+            //create the window if it doesn't exist
+            if (!databaseUpdateWindow) {
+               databaseUpdateWindow = createChildWindow("electronPages/runningMigrations.html", { title: "Running Migrations", parent: mainWindow })
+            }
+            break;
+        case COMPLTED_DATABASE_UPDATE:
+            //create the window if it doesn't exist
+            if (databaseUpdateWindow) {
+                databaseUpdateWindow.close();
+               
+            }
+            dialog.showMessageBox(mainWindow, {
+                type: "info",
+                message: "Database updated successfully",
+            })
+            break;
+        
+        case ERROR_UPDATING_DATABASE:
+            //create the window if it doesn't exist
+            if (databaseUpdateWindow) {
+                databaseUpdateWindow.close();
+                
+            }
+            dialog.showMessageBox(mainWindow, {
+                type: "error",
+                message: "There was a problem updating the database. Please restart the application to try again, or contact us for help",
+            })
+            break;
+        default:
+            break;
+    }
 
 })
+
+
+
 
 function sendServerUrl() {
 
@@ -209,7 +273,7 @@ function sendServerUrl() {
 }
 
 
-function createWindow(htmlLocation: string, preloadLocation?: string) {
+function createMainWindow() {
     // Create the browser window.
     //TODO: Check if null.
     mainWindow = new BrowserWindow({
@@ -230,7 +294,8 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
         protocol: 'file:',
         slashes: true
     })
-    mainWindow?.loadURL(isDev ? 'http://localhost:9000' : startUrl);
+    mainWindowUrl = isDev ? 'http://localhost:9000' : startUrl
+    mainWindow?.loadURL(mainWindowUrl);
     // Open the DevTools.
     mainWindow?.webContents?.openDevTools();
     const mainMenu = Menu.buildFromTemplate(appmenu);
@@ -248,12 +313,12 @@ function createWindow(htmlLocation: string, preloadLocation?: string) {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-    createWindow("/app/index.html", "@/app/index.preload.js");
+    createMainWindow();
     spawnServer();
     app.on("activate", function () {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) createWindow("/app/index.html", "@/app/index.preload.js");
+        if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
 
         spawnServer();
     });
@@ -349,14 +414,44 @@ export async function spawnServer() {
 }
 
 export function loadActivationPage(): void {
-    createWindow("/app/activate.html", "/app/activate.js")
-
+    // mainWindow?.loadURL(mainWindowUrl + "/activate")
+    openReactUrl("activate");
 }
 
 function openFolder(location: string) {
     shell.showItemInFolder(location)
 }
 
+function openReactUrl(url: string) {
+    mainWindow?.webContents.executeJavaScript(`window.history.pushState({}, '', '${url}');`);
+
+}
+
+function createChildWindow(path: string, options?: {
+    title: string,
+    width?: number, height?: number,
+    parent?: BrowserWindow
+}): BrowserWindow {
+    const window = new BrowserWindow({
+        width: options?.width || 300,
+        height: options?.height ||  200,
+        frame: false, // Remove the window frame
+        transparent: true, // Make the window transparent
+        alwaysOnTop: true, // Keep the window always on top
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+        },
+        ...(options?.parent && { modal: true }),
+        ...(options?.parent && { parent: mainWindow }),
+        
+    });
+
+    // Load the HTML file that contains your loading message
+    window.loadFile(path);
+
+    return window;
+}
 
 
 

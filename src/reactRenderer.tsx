@@ -22,6 +22,7 @@ import AddUser from "./app/pages/addUser";
 import Login from "./app/pages/login";
 import { AuthProvider, RequireAuth } from "react-auth-kit";
 import ResetPassword from "./app/pages/resetPassword";
+import { DatabaseSetup } from "./app/pages/databaseSetup";
 
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
                 <Route path='/addUser/:id' element={<RequireAuth loginPath={"/login"}><AddUser /></RequireAuth>} />
                 <Route path='/login' element={<Login />} />
                 <Route path='/resetPassword' element={<ResetPassword />} />
+                <Route path='/databaseSetup' element={<DatabaseSetup />} />
                 <Route path="/" element={<Index />} />
                 <Route path="*" element={<NotFound />} />
 

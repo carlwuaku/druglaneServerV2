@@ -7,7 +7,8 @@ import { Umzug, SequelizeStorage } from 'umzug';
 import { migrationsList } from './migrationsList';
 import { sequelize } from '../sequelize-config'
 import { logger } from '../logger';
-
+import serverEventEmitter from '../../../utils/ServerEvents';
+import { COMPLTED_DATABASE_UPDATE, ERROR_UPDATING_DATABASE, SERVER_DATABASE_UPDATE, UPDATING_DATABASE } from '../../../utils/stringKeys';
 const umzug = new Umzug({
   migrations: migrationsList,
   context: sequelize.getQueryInterface(),
@@ -22,8 +23,13 @@ export type Migration = typeof umzug._types.migration;
 export const runMigrations =
   (async () => {
     try {
+      serverEventEmitter.emit(SERVER_DATABASE_UPDATE, UPDATING_DATABASE)
       await umzug.up();
+      serverEventEmitter.emit(SERVER_DATABASE_UPDATE, COMPLTED_DATABASE_UPDATE)
+
     } catch (error) {
+      serverEventEmitter.emit(SERVER_DATABASE_UPDATE, ERROR_UPDATING_DATABASE)
+
       logger.error({ message: error });
       throw new Error("Migration error:" + error);
 

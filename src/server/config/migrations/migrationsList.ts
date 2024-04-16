@@ -819,19 +819,19 @@ export const migrationsList: InputMigrations<QueryInterface> = [
             await queryInterface.addIndex(Sales.tableName,
                 ['customer',]);
             
-            await queryInterface.addConstraint(
-                Sales.tableName,
-                {
-                    fields: ['insurance_provider'],
-                    type: 'foreign key',
-                    name: 'sales_insurance_provider',
-                    references: {
-                        table: InsuranceProviders.tableName,
-                        field: 'name',
-                    },
-                    onDelete: 'restrict',
-                    onUpdate: 'cascade'
-                });
+            // await queryInterface.addConstraint(
+            //     Sales.tableName,
+            //     {
+            //         fields: ['insurance_provider'],
+            //         type: 'foreign key',
+            //         name: 'sales_insurance_provider',
+            //         references: {
+            //             table: InsuranceProviders.tableName,
+            //             field: 'name',
+            //         },
+            //         onDelete: 'restrict',
+            //         onUpdate: 'cascade'
+            //     });
             
             
         },
